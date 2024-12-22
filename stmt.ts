@@ -17,6 +17,7 @@ export interface Visitor<T> {
   visitEchoStmt(stmt: Echo): T;
   visitExpressionStmt(stmt: Expression): T;
   visitWhileStmt(stmt: While): T;
+  visitForStmt(stmt: For): T;
 }
 
 export class If extends Stmt {
@@ -78,5 +79,19 @@ export class While extends Stmt {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitWhileStmt(this);
+  }
+}
+
+export class For extends Stmt {
+  constructor(
+    public readonly initializer: Stmt | null,
+    public readonly condition: Expr | null,
+    public readonly increment: Expr | null,
+    public readonly body: Stmt,
+  ) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitForStmt(this);
   }
 }

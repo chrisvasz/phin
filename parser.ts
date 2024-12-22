@@ -119,11 +119,40 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function statement(): Stmt {
+    if (match(FOR)) return forStatement();
     if (match(IF)) return ifStatement();
     if (match(ECHO)) return echoStatement();
     if (match(WHILE)) return whileStatement();
     if (match(LEFT_BRACE)) return new stmt.Block(block());
     return expressionStatement();
+  }
+
+  function forStatement(): Stmt {
+    consume('Expect "(" after "for"', LEFT_PAREN);
+    let initializer = forInitializer();
+    let condition = forCondition();
+    let increment = forIncrement();
+    consume('Expect ")" after for clauses', RIGHT_PAREN);
+    let body = statement();
+    return new stmt.For(initializer, condition, increment, body);
+  }
+
+  function forInitializer(): Stmt | null {
+    if (match(SEMICOLON)) return null;
+    if (match(VAR)) return varDeclaration();
+    return expressionStatement();
+  }
+
+  function forCondition(): Expr | null {
+    if (match(SEMICOLON)) return null;
+    let result = expression();
+    consume('Expect ";" after loop condition', SEMICOLON);
+    return result;
+  }
+
+  function forIncrement(): Expr | null {
+    if (check(RIGHT_PAREN)) return null;
+    return expression();
   }
 
   function ifStatement(): Stmt {
