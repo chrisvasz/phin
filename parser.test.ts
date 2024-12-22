@@ -4,10 +4,12 @@ import scan from './Scanner';
 import parse from './parser';
 import {
   Binary,
+  EchoStatement,
   ExpressionStatement,
   Grouping,
   NullLiteral,
   NumberLiteral,
+  StringLiteral,
 } from './nodes';
 import { Token, TokenType } from './Token';
 
@@ -120,6 +122,14 @@ test('1 + (2 + 3)', () => {
       ),
     ),
   ];
+  let tokens = scan(source);
+  let ast = parse(tokens);
+  expect(ast).toEqual(expected);
+});
+
+test('echo "hello"', () => {
+  let source = 'echo "hello"';
+  let expected = [new EchoStatement(new StringLiteral('hello'))];
   let tokens = scan(source);
   let ast = parse(tokens);
   expect(ast).toEqual(expected);

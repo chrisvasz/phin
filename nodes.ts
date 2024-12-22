@@ -9,14 +9,24 @@ export abstract class Expr {
 }
 
 export interface Visitor<T> {
-  visitExpressionStatementStmt(stmt: ExpressionStatement): T;
-  visitBinaryExpr(expr: Binary): T;
-  visitGroupingExpr(expr: Grouping): T;
-  visitNumberLiteralExpr(expr: NumberLiteral): T;
-  visitStringLiteralExpr(expr: StringLiteral): T;
-  visitBooleanLiteralExpr(expr: BooleanLiteral): T;
-  visitNullLiteralExpr(expr: NullLiteral): T;
-  visitUnaryExpr(expr: Unary): T;
+  visitEchoStatement(stmt: EchoStatement): T;
+  visitExpressionStatement(stmt: ExpressionStatement): T;
+  visitBinary(expr: Binary): T;
+  visitGrouping(expr: Grouping): T;
+  visitNumberLiteral(expr: NumberLiteral): T;
+  visitStringLiteral(expr: StringLiteral): T;
+  visitBooleanLiteral(expr: BooleanLiteral): T;
+  visitNullLiteral(expr: NullLiteral): T;
+  visitUnary(expr: Unary): T;
+}
+
+export class EchoStatement extends Stmt {
+  constructor(public readonly expression: Expr) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitEchoStatement(this);
+  }
 }
 
 export class ExpressionStatement extends Stmt {
@@ -24,7 +34,7 @@ export class ExpressionStatement extends Stmt {
     super();
   }
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitExpressionStatementStmt(this);
+    return visitor.visitExpressionStatement(this);
   }
 }
 
@@ -37,7 +47,7 @@ export class Binary extends Expr {
     super();
   }
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitBinaryExpr(this);
+    return visitor.visitBinary(this);
   }
 }
 
@@ -46,7 +56,7 @@ export class Grouping extends Expr {
     super();
   }
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitGroupingExpr(this);
+    return visitor.visitGrouping(this);
   }
 }
 
@@ -55,7 +65,7 @@ export class NumberLiteral extends Expr {
     super();
   }
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitNumberLiteralExpr(this);
+    return visitor.visitNumberLiteral(this);
   }
 }
 
@@ -64,7 +74,7 @@ export class StringLiteral extends Expr {
     super();
   }
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitStringLiteralExpr(this);
+    return visitor.visitStringLiteral(this);
   }
 }
 
@@ -73,13 +83,13 @@ export class BooleanLiteral extends Expr {
     super();
   }
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitBooleanLiteralExpr(this);
+    return visitor.visitBooleanLiteral(this);
   }
 }
 
 export class NullLiteral extends Expr {
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitNullLiteralExpr(this);
+    return visitor.visitNullLiteral(this);
   }
 }
 
@@ -88,6 +98,6 @@ export class Unary extends Expr {
     super();
   }
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitUnaryExpr(this);
+    return visitor.visitUnary(this);
   }
 }

@@ -36,6 +36,7 @@ const {
   STRING,
   NUMBER,
   CLASS,
+  ECHO,
   ELSE,
   FALSE,
   FUN,
@@ -86,7 +87,14 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function statement(): Stmt {
+    if (match(ECHO)) return echoStatement();
     return expressionStatement();
+  }
+
+  function echoStatement(): Stmt {
+    let expr = expression();
+    consume('Expect terminator after echo statement.', SEMICOLON, EOL, EOF);
+    return new ExpressionStatement(expr);
   }
 
   function expressionStatement(): Stmt {
