@@ -299,8 +299,3 @@ test('keywords', () => {
   let actual = scan(source.join(' '));
   expect(actual).toEqual(expected);
 });
-
-test.todo('malformed number', () => {
-  let source = '123.';
-  expect(() => scan(source)).toThrow();
-});

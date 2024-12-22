@@ -100,7 +100,8 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function declaration(): Stmt | null {
     try {
-      if (match(VAR)) return varStatement();
+      if (match(FUN)) return functionDeclaration();
+      if (match(VAR)) return varDeclaration();
       return statement();
     } catch (error) {
       if (!(error instanceof ParseError)) throw error;
@@ -109,7 +110,40 @@ export default function parse(tokens: Token[]): Stmt[] {
     }
   }
 
-  function varStatement(): stmt.Var {
+  function functionDeclaration(): stmt.Function {
+    let name = consume('Expect function name', IDENTIFIER);
+    consume('Expect "(" after function name', LEFT_PAREN);
+    let params = functionParams();
+    consume('Expect ")" after function parameters', RIGHT_PAREN);
+    let returnType = match(COLON) ? typeAnnotation() : null;
+    if (match(EQUAL)) {
+      return new stmt.Function(name, params, returnType, expression());
+    } else if (match(LEFT_BRACE)) {
+      return new stmt.Function(name, params, returnType, block());
+    }
+    throw error(peek(), 'Expect "=" or "{" before function body');
+  }
+
+  function functionParams(): stmt.Var[] {
+    let params: stmt.Var[] = [];
+    if (!check(RIGHT_PAREN)) {
+      params.push(functionParam());
+      while (match(COMMA)) {
+        if (check(RIGHT_PAREN)) break; // support trailing commas
+        params.push(functionParam());
+      }
+    }
+    return params;
+  }
+
+  function functionParam(): stmt.Var {
+    let name = consume('Expect parameter name', IDENTIFIER);
+    let type = match(COLON) ? typeAnnotation() : null;
+    let initializer = match(EQUAL) ? expression() : null;
+    return new stmt.Var(name, type, initializer);
+  }
+
+  function varDeclaration(): stmt.Var {
     let result = varWithType();
     let initializer = match(EQUAL) ? expression() : null;
     consume('Expect terminator after variable declaration', ...terminators);
@@ -127,6 +161,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(FOR)) return forStatement();
     if (match(IF)) return ifStatement();
     if (match(ECHO)) return echoStatement();
+    if (match(RETURN)) return new stmt.Return(expression());
     if (match(WHILE)) return whileStatement();
     if (match(LEFT_BRACE)) return new stmt.Block(block());
     return expressionStatement();
@@ -159,7 +194,7 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function forInitializer(): Stmt | null {
     if (match(SEMICOLON)) return null;
-    if (match(VAR)) return varStatement();
+    if (match(VAR)) return varDeclaration();
     return expressionStatement();
   }
 

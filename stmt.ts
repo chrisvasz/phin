@@ -19,6 +19,8 @@ export interface Visitor<T> {
   visitWhileStmt(stmt: While): T;
   visitForStmt(stmt: For): T;
   visitForeachStmt(stmt: Foreach): T;
+  visitFunctionStmt(stmt: Function): T;
+  visitReturnStmt(stmt: Return): T;
 }
 
 export class If extends Stmt {
@@ -108,5 +110,28 @@ export class Foreach extends Stmt {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitForeachStmt(this);
+  }
+}
+
+export class Function extends Stmt {
+  constructor(
+    public readonly name: Token,
+    public readonly parameters: Var[],
+    public readonly returnType: Type | null,
+    public readonly body: Stmt[] | Expr,
+  ) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitFunctionStmt(this);
+  }
+}
+
+export class Return extends Stmt {
+  constructor(public readonly value: Expr | null) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitReturnStmt(this);
   }
 }
