@@ -1,8 +1,8 @@
 // @ts-ignore
 import { expect, test } from 'bun:test';
-import scan from './Scanner';
-import parse from './parser';
-import { PhpPrinter } from './PhpPrinter';
+import scan from '../Scanner';
+import parse from '../parser';
+import { PhpPrinter } from '../PhpPrinter';
 
 function print(source: string): string {
   let tokens = scan(source);

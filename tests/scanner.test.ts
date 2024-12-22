@@ -1,7 +1,7 @@
 // @ts-ignore
 import { expect, test } from 'bun:test';
-import { Token, TokenType } from './Token';
-import scan from './Scanner';
+import { Token, TokenType } from '../Token';
+import scan from '../Scanner';
 
 const eof = new Token(TokenType.EOF, '', null, 1);
 
