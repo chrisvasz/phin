@@ -52,6 +52,7 @@ const {
   TRUE,
   VAL,
   VAR,
+  WHILE,
 } = TokenType;
 
 const keywords = new Map<string, TokenType>([
@@ -70,6 +71,7 @@ const keywords = new Map<string, TokenType>([
   ['true', TRUE],
   ['val', VAL],
   ['var', VAR],
+  ['while', WHILE],
 ]);
 
 export default function scan(source: string): Token[] {

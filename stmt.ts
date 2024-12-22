@@ -16,6 +16,7 @@ export interface Visitor<T> {
   visitVarStmt(stmt: Var): T;
   visitEchoStmt(stmt: Echo): T;
   visitExpressionStmt(stmt: Expression): T;
+  visitWhileStmt(stmt: While): T;
 }
 
 export class If extends Stmt {
@@ -68,5 +69,14 @@ export class Expression extends Stmt {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitExpressionStmt(this);
+  }
+}
+
+export class While extends Stmt {
+  constructor(public readonly condition: Expr, public readonly body: Stmt) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitWhileStmt(this);
   }
 }

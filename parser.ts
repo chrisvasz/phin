@@ -56,6 +56,7 @@ const {
   TRUE,
   VAL,
   VAR,
+  WHILE,
 } = TokenType;
 const terminators = [SEMICOLON, EOL, EOF];
 
@@ -120,6 +121,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   function statement(): Stmt {
     if (match(IF)) return ifStatement();
     if (match(ECHO)) return echoStatement();
+    if (match(WHILE)) return whileStatement();
     if (match(LEFT_BRACE)) return new stmt.Block(block());
     return expressionStatement();
   }
@@ -140,6 +142,14 @@ export default function parse(tokens: Token[]): Stmt[] {
     let result = expression();
     consume('Expect terminator after echo statement', ...terminators);
     return new stmt.Echo(result);
+  }
+
+  function whileStatement(): Stmt {
+    consume('Expect "(" after "while"', LEFT_PAREN);
+    let condition = expression();
+    consume('Expect ")" after while condition', RIGHT_PAREN);
+    let body = statement();
+    return new stmt.While(condition, body);
   }
 
   function block(): Stmt[] {

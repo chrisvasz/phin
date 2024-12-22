@@ -265,6 +265,7 @@ test('keywords', () => {
     true: TokenType.TRUE,
     val: TokenType.VAL,
     var: TokenType.VAR,
+    while: TokenType.WHILE,
   };
   const source = Object.keys(list);
   const tokens = Object.values(list).map(
