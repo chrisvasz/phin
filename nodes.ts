@@ -9,6 +9,7 @@ export abstract class Expr {
 }
 
 export interface Visitor<T> {
+  visitVarStatement(stmt: VarStatement): T;
   visitEchoStatement(stmt: EchoStatement): T;
   visitExpressionStatement(stmt: ExpressionStatement): T;
   visitBinary(expr: Binary): T;
@@ -18,6 +19,19 @@ export interface Visitor<T> {
   visitBooleanLiteral(expr: BooleanLiteral): T;
   visitNullLiteral(expr: NullLiteral): T;
   visitUnary(expr: Unary): T;
+  visitVariable(expr: Variable): T;
+}
+
+export class VarStatement extends Stmt {
+  constructor(
+    public readonly name: Token,
+    public readonly initializer: Expr | null,
+  ) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitVarStatement(this);
+  }
 }
 
 export class EchoStatement extends Stmt {
@@ -99,5 +113,14 @@ export class Unary extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitUnary(this);
+  }
+}
+
+export class Variable extends Expr {
+  constructor(public readonly name: Token) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitVariable(this);
   }
 }

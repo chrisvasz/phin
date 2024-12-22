@@ -9,6 +9,8 @@ import {
   Stmt,
   StringLiteral,
   Unary,
+  Variable,
+  VarStatement,
 } from './nodes';
 import { Token, TokenType } from './Token';
 
@@ -53,6 +55,7 @@ const {
   EOL,
   EOF,
 } = TokenType;
+const terminators = [SEMICOLON, EOL, EOF];
 
 class ParseError extends Error {}
 
@@ -63,7 +66,8 @@ export default function parse(tokens: Token[]): Stmt[] {
   function parse(): Stmt[] {
     const statements: Stmt[] = [];
     while (!isAtEnd()) {
-      statements.push(statement());
+      const next = declaration();
+      if (next) statements.push(next);
     }
     return statements;
   }
@@ -86,6 +90,27 @@ export default function parse(tokens: Token[]): Stmt[] {
     }
   }
 
+  function declaration(): Stmt | null {
+    try {
+      if (match(VAR)) return varDeclaration();
+      return statement();
+    } catch (error) {
+      if (!(error instanceof ParseError)) throw error;
+      synchronize();
+      return null;
+    }
+  }
+
+  function varDeclaration(): Stmt {
+    let name = consume('Expect variable name', IDENTIFIER);
+    let initializer: Expr | null = null;
+    if (match(EQUAL)) {
+      initializer = expression();
+    }
+    consume('Expect terminator after variable declaration', ...terminators);
+    return new VarStatement(name, initializer);
+  }
+
   function statement(): Stmt {
     if (match(ECHO)) return echoStatement();
     return expressionStatement();
@@ -93,18 +118,13 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function echoStatement(): Stmt {
     let expr = expression();
-    consume('Expect terminator after echo statement.', SEMICOLON, EOL, EOF);
+    consume('Expect terminator after echo statement', ...terminators);
     return new ExpressionStatement(expr);
   }
 
   function expressionStatement(): Stmt {
     let expr = expression();
-    consume(
-      'Expect terminator after expression statement.',
-      SEMICOLON,
-      EOL,
-      EOF,
-    );
+    consume('Expect terminator after expression statement', ...terminators);
     return new ExpressionStatement(expr);
   }
 
@@ -169,10 +189,11 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(STRING)) return new StringLiteral(previous().literal);
     if (match(LEFT_PAREN)) {
       let expr = expression();
-      consume('Expect ")" after expression.', RIGHT_PAREN);
+      consume('Expect ")" after expression', RIGHT_PAREN);
       return new Grouping(expr);
     }
-    throw error(peek(), 'Expect expression.');
+    if (match(IDENTIFIER)) return new Variable(previous());
+    throw error(peek(), 'Expect expression');
   }
 
   function match(...types: TokenType[]): boolean {

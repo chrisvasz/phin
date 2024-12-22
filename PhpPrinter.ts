@@ -9,6 +9,8 @@ import {
   NumberLiteral,
   StringLiteral,
   Unary,
+  Variable,
+  VarStatement,
   Visitor,
 } from './nodes';
 
@@ -17,12 +19,20 @@ export class PhpPrinter implements Visitor<string> {
     return expr.accept(this);
   }
 
+  visitVarStatement(stmt: VarStatement): string {
+    let result = `$${stmt.name.lexeme}`;
+    if (stmt.initializer) {
+      result += ` = ${stmt.initializer.accept(this)}`;
+    }
+    return result + ';';
+  }
+
   visitEchoStatement(stmt: EchoStatement): string {
     return `echo ${stmt.expression.accept(this)};`;
   }
 
   visitExpressionStatement(stmt: ExpressionStatement): string {
-    return stmt.expression.accept(this);
+    return `${stmt.expression.accept(this)};`;
   }
 
   visitNumberLiteral(expr: NumberLiteral): string {
@@ -30,6 +40,7 @@ export class PhpPrinter implements Visitor<string> {
   }
 
   visitStringLiteral(expr: StringLiteral): string {
+    // TODO escape " characters
     return `"${expr.value}"`;
   }
 
@@ -53,5 +64,9 @@ export class PhpPrinter implements Visitor<string> {
 
   visitUnary(expr: Unary): string {
     return `${expr.operator.lexeme}${expr.right.accept(this)}`;
+  }
+
+  visitVariable(expr: Variable): string {
+    return `$${expr.name.lexeme}`;
   }
 }
