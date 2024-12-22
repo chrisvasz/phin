@@ -4,6 +4,7 @@ import scan from './Scanner';
 import parse from './parser';
 import { Block, Echo, Expression, If, Var } from './stmt';
 import * as expr from './expr';
+import * as type from './type';
 import { Token, TokenType } from './Token';
 
 describe('literals', () => {
@@ -284,7 +285,7 @@ describe('variable declarations', () => {
   test('var x', () => {
     let source = 'var x';
     let expected = [
-      new Var(new Token(TokenType.IDENTIFIER, 'x', undefined, 1), null),
+      new Var(new Token(TokenType.IDENTIFIER, 'x', undefined, 1), null, null),
     ];
     let tokens = scan(source);
     let ast = parse(tokens);
@@ -297,6 +298,7 @@ describe('variable declarations', () => {
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
         new expr.NumberLiteral(3),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -314,6 +316,7 @@ describe('variable declarations', () => {
           new Token(TokenType.PLUS, '+', undefined, 1),
           new expr.NumberLiteral(1),
         ),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -331,11 +334,201 @@ describe('variable declarations', () => {
           new Token(TokenType.PLUS, '+', undefined, 1),
           new expr.NumberLiteral(1),
         ),
+        null,
       ),
-      new Var(new Token(TokenType.IDENTIFIER, 'y', undefined, 1), null),
+      new Var(new Token(TokenType.IDENTIFIER, 'y', undefined, 1), null, null),
       new Var(
         new Token(TokenType.IDENTIFIER, 'z', undefined, 1),
         new expr.StringLiteral('hello'),
+        null,
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var x: number', () => {
+    let source = 'var x: number';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
+        new type.Number(),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var x: number = 3', () => {
+    let source = 'var x: number = 3';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        new expr.NumberLiteral(3),
+        new type.Number(),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var x: string', () => {
+    let source = 'var x: string';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
+        new type.String(),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var x: boolean', () => {
+    let source = 'var x: boolean';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
+        new type.Boolean(),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var x: null', () => {
+    let source = 'var x: null';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
+        new type.Null(),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var x: 5', () => {
+    let source = 'var x: 5';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
+        new type.NumberLiteral(5),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var x: "hello"', () => {
+    let source = 'var x: "hello"';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
+        new type.StringLiteral('hello'),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var x: Class', () => {
+    let source = 'var x: Class';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
+        new type.Identifier('Class', null),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var x: true', () => {
+    let source = 'var x: true';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
+        new type.True(),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var x: false', () => {
+    let source = 'var x: false';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
+        new type.False(),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var x: array', () => {
+    let source = 'var x: array';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
+        new type.Identifier('array', null),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var x: array<number>', () => {
+    let source = 'var x: array<number>';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
+        new type.Identifier('array', new type.Number()),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var x: array<array<array<number>>>', () => {
+    let source = 'var x: array<array<array<number>>>';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
+        new type.Identifier(
+          'array',
+          new type.Identifier(
+            'array',
+            new type.Identifier('array', new type.Number()),
+          ),
+        ),
       ),
     ];
     let tokens = scan(source);

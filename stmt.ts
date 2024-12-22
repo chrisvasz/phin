@@ -1,5 +1,6 @@
 import { Expr } from './expr';
 import { Token } from './Token';
+import { Type } from './type';
 
 function indent(depth: number): string {
   return '  '.repeat(depth);
@@ -43,6 +44,7 @@ export class Var extends Stmt {
   constructor(
     public readonly name: Token,
     public readonly initializer: Expr | null,
+    public readonly type: Type | null,
   ) {
     super();
   }

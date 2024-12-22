@@ -3,6 +3,8 @@ import * as stmt from './stmt';
 import { Stmt } from './stmt';
 import * as expr from './expr';
 import { Expr } from './expr';
+import * as types from './type';
+import { Type } from './type';
 
 const {
   LEFT_PAREN,
@@ -11,6 +13,8 @@ const {
   RIGHT_BRACE,
   COMMA,
   DOT,
+  COLON,
+  COLON_COLON,
   MINUS,
   PLUS,
   SEMICOLON,
@@ -94,11 +98,15 @@ export default function parse(tokens: Token[]): Stmt[] {
   function varDeclaration(): Stmt {
     let name = consume('Expect variable name', IDENTIFIER);
     let initializer: Expr | null = null;
+    let typeDefinition: Type | null = null;
+    if (match(COLON)) {
+      typeDefinition = type();
+    }
     if (match(EQUAL)) {
       initializer = expression();
     }
     consume('Expect terminator after variable declaration', ...terminators);
-    return new stmt.Var(name, initializer);
+    return new stmt.Var(name, initializer, typeDefinition);
   }
 
   function statement(): Stmt {
@@ -209,18 +217,43 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function primary(): Expr {
-    if (match(FALSE)) return new expr.BooleanLiteral(false);
-    if (match(TRUE)) return new expr.BooleanLiteral(true);
     if (match(NULL)) return new expr.NullLiteral();
     if (match(NUMBER)) return new expr.NumberLiteral(previous().literal);
     if (match(STRING)) return new expr.StringLiteral(previous().literal);
-    if (match(LEFT_PAREN)) {
-      let result = expression();
-      consume('Expect ")" after expression', RIGHT_PAREN);
-      return new expr.Grouping(result);
-    }
+    if (match(TRUE)) return new expr.BooleanLiteral(true);
+    if (match(FALSE)) return new expr.BooleanLiteral(false);
+    if (match(LEFT_PAREN)) return grouping();
     if (match(IDENTIFIER)) return new expr.Variable(previous());
     throw error(peek(), 'Expect expression');
+  }
+
+  function grouping(): Expr {
+    let result = expression();
+    consume('Expect ")" after expression', RIGHT_PAREN);
+    return new expr.Grouping(result);
+  }
+
+  function type(): Type {
+    if (match(NULL)) return new types.Null();
+    if (match(NUMBER)) return new types.NumberLiteral(previous().literal);
+    if (match(STRING)) return new types.StringLiteral(previous().literal);
+    if (match(TRUE)) return new types.True();
+    if (match(FALSE)) return new types.False();
+    if (match(IDENTIFIER)) return typeIdentifier();
+    throw error(peek(), 'Expect type annotation');
+  }
+
+  function typeIdentifier(): Type {
+    let lexeme = previous().lexeme;
+    if (lexeme === 'number') return new types.Number();
+    if (lexeme === 'string') return new types.String();
+    if (lexeme === 'boolean') return new types.Boolean();
+    let generic: Type | null = null;
+    if (match(LESS)) {
+      generic = type();
+      consume('Expect ">" after generic type', GREATER);
+    }
+    return new types.Identifier(lexeme, generic);
   }
 
   function match(...types: TokenType[]): boolean {
