@@ -101,15 +101,15 @@ export default function parse(tokens: Token[]): Stmt[] {
   function varDeclaration(): Stmt {
     let name = consume('Expect variable name', IDENTIFIER);
     let initializer: Expr | null = null;
-    let typeDefinition: Type | null = null;
+    let type: Type | null = null;
     if (match(COLON)) {
-      typeDefinition = typeAnnotation();
+      type = typeAnnotation();
     }
     if (match(EQUAL)) {
       initializer = expression();
     }
     consume('Expect terminator after variable declaration', ...terminators);
-    return new stmt.Var(name, initializer, typeDefinition);
+    return new stmt.Var(name, type, initializer);
   }
 
   function statement(): Stmt {
@@ -309,8 +309,8 @@ export default function parse(tokens: Token[]): Stmt[] {
     return false;
   }
 
-  function consume(message: string, ...types: TokenType[]): Token {
-    for (let type of types) {
+  function consume(message: string, ...anyOf: TokenType[]): Token {
+    for (let type of anyOf) {
       if (check(type)) {
         return advance();
       }

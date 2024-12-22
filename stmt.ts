@@ -43,8 +43,8 @@ export class Block extends Stmt {
 export class Var extends Stmt {
   constructor(
     public readonly name: Token,
-    public readonly initializer: Expr | null,
     public readonly type: Type | null,
+    public readonly initializer: Expr | null,
   ) {
     super();
   }

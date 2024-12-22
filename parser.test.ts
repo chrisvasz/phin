@@ -297,8 +297,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        new expr.NumberLiteral(3),
         null,
+        new expr.NumberLiteral(3),
       ),
     ];
     let tokens = scan(source);
@@ -311,12 +311,12 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
         new expr.Binary(
           new expr.NumberLiteral(3),
           new Token(TokenType.PLUS, '+', undefined, 1),
           new expr.NumberLiteral(1),
         ),
-        null,
       ),
     ];
     let tokens = scan(source);
@@ -329,18 +329,18 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
         new expr.Binary(
           new expr.NumberLiteral(3),
           new Token(TokenType.PLUS, '+', undefined, 1),
           new expr.NumberLiteral(1),
         ),
-        null,
       ),
       new Var(new Token(TokenType.IDENTIFIER, 'y', undefined, 1), null, null),
       new Var(
         new Token(TokenType.IDENTIFIER, 'z', undefined, 1),
-        new expr.StringLiteral('hello'),
         null,
+        new expr.StringLiteral('hello'),
       ),
     ];
     let tokens = scan(source);
@@ -353,8 +353,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.Number(),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -367,8 +367,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        new expr.NumberLiteral(3),
         new type.Number(),
+        new expr.NumberLiteral(3),
       ),
     ];
     let tokens = scan(source);
@@ -381,8 +381,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.String(),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -395,8 +395,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.Boolean(),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -409,8 +409,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.Null(),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -423,8 +423,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.NumberLiteral(5),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -437,8 +437,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.StringLiteral('hello'),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -451,8 +451,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.Identifier('Class', []),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -465,8 +465,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.True(),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -479,8 +479,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.False(),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -493,8 +493,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.Identifier('array', []),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -507,8 +507,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.Identifier('array', [new type.Number()]),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -521,12 +521,12 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.Identifier('array', [
           new type.Identifier('array', [
             new type.Identifier('array', [new type.Number()]),
           ]),
         ]),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -539,10 +539,10 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.Identifier('array', [
           new type.Union([new type.Number(), new type.String()]),
         ]),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -555,8 +555,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.Identifier('array', [new type.String(), new type.Number()]),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -569,12 +569,12 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.Identifier('array', [
           new type.Union([new type.String(), new type.Number()]),
           new type.Intersection([new type.Number(), new type.Null()]),
           new type.Nullable(new type.NumberLiteral(5)),
         ]),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -587,8 +587,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.Nullable(new type.Number()),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -601,8 +601,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.Union([new type.String(), new type.Number()]),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -615,8 +615,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.Union([new type.String(), new type.Number(), new type.Null()]),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -629,8 +629,8 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.Intersection([new type.String(), new type.Number()]),
+        null,
       ),
     ];
     let tokens = scan(source);
@@ -643,12 +643,12 @@ describe('variable declarations', () => {
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
-        null,
         new type.Intersection([
           new type.String(),
           new type.Number(),
           new type.Null(),
         ]),
+        null,
       ),
     ];
     let tokens = scan(source);
