@@ -1,24 +1,9 @@
-import {
-  Assign,
-  Binary,
-  Block,
-  BooleanLiteral,
-  EchoStatement,
-  Expr,
-  ExpressionStatement,
-  Grouping,
-  If,
-  NullLiteral,
-  NumberLiteral,
-  Stmt,
-  StringLiteral,
-  Unary,
-  Variable,
-  VarStatement,
-  Visitor,
-} from './nodes';
+import * as stmt from './stmt';
+import { Stmt } from './stmt';
+import * as expr from './expr';
+import { Expr } from './expr';
 
-export class PhpPrinter implements Visitor<string> {
+export class PhpPrinter implements expr.Visitor<string>, stmt.Visitor<string> {
   printStatements(statements: Stmt[]): string {
     return statements.map(s => s.accept(this)).join('\n');
   }
@@ -27,11 +12,11 @@ export class PhpPrinter implements Visitor<string> {
     return expr.accept(this);
   }
 
-  visitBlock(stmt: Block): string {
+  visitBlockStmt(stmt: stmt.Block): string {
     return ['{', ...stmt.statements.map(s => s.accept(this)), '}'].join('\n');
   }
 
-  visitIf({ condition, thenBranch, elseBranch }: If): string {
+  visitIfStmt({ condition, thenBranch, elseBranch }: stmt.If): string {
     let result = `if (${condition.accept(this)}) ${thenBranch.accept(this)}`;
     if (elseBranch) {
       result += ` else ${elseBranch.accept(this)}`;
@@ -39,7 +24,7 @@ export class PhpPrinter implements Visitor<string> {
     return result;
   }
 
-  visitVarStatement(stmt: VarStatement): string {
+  visitVarStmt(stmt: stmt.Var): string {
     let result = `$${stmt.name.lexeme}`;
     if (stmt.initializer) {
       result += ` = ${stmt.initializer.accept(this)}`;
@@ -47,50 +32,50 @@ export class PhpPrinter implements Visitor<string> {
     return result + ';';
   }
 
-  visitEchoStatement(stmt: EchoStatement): string {
+  visitEchoStmt(stmt: stmt.Echo): string {
     return `echo ${stmt.expression.accept(this)};`;
   }
 
-  visitExpressionStatement(stmt: ExpressionStatement): string {
+  visitExpressionStmt(stmt: stmt.Expression): string {
     return `${stmt.expression.accept(this)};`;
   }
 
-  visitAssign(expr: Assign): string {
+  visitAssignExpr(expr: expr.Assign): string {
     return `$${expr.name.lexeme} = ${expr.value.accept(this)}`;
   }
 
-  visitNumberLiteral(expr: NumberLiteral): string {
+  visitNumberLiteralExpr(expr: expr.NumberLiteral): string {
     return expr.value.toString();
   }
 
-  visitStringLiteral(expr: StringLiteral): string {
+  visitStringLiteralExpr(expr: expr.StringLiteral): string {
     // TODO escape " characters
     return `"${expr.value}"`;
   }
 
-  visitBooleanLiteral(expr: BooleanLiteral): string {
+  visitBooleanLiteralExpr(expr: expr.BooleanLiteral): string {
     return expr.value ? 'true' : 'false';
   }
 
-  visitNullLiteral(expr: NullLiteral): string {
+  visitNullLiteralExpr(expr: expr.NullLiteral): string {
     return 'null';
   }
 
-  visitBinary(expr: Binary): string {
+  visitBinaryExpr(expr: expr.Binary): string {
     const left = expr.left.accept(this);
     const right = expr.right.accept(this);
     return `${left} ${expr.operator.lexeme} ${right}`;
   }
 
-  visitGrouping(expr: Grouping): string {
+  visitGroupingExpr(expr: expr.Grouping): string {
     return `(${expr.expression.accept(this)})`;
   }
 
-  visitUnary(expr: Unary): string {
+  visitUnaryExpr(expr: expr.Unary): string {
     return `${expr.operator.lexeme}${expr.right.accept(this)}`;
   }
 
-  visitVariable(expr: Variable): string {
+  visitVariableExpr(expr: expr.Variable): string {
     return `$${expr.name.lexeme}`;
   }
 }

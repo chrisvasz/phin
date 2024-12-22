@@ -1,21 +1,8 @@
-import {
-  Assign,
-  Binary,
-  Block,
-  BooleanLiteral,
-  Expr,
-  ExpressionStatement,
-  Grouping,
-  If,
-  NullLiteral,
-  NumberLiteral,
-  Stmt,
-  StringLiteral,
-  Unary,
-  Variable,
-  VarStatement,
-} from './nodes';
 import { Token, TokenType } from './Token';
+import * as stmt from './stmt';
+import { Stmt } from './stmt';
+import * as expr from './expr';
+import { Expr } from './expr';
 
 const {
   LEFT_PAREN,
@@ -111,13 +98,13 @@ export default function parse(tokens: Token[]): Stmt[] {
       initializer = expression();
     }
     consume('Expect terminator after variable declaration', ...terminators);
-    return new VarStatement(name, initializer);
+    return new stmt.Var(name, initializer);
   }
 
   function statement(): Stmt {
     if (match(IF)) return ifStatement();
     if (match(ECHO)) return echoStatement();
-    if (match(LEFT_BRACE)) return new Block(block());
+    if (match(LEFT_BRACE)) return new stmt.Block(block());
     return expressionStatement();
   }
 
@@ -130,13 +117,13 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(ELSE)) {
       elseBranch = statement();
     }
-    return new If(condition, thenBranch, elseBranch);
+    return new stmt.If(condition, thenBranch, elseBranch);
   }
 
   function echoStatement(): Stmt {
-    let expr = expression();
+    let result = expression();
     consume('Expect terminator after echo statement', ...terminators);
-    return new ExpressionStatement(expr);
+    return new stmt.Expression(result);
   }
 
   function block(): Stmt[] {
@@ -150,9 +137,9 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function expressionStatement(): Stmt {
-    let expr = expression();
+    let result = expression();
     consume('Expect terminator after expression statement', ...terminators);
-    return new ExpressionStatement(expr);
+    return new stmt.Expression(result);
   }
 
   function expression(): Expr {
@@ -160,79 +147,79 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function assignment(): Expr {
-    let expr = equality();
+    let result = equality();
     if (match(EQUAL)) {
       let equals = previous();
       let value = assignment();
-      if (expr instanceof Variable) {
-        return new Assign(expr.name, value);
+      if (result instanceof expr.Variable) {
+        return new expr.Assign(result.name, value);
       }
       throw error(equals, 'Invalid assignment target');
     }
-    return expr;
+    return result;
   }
 
   function equality(): Expr {
-    let expr = comparison();
+    let result = comparison();
     while (match(BANG_EQUAL, EQUAL_EQUAL)) {
       let operator = previous();
       let right = comparison();
-      expr = new Binary(expr, operator, right);
+      result = new expr.Binary(result, operator, right);
     }
-    return expr;
+    return result;
   }
 
   function comparison(): Expr {
-    let expr = term();
+    let result = term();
     while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
       let operator = previous();
       let right = term();
-      expr = new Binary(expr, operator, right);
+      result = new expr.Binary(result, operator, right);
     }
-    return expr;
+    return result;
   }
 
   function term(): Expr {
-    let expr = factor();
+    let result = factor();
     while (match(MINUS, PLUS)) {
       let operator = previous();
       let right = factor();
-      expr = new Binary(expr, operator, right);
+      result = new expr.Binary(result, operator, right);
     }
-    return expr;
+    return result;
   }
 
   function factor(): Expr {
-    let expr = unary();
+    let result = unary();
     while (match(SLASH, STAR)) {
       let operator = previous();
       let right = unary();
-      expr = new Binary(expr, operator, right);
+      result = new expr.Binary(result, operator, right);
     }
-    return expr;
+    return result;
   }
 
   function unary(): Expr {
     if (match(BANG, MINUS)) {
       let operator = previous();
       let right = unary();
-      return new Unary(operator, right);
+      return new expr.Unary(operator, right);
     }
     return primary();
   }
 
   function primary(): Expr {
-    if (match(FALSE)) return new BooleanLiteral(false);
-    if (match(TRUE)) return new BooleanLiteral(true);
-    if (match(NULL)) return new NullLiteral();
-    if (match(NUMBER)) return new NumberLiteral(previous().literal);
-    if (match(STRING)) return new StringLiteral(previous().literal);
+    if (match(FALSE)) return new expr.BooleanLiteral(false);
+    if (match(TRUE)) return new expr.BooleanLiteral(true);
+    if (match(NULL)) return new expr.NullLiteral();
+    if (match(NUMBER)) return new expr.NumberLiteral(previous().literal);
+    if (match(STRING)) return new expr.StringLiteral(previous().literal);
     if (match(LEFT_PAREN)) {
-      let expr = expression();
+      let result = expression();
       consume('Expect ")" after expression', RIGHT_PAREN);
-      return new Grouping(expr);
+      return new expr.Grouping(result);
     }
-    if (match(IDENTIFIER)) return new Variable(previous());
+    if (match(IDENTIFIER)) return new expr.Variable(previous());
     throw error(peek(), 'Expect expression');
   }
 
