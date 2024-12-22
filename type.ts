@@ -9,6 +9,7 @@ export interface Visitor<T> {
   visitTrueType(true_: True): T;
   visitFalseType(false_: False): T;
   visitNullableType(nullable: Nullable): T;
+  visitUnionType(union: Union): T;
 }
 
 export abstract class Type {
@@ -87,5 +88,14 @@ export class Nullable extends Type {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitNullableType(this);
+  }
+}
+
+export class Union extends Type {
+  constructor(public readonly types: Type[]) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitUnionType(this);
   }
 }

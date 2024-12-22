@@ -16,6 +16,7 @@ const {
   COLON,
   COLON_COLON,
   QUESTION,
+  PIPE,
   MINUS,
   PLUS,
   SEMICOLON,
@@ -101,7 +102,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     let initializer: Expr | null = null;
     let typeDefinition: Type | null = null;
     if (match(COLON)) {
-      typeDefinition = type();
+      typeDefinition = typeAnnotation();
     }
     if (match(EQUAL)) {
       initializer = expression();
@@ -234,6 +235,19 @@ export default function parse(tokens: Token[]): Stmt[] {
     return new expr.Grouping(result);
   }
 
+  function typeAnnotation(): Type {
+    return typeUnion();
+  }
+
+  function typeUnion(): Type {
+    let elements = [type()];
+    while (match(PIPE)) {
+      elements.push(type());
+    }
+    if (elements.length === 1) return elements[0];
+    return new types.Union(elements);
+  }
+
   function type(): Type {
     if (match(QUESTION)) return new types.Nullable(type());
     if (match(NULL)) return new types.Null();
@@ -252,8 +266,8 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (lexeme === 'bool') return new types.Boolean();
     let generic: Type | null = null;
     if (match(LESS)) {
-      generic = type();
-      consume('Expect ">" after generic type', GREATER);
+      generic = typeUnion();
+      consume('Expect ">" after type generic', GREATER);
     }
     return new types.Identifier(lexeme, generic);
   }
