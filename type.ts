@@ -8,6 +8,7 @@ export interface Visitor<T> {
   visitStringLiteralType(stringLiteral: StringLiteral): T;
   visitTrueType(true_: True): T;
   visitFalseType(false_: False): T;
+  visitNullableType(nullable: Nullable): T;
 }
 
 export abstract class Type {
@@ -77,5 +78,14 @@ export class True extends Type {
 export class False extends Type {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitFalseType(this);
+  }
+}
+
+export class Nullable extends Type {
+  constructor(public readonly type: Type) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitNullableType(this);
   }
 }

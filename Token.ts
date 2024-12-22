@@ -21,6 +21,7 @@ export enum TokenType {
   DOT,
   COLON,
   COLON_COLON,
+  QUESTION,
   MINUS,
   PLUS,
   SEMICOLON,

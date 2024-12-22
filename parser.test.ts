@@ -536,6 +536,20 @@ describe('variable declarations', () => {
     expect(ast).toEqual(expected);
   });
 
+  test('var x: ?number', () => {
+    let source = 'var x: ?number';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
+        new type.Nullable(new type.Number()),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
   test('abc = 123', () => {
     let source = 'abc = 123';
     let expected = [

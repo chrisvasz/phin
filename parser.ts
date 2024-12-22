@@ -15,6 +15,7 @@ const {
   DOT,
   COLON,
   COLON_COLON,
+  QUESTION,
   MINUS,
   PLUS,
   SEMICOLON,
@@ -234,6 +235,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function type(): Type {
+    if (match(QUESTION)) return new types.Nullable(type());
     if (match(NULL)) return new types.Null();
     if (match(NUMBER)) return new types.NumberLiteral(previous().literal);
     if (match(STRING)) return new types.StringLiteral(previous().literal);

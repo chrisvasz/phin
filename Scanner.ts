@@ -9,6 +9,7 @@ const {
   DOT,
   COLON,
   COLON_COLON,
+  QUESTION,
   MINUS,
   PLUS,
   SEMICOLON,
@@ -86,6 +87,7 @@ export default function scan(source: string): Token[] {
   chars[code('<')] = () => addToken(match('=') ? LESS_EQUAL : LESS);
   chars[code('>')] = () => addToken(match('=') ? GREATER_EQUAL : GREATER);
   chars[code(':')] = () => addToken(match(':') ? COLON_COLON : COLON);
+  chars[code('?')] = () => addToken(QUESTION);
   chars[code('"')] = string;
   chars[code('/')] = slash;
   chars[code(' ')] = () => {};
