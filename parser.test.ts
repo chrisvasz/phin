@@ -452,7 +452,7 @@ describe('variable declarations', () => {
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
         null,
-        new type.Identifier('Class', null),
+        new type.Identifier('Class', []),
       ),
     ];
     let tokens = scan(source);
@@ -494,7 +494,7 @@ describe('variable declarations', () => {
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
         null,
-        new type.Identifier('array', null),
+        new type.Identifier('array', []),
       ),
     ];
     let tokens = scan(source);
@@ -508,7 +508,7 @@ describe('variable declarations', () => {
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
         null,
-        new type.Identifier('array', new type.Number()),
+        new type.Identifier('array', [new type.Number()]),
       ),
     ];
     let tokens = scan(source);
@@ -522,13 +522,11 @@ describe('variable declarations', () => {
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
         null,
-        new type.Identifier(
-          'array',
-          new type.Identifier(
-            'array',
-            new type.Identifier('array', new type.Number()),
-          ),
-        ),
+        new type.Identifier('array', [
+          new type.Identifier('array', [
+            new type.Identifier('array', [new type.Number()]),
+          ]),
+        ]),
       ),
     ];
     let tokens = scan(source);
@@ -542,10 +540,23 @@ describe('variable declarations', () => {
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
         null,
-        new type.Identifier(
-          'array',
+        new type.Identifier('array', [
           new type.Union([new type.Number(), new type.String()]),
-        ),
+        ]),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var x: array<string,number>', () => {
+    let source = 'var x: array<string,number>';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
+        new type.Identifier('array', [new type.String(), new type.Number()]),
       ),
     ];
     let tokens = scan(source);

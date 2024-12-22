@@ -236,6 +236,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function typeAnnotation(): Type {
+    if (match(QUESTION)) return typeNullable();
     return typeUnion();
   }
 
@@ -248,8 +249,11 @@ export default function parse(tokens: Token[]): Stmt[] {
     return new types.Union(elements);
   }
 
+  function typeNullable(): Type {
+    return new types.Nullable(type());
+  }
+
   function type(): Type {
-    if (match(QUESTION)) return new types.Nullable(type());
     if (match(NULL)) return new types.Null();
     if (match(NUMBER)) return new types.NumberLiteral(previous().literal);
     if (match(STRING)) return new types.StringLiteral(previous().literal);
@@ -264,12 +268,23 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (lexeme === 'number') return new types.Number();
     if (lexeme === 'string') return new types.String();
     if (lexeme === 'bool') return new types.Boolean();
-    let generic: Type | null = null;
+    return new types.Identifier(lexeme, typeGenerics());
+  }
+
+  function typeGenerics(): Type[] {
+    let generics: Type[] = [];
     if (match(LESS)) {
-      generic = typeUnion();
-      consume('Expect ">" after type generic', GREATER);
+      generics.push(typeGeneric());
+      while (match(COMMA)) {
+        generics.push(typeGeneric());
+      }
+      consume('Expect ">" after type generics', GREATER);
     }
-    return new types.Identifier(lexeme, generic);
+    return generics;
+  }
+
+  function typeGeneric(): Type {
+    return typeUnion();
   }
 
   function match(...types: TokenType[]): boolean {

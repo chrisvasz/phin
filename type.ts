@@ -41,10 +41,7 @@ export class Null extends Type {
 }
 
 export class Identifier extends Type {
-  constructor(
-    public readonly name: string,
-    public readonly generic: Type | null,
-  ) {
+  constructor(public readonly name: string, public readonly generics: Type[]) {
     super();
   }
   accept<T>(visitor: Visitor<T>): T {
