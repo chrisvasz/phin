@@ -151,6 +151,110 @@ test(`1\n2`, () => {
   expect(ast).toEqual(expected);
 });
 
+test('1 > 2', () => {
+  let source = '1 > 2';
+  let expected = [
+    new ExpressionStatement(
+      new Binary(
+        new NumberLiteral(1),
+        new Token(TokenType.GREATER, '>', undefined, 1),
+        new NumberLiteral(2),
+      ),
+    ),
+  ];
+  let tokens = scan(source);
+  let ast = parse(tokens);
+  expect(ast).toEqual(expected);
+});
+
+test('1 >= 2', () => {
+  let source = '1 >= 2';
+  let expected = [
+    new ExpressionStatement(
+      new Binary(
+        new NumberLiteral(1),
+        new Token(TokenType.GREATER_EQUAL, '>=', undefined, 1),
+        new NumberLiteral(2),
+      ),
+    ),
+  ];
+  let tokens = scan(source);
+  let ast = parse(tokens);
+  expect(ast).toEqual(expected);
+});
+
+test('1 < 2', () => {
+  let source = '1 < 2';
+  let expected = [
+    new ExpressionStatement(
+      new Binary(
+        new NumberLiteral(1),
+        new Token(TokenType.LESS, '<', undefined, 1),
+        new NumberLiteral(2),
+      ),
+    ),
+  ];
+  let tokens = scan(source);
+  let ast = parse(tokens);
+  expect(ast).toEqual(expected);
+});
+
+test('1 <= 2', () => {
+  let source = '1 <= 2';
+  let expected = [
+    new ExpressionStatement(
+      new Binary(
+        new NumberLiteral(1),
+        new Token(TokenType.LESS_EQUAL, '<=', undefined, 1),
+        new NumberLiteral(2),
+      ),
+    ),
+  ];
+  let tokens = scan(source);
+  let ast = parse(tokens);
+  expect(ast).toEqual(expected);
+});
+
+test('1 == 2', () => {
+  let source = '1 == 2';
+  let expected = [
+    new ExpressionStatement(
+      new Binary(
+        new NumberLiteral(1),
+        new Token(TokenType.EQUAL_EQUAL, '==', undefined, 1),
+        new NumberLiteral(2),
+      ),
+    ),
+  ];
+  let tokens = scan(source);
+  let ast = parse(tokens);
+  expect(ast).toEqual(expected);
+});
+
+test('1 != 2', () => {
+  let source = '1 != 2';
+  let expected = [
+    new ExpressionStatement(
+      new Binary(
+        new NumberLiteral(1),
+        new Token(TokenType.BANG_EQUAL, '!=', undefined, 1),
+        new NumberLiteral(2),
+      ),
+    ),
+  ];
+  let tokens = scan(source);
+  let ast = parse(tokens);
+  expect(ast).toEqual(expected);
+});
+
+test('"hello"', () => {
+  let source = '"hello"';
+  let expected = [new ExpressionStatement(new StringLiteral('hello'))];
+  let tokens = scan(source);
+  let ast = parse(tokens);
+  expect(ast).toEqual(expected);
+});
+
 test('echo "hello"', () => {
   let source = 'echo "hello"';
   let expected = [new EchoStatement(new StringLiteral('hello'))];
