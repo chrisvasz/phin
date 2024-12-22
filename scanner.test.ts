@@ -186,7 +186,7 @@ test('keywords', () => {
   expect(actual).toEqual(expected);
 });
 
-test.skip('malformed number', () => {
+test.todo('malformed number', () => {
   let source = '123.';
   expect(() => scan(source)).toThrow();
 });

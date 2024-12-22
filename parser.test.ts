@@ -6,9 +6,11 @@ import {
   Assign,
   Binary,
   Block,
+  BooleanLiteral,
   EchoStatement,
   ExpressionStatement,
   Grouping,
+  If,
   NullLiteral,
   NumberLiteral,
   StringLiteral,
@@ -348,6 +350,35 @@ test('{ 1; 2; }', () => {
       new ExpressionStatement(new NumberLiteral(1)),
       new ExpressionStatement(new NumberLiteral(2)),
     ]),
+  ];
+  let tokens = scan(source);
+  let ast = parse(tokens);
+  expect(ast).toEqual(expected);
+});
+
+test('if (true) 2', () => {
+  let source = 'if (true) 2';
+  let expected = [
+    new If(
+      new BooleanLiteral(true),
+      new ExpressionStatement(new NumberLiteral(2)),
+      null,
+    ),
+  ];
+  let tokens = scan(source);
+  let ast = parse(tokens);
+  expect(ast).toEqual(expected);
+});
+
+test('if (true) 2; else 3', () => {
+  // TODO don't require that ;
+  let source = 'if (true) 2; else 3';
+  let expected = [
+    new If(
+      new BooleanLiteral(true),
+      new ExpressionStatement(new NumberLiteral(2)),
+      new ExpressionStatement(new NumberLiteral(3)),
+    ),
   ];
   let tokens = scan(source);
   let ast = parse(tokens);

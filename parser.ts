@@ -6,6 +6,7 @@ import {
   Expr,
   ExpressionStatement,
   Grouping,
+  If,
   NullLiteral,
   NumberLiteral,
   Stmt,
@@ -114,9 +115,22 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function statement(): Stmt {
+    if (match(IF)) return ifStatement();
     if (match(ECHO)) return echoStatement();
     if (match(LEFT_BRACE)) return new Block(block());
     return expressionStatement();
+  }
+
+  function ifStatement(): Stmt {
+    consume('Expect "(" after "if"', LEFT_PAREN);
+    let condition = expression();
+    consume('Expect ")" after if condition', RIGHT_PAREN);
+    let thenBranch = statement();
+    let elseBranch: Stmt | null = null;
+    if (match(ELSE)) {
+      elseBranch = statement();
+    }
+    return new If(condition, thenBranch, elseBranch);
   }
 
   function echoStatement(): Stmt {

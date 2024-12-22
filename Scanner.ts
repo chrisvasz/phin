@@ -135,14 +135,10 @@ export default function scan(source: string): Token[] {
   }
 
   function string() {
-    while (peek() !== '"' && !isAtEnd()) {
-      if (peek() === '\n') {
-        console.error('Unterminated string on line ' + line);
-        return;
-      }
+    while (peek() !== '"' && peek() !== '\n' && !isAtEnd()) {
       advance();
     }
-    if (isAtEnd()) {
+    if (peek() !== '"') {
       console.error('Unterminated string on line ' + line);
       return;
     }

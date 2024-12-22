@@ -7,8 +7,10 @@ import {
   Expr,
   ExpressionStatement,
   Grouping,
+  If,
   NullLiteral,
   NumberLiteral,
+  Stmt,
   StringLiteral,
   Unary,
   Variable,
@@ -17,12 +19,24 @@ import {
 } from './nodes';
 
 export class PhpPrinter implements Visitor<string> {
-  print(expr: Expr): string {
+  printStatements(statements: Stmt[]): string {
+    return statements.map(s => s.accept(this)).join('\n');
+  }
+
+  printExpression(expr: Expr): string {
     return expr.accept(this);
   }
 
   visitBlock(stmt: Block): string {
     return ['{', ...stmt.statements.map(s => s.accept(this)), '}'].join('\n');
+  }
+
+  visitIf({ condition, thenBranch, elseBranch }: If): string {
+    let result = `if (${condition.accept(this)}) ${thenBranch.accept(this)}`;
+    if (elseBranch) {
+      result += ` else ${elseBranch.accept(this)}`;
+    }
+    return result;
   }
 
   visitVarStatement(stmt: VarStatement): string {

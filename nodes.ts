@@ -10,6 +10,7 @@ export abstract class Expr {
 
 export interface Visitor<T> {
   visitBlock(stmt: Block): T;
+  visitIf(stmt: If): T;
   visitVarStatement(stmt: VarStatement): T;
   visitEchoStatement(stmt: EchoStatement): T;
   visitExpressionStatement(stmt: ExpressionStatement): T;
@@ -22,6 +23,19 @@ export interface Visitor<T> {
   visitNullLiteral(expr: NullLiteral): T;
   visitUnary(expr: Unary): T;
   visitVariable(expr: Variable): T;
+}
+
+export class If extends Stmt {
+  constructor(
+    public readonly condition: Expr,
+    public readonly thenBranch: Stmt,
+    public readonly elseBranch: Stmt | null,
+  ) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitIf(this);
+  }
 }
 
 export class Block extends Stmt {
