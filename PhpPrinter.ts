@@ -1,6 +1,7 @@
 import {
   Assign,
   Binary,
+  Block,
   BooleanLiteral,
   EchoStatement,
   Expr,
@@ -18,6 +19,10 @@ import {
 export class PhpPrinter implements Visitor<string> {
   print(expr: Expr): string {
     return expr.accept(this);
+  }
+
+  visitBlock(stmt: Block): string {
+    return ['{', ...stmt.statements.map(s => s.accept(this)), '}'].join('\n');
   }
 
   visitVarStatement(stmt: VarStatement): string {

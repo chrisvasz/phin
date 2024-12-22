@@ -5,6 +5,7 @@ import parse from './parser';
 import {
   Assign,
   Binary,
+  Block,
   EchoStatement,
   ExpressionStatement,
   Grouping,
@@ -334,6 +335,19 @@ test('abc = 123', () => {
         new NumberLiteral(123),
       ),
     ),
+  ];
+  let tokens = scan(source);
+  let ast = parse(tokens);
+  expect(ast).toEqual(expected);
+});
+
+test('{ 1; 2; }', () => {
+  let source = '{ 1; 2; }';
+  let expected = [
+    new Block([
+      new ExpressionStatement(new NumberLiteral(1)),
+      new ExpressionStatement(new NumberLiteral(2)),
+    ]),
   ];
   let tokens = scan(source);
   let ast = parse(tokens);

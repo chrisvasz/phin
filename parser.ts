@@ -1,6 +1,7 @@
 import {
   Assign,
   Binary,
+  Block,
   BooleanLiteral,
   Expr,
   ExpressionStatement,
@@ -114,6 +115,7 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function statement(): Stmt {
     if (match(ECHO)) return echoStatement();
+    if (match(LEFT_BRACE)) return new Block(block());
     return expressionStatement();
   }
 
@@ -121,6 +123,16 @@ export default function parse(tokens: Token[]): Stmt[] {
     let expr = expression();
     consume('Expect terminator after echo statement', ...terminators);
     return new ExpressionStatement(expr);
+  }
+
+  function block(): Stmt[] {
+    const statements: Stmt[] = [];
+    while (!check(RIGHT_BRACE) && !isAtEnd()) {
+      const next = declaration();
+      if (next) statements.push(next);
+    }
+    consume('Expect "}" after block', RIGHT_BRACE);
+    return statements;
   }
 
   function expressionStatement(): Stmt {

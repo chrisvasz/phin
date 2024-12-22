@@ -9,6 +9,7 @@ export abstract class Expr {
 }
 
 export interface Visitor<T> {
+  visitBlock(stmt: Block): T;
   visitVarStatement(stmt: VarStatement): T;
   visitEchoStatement(stmt: EchoStatement): T;
   visitExpressionStatement(stmt: ExpressionStatement): T;
@@ -21,6 +22,15 @@ export interface Visitor<T> {
   visitNullLiteral(expr: NullLiteral): T;
   visitUnary(expr: Unary): T;
   visitVariable(expr: Variable): T;
+}
+
+export class Block extends Stmt {
+  constructor(public readonly statements: Stmt[]) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitBlock(this);
+  }
 }
 
 export class VarStatement extends Stmt {
