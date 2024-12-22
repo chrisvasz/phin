@@ -20,7 +20,6 @@ export enum TokenType {
   COMMA,
   DOT,
   COLON,
-  COLON_COLON,
   QUESTION,
   AMPERSAND,
   PIPE,
@@ -30,15 +29,23 @@ export enum TokenType {
   SLASH,
   STAR,
 
-  // One or two character tokens
+  // >= 2 character tokens
   BANG,
   BANG_EQUAL,
+  BANG_EQUAL_EQUAL,
   EQUAL,
   EQUAL_EQUAL,
+  EQUAL_EQUAL_EQUAL,
   GREATER,
   GREATER_EQUAL,
   LESS,
   LESS_EQUAL,
+  COLON_COLON,
+  LOGICAL_AND,
+  LOGICAL_OR,
+  SPACESHIP,
+  NULL_COALESCE,
+  ELVIS, // a ?: b
 
   // Literals
   IDENTIFIER,

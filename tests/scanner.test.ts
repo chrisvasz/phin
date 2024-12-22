@@ -61,13 +61,6 @@ test('!', () => {
   expect(actual).toEqual(expected);
 });
 
-test('!=', () => {
-  let expected = [new Token(TokenType.BANG_EQUAL, '!=', undefined, 1), eof];
-  let source = '!=';
-  let actual = scan(source);
-  expect(actual).toEqual(expected);
-});
-
 test('<', () => {
   let expected = [new Token(TokenType.LESS, '<', undefined, 1), eof];
   let source = '<';
@@ -96,6 +89,13 @@ test('>=', () => {
   expect(actual).toEqual(expected);
 });
 
+test('<=>', () => {
+  let expected = [new Token(TokenType.SPACESHIP, '<=>', undefined, 1), eof];
+  let source = '<=>';
+  let actual = scan(source);
+  expect(actual).toEqual(expected);
+});
+
 test('=', () => {
   let expected = [new Token(TokenType.EQUAL, '=', undefined, 1), eof];
   let source = '=';
@@ -106,6 +106,33 @@ test('=', () => {
 test('==', () => {
   let expected = [new Token(TokenType.EQUAL_EQUAL, '==', undefined, 1), eof];
   let source = '==';
+  let actual = scan(source);
+  expect(actual).toEqual(expected);
+});
+
+test('===', () => {
+  let expected = [
+    new Token(TokenType.EQUAL_EQUAL_EQUAL, '===', undefined, 1),
+    eof,
+  ];
+  let source = '===';
+  let actual = scan(source);
+  expect(actual).toEqual(expected);
+});
+
+test('!=', () => {
+  let expected = [new Token(TokenType.BANG_EQUAL, '!=', undefined, 1), eof];
+  let source = '!=';
+  let actual = scan(source);
+  expect(actual).toEqual(expected);
+});
+
+test('!==', () => {
+  let expected = [
+    new Token(TokenType.BANG_EQUAL_EQUAL, '!==', undefined, 1),
+    eof,
+  ];
+  let source = '!==';
   let actual = scan(source);
   expect(actual).toEqual(expected);
 });
@@ -138,6 +165,20 @@ test('?', () => {
   expect(actual).toEqual(expected);
 });
 
+test('??', () => {
+  let expected = [new Token(TokenType.NULL_COALESCE, '??', undefined, 1), eof];
+  let source = '??';
+  let actual = scan(source);
+  expect(actual).toEqual(expected);
+});
+
+test('?:', () => {
+  let expected = [new Token(TokenType.ELVIS, '?:', undefined, 1), eof];
+  let source = '?:';
+  let actual = scan(source);
+  expect(actual).toEqual(expected);
+});
+
 test('|', () => {
   let expected = [new Token(TokenType.PIPE, '|', undefined, 1), eof];
   let source = '|';
@@ -148,6 +189,20 @@ test('|', () => {
 test('&', () => {
   let expected = [new Token(TokenType.AMPERSAND, '&', undefined, 1), eof];
   let source = '&';
+  let actual = scan(source);
+  expect(actual).toEqual(expected);
+});
+
+test('||', () => {
+  let expected = [new Token(TokenType.LOGICAL_OR, '||', undefined, 1), eof];
+  let source = '||';
+  let actual = scan(source);
+  expect(actual).toEqual(expected);
+});
+
+test('&&', () => {
+  let expected = [new Token(TokenType.LOGICAL_AND, '&&', undefined, 1), eof];
+  let source = '&&';
   let actual = scan(source);
   expect(actual).toEqual(expected);
 });

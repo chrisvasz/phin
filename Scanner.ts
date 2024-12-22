@@ -1,50 +1,57 @@
 import { Token, TokenType } from './Token';
 
 const {
-  LEFT_PAREN,
-  RIGHT_PAREN,
-  LEFT_BRACE,
-  RIGHT_BRACE,
+  AMPERSAND,
+  BANG_EQUAL_EQUAL,
+  BANG_EQUAL,
+  BANG,
+  CLASS,
+  COLON_COLON,
+  COLON,
   COMMA,
   DOT,
-  COLON,
-  COLON_COLON,
-  QUESTION,
-  AMPERSAND,
-  PIPE,
-  MINUS,
-  PLUS,
-  SEMICOLON,
-  SLASH,
-  STAR,
-  BANG,
-  BANG_EQUAL,
-  EQUAL,
-  EQUAL_EQUAL,
-  GREATER,
-  GREATER_EQUAL,
-  LESS,
-  LESS_EQUAL,
-  IDENTIFIER,
-  STRING,
-  NUMBER,
-  CLASS,
   ECHO,
   ELSE,
+  ELVIS,
+  EOF,
+  EOL,
+  EQUAL_EQUAL_EQUAL,
+  EQUAL_EQUAL,
+  EQUAL,
   FALSE,
-  FUN,
   FOR,
+  FUN,
+  GREATER_EQUAL,
+  GREATER,
+  IDENTIFIER,
   IF,
+  LEFT_BRACE,
+  LEFT_PAREN,
+  LESS_EQUAL,
+  LESS,
+  LOGICAL_AND,
+  LOGICAL_OR,
   MATCH,
+  MINUS,
+  NULL_COALESCE,
   NULL,
+  NUMBER,
+  PIPE,
+  PLUS,
+  QUESTION,
   RETURN,
+  RIGHT_BRACE,
+  RIGHT_PAREN,
+  SEMICOLON,
+  SLASH,
+  SPACESHIP,
+  STAR,
+  STRING,
   SUPER,
   THIS,
   TRUE,
   VAL,
   VAR,
-  EOL,
-  EOF,
 } = TokenType;
 
 const keywords = new Map<string, TokenType>([
@@ -84,14 +91,14 @@ export default function scan(source: string): Token[] {
   chars[code('+')] = () => addToken(PLUS);
   chars[code(';')] = () => addToken(SEMICOLON);
   chars[code('*')] = () => addToken(STAR);
-  chars[code('!')] = () => addToken(match('=') ? BANG_EQUAL : BANG);
-  chars[code('=')] = () => addToken(match('=') ? EQUAL_EQUAL : EQUAL);
-  chars[code('<')] = () => addToken(match('=') ? LESS_EQUAL : LESS);
+  chars[code('!')] = bang;
+  chars[code('=')] = equal;
+  chars[code('<')] = less;
   chars[code('>')] = () => addToken(match('=') ? GREATER_EQUAL : GREATER);
   chars[code(':')] = () => addToken(match(':') ? COLON_COLON : COLON);
-  chars[code('?')] = () => addToken(QUESTION);
-  chars[code('|')] = () => addToken(PIPE);
-  chars[code('&')] = () => addToken(AMPERSAND);
+  chars[code('?')] = question;
+  chars[code('|')] = () => addToken(match('|') ? LOGICAL_OR : PIPE);
+  chars[code('&')] = () => addToken(match('&') ? LOGICAL_AND : AMPERSAND);
   chars[code('"')] = string;
   chars[code('/')] = slash;
   chars[code(' ')] = () => {};
@@ -141,6 +148,52 @@ export default function scan(source: string): Token[] {
   function peek() {
     if (isAtEnd()) return '\0';
     return source.charAt(current);
+  }
+
+  function bang() {
+    if (match('=')) {
+      if (match('=')) {
+        addToken(BANG_EQUAL_EQUAL);
+      } else {
+        addToken(BANG_EQUAL);
+      }
+    } else {
+      addToken(BANG);
+    }
+  }
+
+  function equal() {
+    if (match('=')) {
+      if (match('=')) {
+        addToken(EQUAL_EQUAL_EQUAL);
+      } else {
+        addToken(EQUAL_EQUAL);
+      }
+    } else {
+      addToken(EQUAL);
+    }
+  }
+
+  function less() {
+    if (match('=')) {
+      if (match('>')) {
+        addToken(SPACESHIP);
+      } else {
+        addToken(LESS_EQUAL);
+      }
+    } else {
+      addToken(LESS);
+    }
+  }
+
+  function question() {
+    if (match('?')) {
+      addToken(NULL_COALESCE);
+    } else if (match(':')) {
+      addToken(ELVIS);
+    } else {
+      addToken(QUESTION);
+    }
   }
 
   function string() {

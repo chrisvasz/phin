@@ -43,8 +43,8 @@ describe('math', () => {
     expect(ast).toEqual(expected);
   });
 
-  test('1 * 2 + 3', () => {
-    let source = '1 * 2 + 3';
+  test('1 * 2 - 3', () => {
+    let source = '1 * 2 - 3';
     let expected = [
       new stmt.Expression(
         new expr.Binary(
@@ -53,7 +53,7 @@ describe('math', () => {
             new Token(TokenType.STAR, '*', undefined, 1),
             new expr.NumberLiteral(2),
           ),
-          new Token(TokenType.PLUS, '+', undefined, 1),
+          new Token(TokenType.MINUS, '-', undefined, 1),
           new expr.NumberLiteral(3),
         ),
       ),
@@ -97,6 +97,22 @@ describe('math', () => {
               new expr.NumberLiteral(3),
             ),
           ),
+        ),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('1 / 2', () => {
+    let source = '1 / 2';
+    let expected = [
+      new stmt.Expression(
+        new expr.Binary(
+          new expr.NumberLiteral(1),
+          new Token(TokenType.SLASH, '/', undefined, 1),
+          new expr.NumberLiteral(2),
         ),
       ),
     ];
@@ -187,6 +203,22 @@ describe('binary operators', () => {
     expect(ast).toEqual(expected);
   });
 
+  test('1 === 2', () => {
+    let source = '1 === 2';
+    let expected = [
+      new stmt.Expression(
+        new expr.Binary(
+          new expr.NumberLiteral(1),
+          new Token(TokenType.EQUAL_EQUAL_EQUAL, '===', undefined, 1),
+          new expr.NumberLiteral(2),
+        ),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
   test('1 != 2', () => {
     let source = '1 != 2';
     let expected = [
@@ -194,6 +226,70 @@ describe('binary operators', () => {
         new expr.Binary(
           new expr.NumberLiteral(1),
           new Token(TokenType.BANG_EQUAL, '!=', undefined, 1),
+          new expr.NumberLiteral(2),
+        ),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('1 !== 2', () => {
+    let source = '1 !== 2';
+    let expected = [
+      new stmt.Expression(
+        new expr.Binary(
+          new expr.NumberLiteral(1),
+          new Token(TokenType.BANG_EQUAL_EQUAL, '!==', undefined, 1),
+          new expr.NumberLiteral(2),
+        ),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('1 <=> 2', () => {
+    let source = '1 <=> 2';
+    let expected = [
+      new stmt.Expression(
+        new expr.Binary(
+          new expr.NumberLiteral(1),
+          new Token(TokenType.SPACESHIP, '<=>', undefined, 1),
+          new expr.NumberLiteral(2),
+        ),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('1 && 2', () => {
+    let source = '1 && 2';
+    let expected = [
+      new stmt.Expression(
+        new expr.Binary(
+          new expr.NumberLiteral(1),
+          new Token(TokenType.LOGICAL_AND, '&&', undefined, 1),
+          new expr.NumberLiteral(2),
+        ),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('1 || 2', () => {
+    let source = '1 || 2';
+    let expected = [
+      new stmt.Expression(
+        new expr.Binary(
+          new expr.NumberLiteral(1),
+          new Token(TokenType.LOGICAL_OR, '||', undefined, 1),
           new expr.NumberLiteral(2),
         ),
       ),

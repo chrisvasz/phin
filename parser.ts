@@ -7,50 +7,55 @@ import * as types from './type';
 import { Type } from './type';
 
 const {
-  LEFT_PAREN,
-  RIGHT_PAREN,
-  LEFT_BRACE,
-  RIGHT_BRACE,
+  AMPERSAND,
+  BANG_EQUAL_EQUAL,
+  BANG_EQUAL,
+  BANG,
+  CLASS,
+  COLON_COLON,
+  COLON,
   COMMA,
   DOT,
-  COLON,
-  COLON_COLON,
-  QUESTION,
-  PIPE,
-  AMPERSAND,
-  MINUS,
-  PLUS,
-  SEMICOLON,
-  SLASH,
-  STAR,
-  BANG,
-  BANG_EQUAL,
-  EQUAL,
-  EQUAL_EQUAL,
-  GREATER,
-  GREATER_EQUAL,
-  LESS,
-  LESS_EQUAL,
-  IDENTIFIER,
-  STRING,
-  NUMBER,
-  CLASS,
   ECHO,
   ELSE,
+  EOF,
+  EOL,
+  EQUAL_EQUAL_EQUAL,
+  EQUAL_EQUAL,
+  EQUAL,
   FALSE,
-  FUN,
   FOR,
+  FUN,
+  GREATER_EQUAL,
+  GREATER,
+  IDENTIFIER,
   IF,
+  LEFT_BRACE,
+  LEFT_PAREN,
+  LESS_EQUAL,
+  LESS,
+  LOGICAL_AND,
+  LOGICAL_OR,
   MATCH,
+  MINUS,
   NULL,
+  NUMBER,
+  PIPE,
+  PLUS,
+  QUESTION,
   RETURN,
+  RIGHT_BRACE,
+  RIGHT_PAREN,
+  SEMICOLON,
+  SLASH,
+  SPACESHIP,
+  STAR,
+  STRING,
   SUPER,
   THIS,
   TRUE,
   VAL,
   VAR,
-  EOL,
-  EOF,
 } = TokenType;
 const terminators = [SEMICOLON, EOL, EOF];
 
@@ -158,7 +163,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function assignment(): Expr {
-    let result = equality();
+    let result = logicalOr();
     if (match(EQUAL)) {
       let equals = previous();
       let value = assignment();
@@ -170,9 +175,31 @@ export default function parse(tokens: Token[]): Stmt[] {
     return result;
   }
 
+  function logicalOr(): Expr {
+    let result = logicalAnd();
+    while (match(LOGICAL_OR)) {
+      let operator = previous();
+      let right = logicalAnd();
+      result = new expr.Binary(result, operator, right);
+    }
+    return result;
+  }
+
+  function logicalAnd(): Expr {
+    let result = equality();
+    while (match(LOGICAL_AND)) {
+      let operator = previous();
+      let right = equality();
+      result = new expr.Binary(result, operator, right);
+    }
+    return result;
+  }
+
   function equality(): Expr {
     let result = comparison();
-    while (match(BANG_EQUAL, EQUAL_EQUAL)) {
+    while (
+      match(BANG_EQUAL, EQUAL_EQUAL, BANG_EQUAL_EQUAL, EQUAL_EQUAL_EQUAL)
+    ) {
       let operator = previous();
       let right = comparison();
       result = new expr.Binary(result, operator, right);
@@ -182,7 +209,7 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function comparison(): Expr {
     let result = term();
-    while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
+    while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, SPACESHIP)) {
       let operator = previous();
       let right = term();
       result = new expr.Binary(result, operator, right);
