@@ -19,6 +19,8 @@ export enum TokenType {
   RIGHT_BRACE,
   COMMA,
   DOT,
+  COLON,
+  COLON_COLON,
   MINUS,
   PLUS,
   SEMICOLON,
