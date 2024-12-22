@@ -54,6 +54,20 @@ test('+-*/', () => {
   expect(actual).toEqual(expected);
 });
 
+test('++', () => {
+  let expected = [new Token(TokenType.PLUS_PLUS, '++', undefined, 1), eof];
+  let source = '++';
+  let actual = scan(source);
+  expect(actual).toEqual(expected);
+});
+
+test('--', () => {
+  let expected = [new Token(TokenType.MINUS_MINUS, '--', undefined, 1), eof];
+  let source = '--';
+  let actual = scan(source);
+  expect(actual).toEqual(expected);
+});
+
 test('!', () => {
   let expected = [new Token(TokenType.BANG, '!', undefined, 1), eof];
   let source = '!';

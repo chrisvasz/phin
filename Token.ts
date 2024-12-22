@@ -30,6 +30,8 @@ export enum TokenType {
   STAR,
 
   // >= 2 character tokens
+  PLUS_PLUS,
+  MINUS_MINUS,
   BANG,
   BANG_EQUAL,
   BANG_EQUAL_EQUAL,

@@ -32,11 +32,13 @@ const {
   LOGICAL_AND,
   LOGICAL_OR,
   MATCH,
+  MINUS_MINUS,
   MINUS,
   NULL_COALESCE,
   NULL,
   NUMBER,
   PIPE,
+  PLUS_PLUS,
   PLUS,
   QUESTION,
   RETURN,
@@ -89,8 +91,8 @@ export default function scan(source: string): Token[] {
   chars[code('}')] = () => addToken(RIGHT_BRACE);
   chars[code(',')] = () => addToken(COMMA);
   chars[code('.')] = () => addToken(DOT);
-  chars[code('-')] = () => addToken(MINUS);
-  chars[code('+')] = () => addToken(PLUS);
+  chars[code('-')] = () => addToken(match('-') ? MINUS_MINUS : MINUS);
+  chars[code('+')] = () => addToken(match('+') ? PLUS_PLUS : PLUS);
   chars[code(';')] = () => addToken(SEMICOLON);
   chars[code('*')] = () => addToken(STAR);
   chars[code('!')] = bang;

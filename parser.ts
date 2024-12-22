@@ -37,10 +37,12 @@ const {
   LOGICAL_AND,
   LOGICAL_OR,
   MATCH,
+  MINUS_MINUS,
   MINUS,
   NULL,
   NUMBER,
   PIPE,
+  PLUS_PLUS,
   PLUS,
   QUESTION,
   RETURN,
@@ -106,14 +108,8 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function varDeclaration(): Stmt {
     let name = consume('Expect variable name', IDENTIFIER);
-    let initializer: Expr | null = null;
-    let type: Type | null = null;
-    if (match(COLON)) {
-      type = typeAnnotation();
-    }
-    if (match(EQUAL)) {
-      initializer = expression();
-    }
+    let type = match(COLON) ? typeAnnotation() : null;
+    let initializer = match(EQUAL) ? expression() : null;
     consume('Expect terminator after variable declaration', ...terminators);
     return new stmt.Var(name, type, initializer);
   }
@@ -277,7 +273,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function unary(): Expr {
-    if (match(BANG, MINUS)) {
+    if (match(BANG, MINUS, PLUS, PLUS_PLUS, MINUS_MINUS)) {
       let operator = previous();
       let right = unary();
       return new expr.Unary(operator, right);

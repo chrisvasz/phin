@@ -122,6 +122,106 @@ describe('math', () => {
   });
 });
 
+describe('unary operators', () => {
+  test('!true', () => {
+    let source = '!true';
+    let expected = [
+      new stmt.Expression(
+        new expr.Unary(
+          new Token(TokenType.BANG, '!', undefined, 1),
+          new expr.BooleanLiteral(true),
+        ),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('-1', () => {
+    let source = '-1';
+    let expected = [
+      new stmt.Expression(
+        new expr.Unary(
+          new Token(TokenType.MINUS, '-', undefined, 1),
+          new expr.NumberLiteral(1),
+        ),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('+1', () => {
+    let source = '+1';
+    let expected = [
+      new stmt.Expression(
+        new expr.Unary(
+          new Token(TokenType.PLUS, '+', undefined, 1),
+          new expr.NumberLiteral(1),
+        ),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('!!true', () => {
+    let source = '!!true';
+    let expected = [
+      new stmt.Expression(
+        new expr.Unary(
+          new Token(TokenType.BANG, '!', undefined, 1),
+          new expr.Unary(
+            new Token(TokenType.BANG, '!', undefined, 1),
+            new expr.BooleanLiteral(true),
+          ),
+        ),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('++i', () => {
+    let source = '++i';
+    let expected = [
+      new stmt.Expression(
+        new expr.Unary(
+          new Token(TokenType.PLUS_PLUS, '++', undefined, 1),
+          new expr.Variable(new Token(TokenType.IDENTIFIER, 'i', undefined, 1)),
+        ),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('--i', () => {
+    let source = '--i';
+    let expected = [
+      new stmt.Expression(
+        new expr.Unary(
+          new Token(TokenType.MINUS_MINUS, '--', undefined, 1),
+          new expr.Variable(new Token(TokenType.IDENTIFIER, 'i', undefined, 1)),
+        ),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test.todo('i++');
+  test.todo('i--');
+  test.todo('++1'); // should fail
+  test.todo('1++'); // should fail
+});
+
 describe('binary operators', () => {
   test('1 > 2', () => {
     let source = '1 > 2';
