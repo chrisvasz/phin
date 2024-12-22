@@ -10,6 +10,7 @@ export interface Visitor<T> {
   visitFalseType(false_: False): T;
   visitNullableType(nullable: Nullable): T;
   visitUnionType(union: Union): T;
+  visitIntersectionType(intersection: Intersection): T;
 }
 
 export abstract class Type {
@@ -94,5 +95,14 @@ export class Union extends Type {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitUnionType(this);
+  }
+}
+
+export class Intersection extends Type {
+  constructor(public readonly types: Type[]) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitIntersectionType(this);
   }
 }

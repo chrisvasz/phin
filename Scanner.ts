@@ -10,6 +10,7 @@ const {
   COLON,
   COLON_COLON,
   QUESTION,
+  AMPERSAND,
   PIPE,
   MINUS,
   PLUS,
@@ -90,6 +91,7 @@ export default function scan(source: string): Token[] {
   chars[code(':')] = () => addToken(match(':') ? COLON_COLON : COLON);
   chars[code('?')] = () => addToken(QUESTION);
   chars[code('|')] = () => addToken(PIPE);
+  chars[code('&')] = () => addToken(AMPERSAND);
   chars[code('"')] = string;
   chars[code('/')] = slash;
   chars[code(' ')] = () => {};

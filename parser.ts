@@ -17,6 +17,7 @@ const {
   COLON_COLON,
   QUESTION,
   PIPE,
+  AMPERSAND,
   MINUS,
   PLUS,
   SEMICOLON,
@@ -237,16 +238,27 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function typeAnnotation(): Type {
     if (match(QUESTION)) return typeNullable();
-    return typeUnion();
+    let first = type();
+    if (check(PIPE)) return typeUnion(first);
+    if (check(AMPERSAND)) return typeIntersection(first);
+    return first;
   }
 
-  function typeUnion(): Type {
-    let elements = [type()];
+  function typeUnion(first: Type): Type {
+    let elements = [first];
     while (match(PIPE)) {
       elements.push(type());
     }
-    if (elements.length === 1) return elements[0];
     return new types.Union(elements);
+  }
+
+  function typeIntersection(first: Type): Type {
+    let elements = [first];
+    while (match(AMPERSAND)) {
+      elements.push(type());
+    }
+    if (elements.length === 1) return elements[0];
+    return new types.Intersection(elements);
   }
 
   function typeNullable(): Type {
@@ -284,7 +296,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function typeGeneric(): Type {
-    return typeUnion();
+    return typeAnnotation();
   }
 
   function match(...types: TokenType[]): boolean {

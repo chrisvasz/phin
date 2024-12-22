@@ -145,6 +145,13 @@ test('|', () => {
   expect(actual).toEqual(expected);
 });
 
+test('&', () => {
+  let expected = [new Token(TokenType.AMPERSAND, '&', undefined, 1), eof];
+  let source = '&';
+  let actual = scan(source);
+  expect(actual).toEqual(expected);
+});
+
 test(';//comment', () => {
   let expected = [new Token(TokenType.SEMICOLON, ';', undefined, 1), eof];
   let source = ';//comment';

@@ -22,6 +22,7 @@ export enum TokenType {
   COLON,
   COLON_COLON,
   QUESTION,
+  AMPERSAND,
   PIPE,
   MINUS,
   PLUS,

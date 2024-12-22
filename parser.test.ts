@@ -564,6 +564,24 @@ describe('variable declarations', () => {
     expect(ast).toEqual(expected);
   });
 
+  test('var x: array<string|number,number&null,?5>', () => {
+    let source = 'var x: array<string|number,number&null,?5>';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
+        new type.Identifier('array', [
+          new type.Union([new type.String(), new type.Number()]),
+          new type.Intersection([new type.Number(), new type.Null()]),
+          new type.Nullable(new type.NumberLiteral(5)),
+        ]),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
   test('var x: ?number', () => {
     let source = 'var x: ?number';
     let expected = [
@@ -599,6 +617,38 @@ describe('variable declarations', () => {
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
         null,
         new type.Union([new type.String(), new type.Number(), new type.Null()]),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var x: string&number', () => {
+    let source = 'var x: string&number';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
+        new type.Intersection([new type.String(), new type.Number()]),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var x: string&number&null', () => {
+    let source = 'var x: string&number&null';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        null,
+        new type.Intersection([
+          new type.String(),
+          new type.Number(),
+          new type.Null(),
+        ]),
       ),
     ];
     let tokens = scan(source);
