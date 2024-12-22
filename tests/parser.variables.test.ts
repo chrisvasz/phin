@@ -326,6 +326,20 @@ describe('variable declarations', () => {
     expect(ast).toEqual(expected);
   });
 
+  test('var x: array<string,>', () => {
+    let source = 'var x: array<string,>';
+    let expected = [
+      new stmt.Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        new type.Identifier('array', [new type.String()]),
+        null,
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
   test('var x: array<string|number,number&null,?5>', () => {
     let source = 'var x: array<string|number,number&null,?5>';
     let expected = [

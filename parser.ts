@@ -376,6 +376,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(LESS)) {
       generics.push(typeGeneric());
       while (match(COMMA)) {
+        if (check(GREATER)) break; // support trailing commas
         generics.push(typeGeneric());
       }
       consume('Expect ">" after type generics', GREATER);
