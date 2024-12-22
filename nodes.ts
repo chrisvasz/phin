@@ -12,6 +12,7 @@ export interface Visitor<T> {
   visitVarStatement(stmt: VarStatement): T;
   visitEchoStatement(stmt: EchoStatement): T;
   visitExpressionStatement(stmt: ExpressionStatement): T;
+  visitAssign(expr: Assign): T;
   visitBinary(expr: Binary): T;
   visitGrouping(expr: Grouping): T;
   visitNumberLiteral(expr: NumberLiteral): T;
@@ -49,6 +50,15 @@ export class ExpressionStatement extends Stmt {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitExpressionStatement(this);
+  }
+}
+
+export class Assign extends Expr {
+  constructor(public readonly name: Token, public readonly value: Expr) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitAssign(this);
   }
 }
 

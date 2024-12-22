@@ -3,6 +3,7 @@ import { expect, test } from 'bun:test';
 import scan from './Scanner';
 import parse from './parser';
 import {
+  Assign,
   Binary,
   EchoStatement,
   ExpressionStatement,
@@ -213,6 +214,21 @@ test('var x = 3 + 1; var y; var z = "hello"', () => {
     new VarStatement(
       new Token(TokenType.IDENTIFIER, 'z', undefined, 1),
       new StringLiteral('hello'),
+    ),
+  ];
+  let tokens = scan(source);
+  let ast = parse(tokens);
+  expect(ast).toEqual(expected);
+});
+
+test('abc = 123', () => {
+  let source = 'abc = 123';
+  let expected = [
+    new ExpressionStatement(
+      new Assign(
+        new Token(TokenType.IDENTIFIER, 'abc', undefined, 1),
+        new NumberLiteral(123),
+      ),
     ),
   ];
   let tokens = scan(source);

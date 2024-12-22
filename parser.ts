@@ -1,4 +1,5 @@
 import {
+  Assign,
   Binary,
   BooleanLiteral,
   Expr,
@@ -129,7 +130,20 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function expression(): Expr {
-    return equality();
+    return assignment();
+  }
+
+  function assignment(): Expr {
+    let expr = equality();
+    if (match(EQUAL)) {
+      let equals = previous();
+      let value = assignment();
+      if (expr instanceof Variable) {
+        return new Assign(expr.name, value);
+      }
+      throw error(equals, 'Invalid assignment target');
+    }
+    return expr;
   }
 
   function equality(): Expr {

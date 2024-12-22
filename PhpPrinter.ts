@@ -1,4 +1,5 @@
 import {
+  Assign,
   Binary,
   BooleanLiteral,
   EchoStatement,
@@ -33,6 +34,10 @@ export class PhpPrinter implements Visitor<string> {
 
   visitExpressionStatement(stmt: ExpressionStatement): string {
     return `${stmt.expression.accept(this)};`;
+  }
+
+  visitAssign(expr: Assign): string {
+    return `$${expr.name.lexeme} = ${expr.value.accept(this)}`;
   }
 
   visitNumberLiteral(expr: NumberLiteral): string {
