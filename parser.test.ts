@@ -418,6 +418,34 @@ describe('variable declarations', () => {
     expect(ast).toEqual(expected);
   });
 
+  test('var x: int', () => {
+    let source = 'var x: int';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        new type.Int(),
+        null,
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var x: float', () => {
+    let source = 'var x: float';
+    let expected = [
+      new Var(
+        new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
+        new type.Float(),
+        null,
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
   test('var x: 5', () => {
     let source = 'var x: 5';
     let expected = [

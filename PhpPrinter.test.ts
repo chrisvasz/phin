@@ -75,7 +75,7 @@ test('var abc = "hello"; abc = 5', () => {
   expect(actual).toEqual(expected);
 });
 
-test.todo('echo "hello"', () => {
+test('echo "hello"', () => {
   let source = 'echo "hello"';
   let expected = 'echo "hello";';
   let actual = print(source);

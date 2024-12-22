@@ -134,7 +134,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   function echoStatement(): Stmt {
     let result = expression();
     consume('Expect terminator after echo statement', ...terminators);
-    return new stmt.Expression(result);
+    return new stmt.Echo(result);
   }
 
   function block(): Stmt[] {
@@ -280,6 +280,8 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (lexeme === 'number') return new types.Number();
     if (lexeme === 'string') return new types.String();
     if (lexeme === 'bool') return new types.Boolean();
+    if (lexeme === 'int') return new types.Int();
+    if (lexeme === 'float') return new types.Float();
     return new types.Identifier(lexeme, typeGenerics());
   }
 

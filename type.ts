@@ -2,6 +2,8 @@ export interface Visitor<T> {
   visitNumberType(number: Number): T;
   visitStringType(string: String): T;
   visitBooleanType(boolean: Boolean): T;
+  visitIntType(int: Int): T;
+  visitFloatType(float: Float): T;
   visitNullType(null_: Null): T;
   visitIdentifierType(identifier: Identifier): T;
   visitNumberLiteralType(numberLiteral: NumberLiteral): T;
@@ -32,6 +34,18 @@ export class String extends Type {
 export class Boolean extends Type {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitBooleanType(this);
+  }
+}
+
+export class Int extends Type {
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitIntType(this);
+  }
+}
+
+export class Float extends Type {
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitFloatType(this);
   }
 }
 
