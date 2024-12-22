@@ -18,6 +18,7 @@ export interface Visitor<T> {
   visitExpressionStmt(stmt: Expression): T;
   visitWhileStmt(stmt: While): T;
   visitForStmt(stmt: For): T;
+  visitForeachStmt(stmt: Foreach): T;
 }
 
 export class If extends Stmt {
@@ -93,5 +94,19 @@ export class For extends Stmt {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitForStmt(this);
+  }
+}
+
+export class Foreach extends Stmt {
+  constructor(
+    public readonly key: Var | null,
+    public readonly value: Var,
+    public readonly iterable: Expr,
+    public readonly body: Stmt,
+  ) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitForeachStmt(this);
   }
 }

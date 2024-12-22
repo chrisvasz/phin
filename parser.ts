@@ -8,6 +8,8 @@ import { Type } from './type';
 
 const {
   AMPERSAND,
+  ARROW,
+  AS,
   BANG_EQUAL_EQUAL,
   BANG_EQUAL,
   BANG,
@@ -24,6 +26,7 @@ const {
   EQUAL_EQUAL,
   EQUAL,
   FALSE,
+  FOREACH,
   FOR,
   FUN,
   GREATER_EQUAL,
@@ -97,7 +100,7 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function declaration(): Stmt | null {
     try {
-      if (match(VAR)) return varDeclaration();
+      if (match(VAR)) return varStatement();
       return statement();
     } catch (error) {
       if (!(error instanceof ParseError)) throw error;
@@ -106,21 +109,42 @@ export default function parse(tokens: Token[]): Stmt[] {
     }
   }
 
-  function varDeclaration(): Stmt {
-    let name = consume('Expect variable name', IDENTIFIER);
-    let type = match(COLON) ? typeAnnotation() : null;
+  function varStatement(): stmt.Var {
+    let result = varWithType();
     let initializer = match(EQUAL) ? expression() : null;
     consume('Expect terminator after variable declaration', ...terminators);
-    return new stmt.Var(name, type, initializer);
+    return new stmt.Var(result.name, result.type, initializer);
+  }
+
+  function varWithType(): stmt.Var {
+    let name = consume('Expect variable name', IDENTIFIER);
+    let type = match(COLON) ? typeAnnotation() : null;
+    return new stmt.Var(name, type, null);
   }
 
   function statement(): Stmt {
+    if (match(FOREACH)) return foreachStatement();
     if (match(FOR)) return forStatement();
     if (match(IF)) return ifStatement();
     if (match(ECHO)) return echoStatement();
     if (match(WHILE)) return whileStatement();
     if (match(LEFT_BRACE)) return new stmt.Block(block());
     return expressionStatement();
+  }
+
+  function foreachStatement(): Stmt {
+    consume('Expect "(" after "foreach"', LEFT_PAREN);
+    let iterable = expression();
+    consume('Expect "as" after foreach iterable expression', AS);
+    let key: stmt.Var | null = null;
+    let value = varWithType();
+    if (match(ARROW)) {
+      key = value;
+      value = varWithType();
+    }
+    consume('Expect ")" after foreach expression', RIGHT_PAREN);
+    let body = statement();
+    return new stmt.Foreach(key, value, iterable, body);
   }
 
   function forStatement(): Stmt {
@@ -135,7 +159,7 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function forInitializer(): Stmt | null {
     if (match(SEMICOLON)) return null;
-    if (match(VAR)) return varDeclaration();
+    if (match(VAR)) return varStatement();
     return expressionStatement();
   }
 

@@ -2,6 +2,8 @@ import { Token, TokenType } from './Token';
 
 const {
   AMPERSAND,
+  ARROW,
+  AS,
   BANG_EQUAL_EQUAL,
   BANG_EQUAL,
   BANG,
@@ -19,6 +21,7 @@ const {
   EQUAL_EQUAL,
   EQUAL,
   FALSE,
+  FOREACH,
   FOR,
   FUN,
   GREATER_EQUAL,
@@ -58,12 +61,14 @@ const {
 } = TokenType;
 
 const keywords = new Map<string, TokenType>([
+  ['as', AS],
   ['class', CLASS],
   ['echo', ECHO],
   ['else', ELSE],
   ['false', FALSE],
-  ['fun', FUN],
   ['for', FOR],
+  ['foreach', FOREACH],
+  ['fun', FUN],
   ['if', IF],
   ['match', MATCH],
   ['null', NULL],
@@ -173,6 +178,8 @@ export default function scan(source: string): Token[] {
       } else {
         addToken(EQUAL_EQUAL);
       }
+    } else if (match('>')) {
+      addToken(ARROW);
     } else {
       addToken(EQUAL);
     }

@@ -228,6 +228,13 @@ test(';//comment', () => {
   expect(actual).toEqual(expected);
 });
 
+test('=>', () => {
+  let expected = [new Token(TokenType.ARROW, '=>', undefined, 1), eof];
+  let source = '=>';
+  let actual = scan(source);
+  expect(actual).toEqual(expected);
+});
+
 test('123', () => {
   let expected = [new Token(TokenType.NUMBER, '123', 123, 1), eof];
   let source = '123';
@@ -264,11 +271,13 @@ test('eol', () => {
 
 test('keywords', () => {
   const list = {
+    as: TokenType.AS,
     class: TokenType.CLASS,
     echo: TokenType.ECHO,
     else: TokenType.ELSE,
     false: TokenType.FALSE,
     fun: TokenType.FUN,
+    foreach: TokenType.FOREACH,
     for: TokenType.FOR,
     if: TokenType.IF,
     match: TokenType.MATCH,

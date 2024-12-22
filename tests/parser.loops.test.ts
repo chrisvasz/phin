@@ -136,3 +136,118 @@ describe('for', () => {
     expect(ast).toEqual(expected);
   });
 });
+
+describe('foreach', () => {
+  test('foreach (list as i) 2', () => {
+    let source = 'foreach (list as i) 2';
+    let expected = [
+      new stmt.Foreach(
+        null,
+        new stmt.Var(
+          new Token(TokenType.IDENTIFIER, 'i', undefined, 1),
+          null,
+          null,
+        ),
+        new expr.Variable(
+          new Token(TokenType.IDENTIFIER, 'list', undefined, 1),
+        ),
+        new stmt.Expression(new expr.NumberLiteral(2)),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('foreach (list as i) {2;}', () => {
+    let source = 'foreach (list as i) {2;}';
+    let expected = [
+      new stmt.Foreach(
+        null,
+        new stmt.Var(
+          new Token(TokenType.IDENTIFIER, 'i', undefined, 1),
+          null,
+          null,
+        ),
+        new expr.Variable(
+          new Token(TokenType.IDENTIFIER, 'list', undefined, 1),
+        ),
+        new stmt.Block([new stmt.Expression(new expr.NumberLiteral(2))]),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('foreach (list as i: number) 2', () => {
+    let source = 'foreach (list as i: number) 2';
+    let expected = [
+      new stmt.Foreach(
+        null,
+        new stmt.Var(
+          new Token(TokenType.IDENTIFIER, 'i', undefined, 1),
+          new types.Number(),
+          null,
+        ),
+        new expr.Variable(
+          new Token(TokenType.IDENTIFIER, 'list', undefined, 1),
+        ),
+        new stmt.Expression(new expr.NumberLiteral(2)),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('foreach (list as i => l) 2', () => {
+    let source = 'foreach (list as i => l) 2';
+    let expected = [
+      new stmt.Foreach(
+        new stmt.Var(
+          new Token(TokenType.IDENTIFIER, 'i', undefined, 1),
+          null,
+          null,
+        ),
+        new stmt.Var(
+          new Token(TokenType.IDENTIFIER, 'l', undefined, 1),
+          null,
+          null,
+        ),
+        new expr.Variable(
+          new Token(TokenType.IDENTIFIER, 'list', undefined, 1),
+        ),
+        new stmt.Expression(new expr.NumberLiteral(2)),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('foreach (list as i: number => l: Rental) 2', () => {
+    let source = 'foreach (list as i: number => l: Rental) 2';
+    let expected = [
+      new stmt.Foreach(
+        new stmt.Var(
+          new Token(TokenType.IDENTIFIER, 'i', undefined, 1),
+          new types.Number(),
+          null,
+        ),
+        new stmt.Var(
+          new Token(TokenType.IDENTIFIER, 'l', undefined, 1),
+          new types.Identifier('Rental', []),
+          null,
+        ),
+        new expr.Variable(
+          new Token(TokenType.IDENTIFIER, 'list', undefined, 1),
+        ),
+        new stmt.Expression(new expr.NumberLiteral(2)),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+});

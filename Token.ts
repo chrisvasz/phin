@@ -30,6 +30,7 @@ export enum TokenType {
   STAR,
 
   // >= 2 character tokens
+  ARROW, // =>
   PLUS_PLUS,
   MINUS_MINUS,
   BANG,
@@ -55,10 +56,12 @@ export enum TokenType {
   NUMBER,
 
   // Keywords
+  AS,
   CLASS,
   ECHO,
   ELSE,
   FALSE,
+  FOREACH,
   FOR,
   FUN,
   IF,
