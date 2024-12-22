@@ -249,7 +249,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     let lexeme = previous().lexeme;
     if (lexeme === 'number') return new types.Number();
     if (lexeme === 'string') return new types.String();
-    if (lexeme === 'boolean') return new types.Boolean();
+    if (lexeme === 'bool') return new types.Boolean();
     let generic: Type | null = null;
     if (match(LESS)) {
       generic = type();

@@ -390,8 +390,8 @@ describe('variable declarations', () => {
     expect(ast).toEqual(expected);
   });
 
-  test('var x: boolean', () => {
-    let source = 'var x: boolean';
+  test('var x: bool', () => {
+    let source = 'var x: bool';
     let expected = [
       new Var(
         new Token(TokenType.IDENTIFIER, 'x', undefined, 1),
