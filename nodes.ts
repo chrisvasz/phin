@@ -1,11 +1,16 @@
 import { Token } from './Token';
 
+function indent(depth: number): string {
+  return '  '.repeat(depth);
+}
+
 export abstract class Stmt {
   abstract accept<T>(visitor: Visitor<T>): T;
 }
 
 export abstract class Expr {
   abstract accept<T>(visitor: Visitor<T>): T;
+  abstract toString(depth?: number): string;
 }
 
 export interface Visitor<T> {
@@ -84,6 +89,9 @@ export class Assign extends Expr {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitAssign(this);
   }
+  toString(depth?: number): string {
+    return '';
+  }
 }
 
 export class Binary extends Expr {
@@ -97,6 +105,9 @@ export class Binary extends Expr {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitBinary(this);
   }
+  toString(depth?: number): string {
+    return '';
+  }
 }
 
 export class Grouping extends Expr {
@@ -105,6 +116,9 @@ export class Grouping extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitGrouping(this);
+  }
+  toString(depth?: number): string {
+    return '';
   }
 }
 
@@ -115,6 +129,9 @@ export class NumberLiteral extends Expr {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitNumberLiteral(this);
   }
+  toString(depth?: number): string {
+    return '';
+  }
 }
 
 export class StringLiteral extends Expr {
@@ -123,6 +140,9 @@ export class StringLiteral extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitStringLiteral(this);
+  }
+  toString(depth?: number): string {
+    return '';
   }
 }
 
@@ -133,11 +153,17 @@ export class BooleanLiteral extends Expr {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitBooleanLiteral(this);
   }
+  toString(depth?: number): string {
+    return '';
+  }
 }
 
 export class NullLiteral extends Expr {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitNullLiteral(this);
+  }
+  toString(depth = 0) {
+    return indent(depth) + 'NullLiteral';
   }
 }
 
@@ -148,6 +174,11 @@ export class Unary extends Expr {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitUnary(this);
   }
+  toString(depth = 0) {
+    const { operator, right } = this;
+    const lexeme = operator.lexeme;
+    return `${indent(depth)}Unary ${lexeme} ${right.toString(depth + 1)}`;
+  }
 }
 
 export class Variable extends Expr {
@@ -156,5 +187,8 @@ export class Variable extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitVariable(this);
+  }
+  toString(depth = 0): string {
+    return indent(depth) + this.name.lexeme;
   }
 }
