@@ -12,7 +12,7 @@ export class Token {
 }
 
 export enum TokenType {
-  // Single-character tokens.
+  // Single-character tokens
   LEFT_PAREN,
   RIGHT_PAREN,
   LEFT_BRACE,
@@ -25,7 +25,7 @@ export enum TokenType {
   SLASH,
   STAR,
 
-  // One or two character tokens.
+  // One or two character tokens
   BANG,
   BANG_EQUAL,
   EQUAL,
@@ -35,13 +35,14 @@ export enum TokenType {
   LESS,
   LESS_EQUAL,
 
-  // Literals.
+  // Literals
   IDENTIFIER,
   STRING,
   NUMBER,
 
-  // Keywords.
+  // Keywords
   CLASS,
+  ECHO,
   ELSE,
   FALSE,
   FUN,
@@ -56,5 +57,6 @@ export enum TokenType {
   VAL,
   VAR,
 
+  EOL,
   EOF,
 }

@@ -148,9 +148,20 @@ test('"string literal"', () => {
   expect(actual).toEqual(expected);
 });
 
+test('eol', () => {
+  let expected = [
+    new Token(TokenType.EOL, '\n', undefined, 1),
+    new Token(TokenType.EOF, '', null, 2),
+  ];
+  let source = '\n';
+  let actual = scan(source);
+  expect(actual).toEqual(expected);
+});
+
 test('keywords', () => {
   const list = {
     class: TokenType.CLASS,
+    echo: TokenType.ECHO,
     else: TokenType.ELSE,
     false: TokenType.FALSE,
     fun: TokenType.FUN,

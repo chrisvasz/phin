@@ -1,207 +1,203 @@
 import { Token, TokenType } from './Token';
 
+const {
+  LEFT_PAREN,
+  RIGHT_PAREN,
+  LEFT_BRACE,
+  RIGHT_BRACE,
+  COMMA,
+  DOT,
+  MINUS,
+  PLUS,
+  SEMICOLON,
+  SLASH,
+  STAR,
+  BANG,
+  BANG_EQUAL,
+  EQUAL,
+  EQUAL_EQUAL,
+  GREATER,
+  GREATER_EQUAL,
+  LESS,
+  LESS_EQUAL,
+  IDENTIFIER,
+  STRING,
+  NUMBER,
+  CLASS,
+  ECHO,
+  ELSE,
+  FALSE,
+  FUN,
+  FOR,
+  IF,
+  MATCH,
+  NULL,
+  RETURN,
+  SUPER,
+  THIS,
+  TRUE,
+  VAL,
+  VAR,
+  EOL,
+  EOF,
+} = TokenType;
+
 const keywords = new Map<string, TokenType>([
-  ['class', TokenType.CLASS],
-  ['else', TokenType.ELSE],
-  ['false', TokenType.FALSE],
-  ['fun', TokenType.FUN],
-  ['for', TokenType.FOR],
-  ['if', TokenType.IF],
-  ['match', TokenType.MATCH],
-  ['null', TokenType.NULL],
-  ['return', TokenType.RETURN],
-  ['super', TokenType.SUPER],
-  ['this', TokenType.THIS],
-  ['true', TokenType.TRUE],
-  ['val', TokenType.VAL],
-  ['var', TokenType.VAR],
+  ['class', CLASS],
+  ['echo', ECHO],
+  ['else', ELSE],
+  ['false', FALSE],
+  ['fun', FUN],
+  ['for', FOR],
+  ['if', IF],
+  ['match', MATCH],
+  ['null', NULL],
+  ['return', RETURN],
+  ['super', SUPER],
+  ['this', THIS],
+  ['true', TRUE],
+  ['val', VAL],
+  ['var', VAR],
 ]);
 
-export default function scan(source: string) {
-  const scanner = new Scanner(source);
-  const tokens = scanner.scanTokens();
-  return tokens;
-}
+export default function scan(source: string): Token[] {
+  const tokens: Token[] = [];
+  let start = 0;
+  let current = 0;
+  let line = 1;
+  let hasError = false;
 
-export class Scanner {
-  private tokens: Token[] = [];
-  private start = 0;
-  private current = 0;
-  private line = 1;
-  private hasError = false;
+  const chars = new Array(200).fill(null);
+  const code = (char: string) => char.charCodeAt(0);
+  chars[code('(')] = () => addToken(LEFT_PAREN);
+  chars[code(')')] = () => addToken(RIGHT_PAREN);
+  chars[code('{')] = () => addToken(LEFT_BRACE);
+  chars[code('}')] = () => addToken(RIGHT_BRACE);
+  chars[code(',')] = () => addToken(COMMA);
+  chars[code('.')] = () => addToken(DOT);
+  chars[code('-')] = () => addToken(MINUS);
+  chars[code('+')] = () => addToken(PLUS);
+  chars[code(';')] = () => addToken(SEMICOLON);
+  chars[code('*')] = () => addToken(STAR);
+  chars[code('!')] = () => addToken(match('=') ? BANG_EQUAL : BANG);
+  chars[code('=')] = () => addToken(match('=') ? EQUAL_EQUAL : EQUAL);
+  chars[code('<')] = () => addToken(match('=') ? LESS_EQUAL : LESS);
+  chars[code('>')] = () => addToken(match('=') ? GREATER_EQUAL : GREATER);
+  chars[code('"')] = string;
+  chars[code('/')] = slash;
+  chars[code(' ')] = () => {};
+  chars[code('\r')] = () => {};
+  chars[code('\t')] = () => {};
+  chars[code('\n')] = eol;
 
-  constructor(private readonly source: string) {}
+  return scanTokens();
 
-  scanTokens() {
-    while (!this.isAtEnd()) {
-      // We are at the beginning of the next lexeme.
-      this.start = this.current;
-      this.scanToken();
+  function scanTokens() {
+    while (!isAtEnd()) {
+      start = current;
+      scanToken();
     }
+    tokens.push(new Token(EOF, '', null, line));
+    if (hasError) throw new Error('Scanner error');
+    return tokens;
+  }
 
-    this.tokens.push(new Token(TokenType.EOF, '', null, this.line));
-    if (this.hasError) {
-      throw new Error('Scanner error');
+  function scanToken() {
+    let c = advance();
+    if (chars[code(c)]) {
+      return chars[code(c)]();
     }
-    return this.tokens;
+    if (isDigit(c)) return number();
+    if (isAlpha(c)) return identifier();
+    console.log('Unexpected character on line ' + line);
+    hasError = true;
   }
 
-  private scanToken() {
-    let c = this.advance();
-    switch (c) {
-      case '(':
-        return this.addToken(TokenType.LEFT_PAREN);
-      case ')':
-        return this.addToken(TokenType.RIGHT_PAREN);
-      case '{':
-        return this.addToken(TokenType.LEFT_BRACE);
-      case '}':
-        return this.addToken(TokenType.RIGHT_BRACE);
-      case ',':
-        return this.addToken(TokenType.COMMA);
-      case '.':
-        return this.addToken(TokenType.DOT);
-      case '-':
-        return this.addToken(TokenType.MINUS);
-      case '+':
-        return this.addToken(TokenType.PLUS);
-      case ';':
-        return this.addToken(TokenType.SEMICOLON);
-      case '*':
-        return this.addToken(TokenType.STAR);
-      case '!':
-        this.addToken(this.match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);
-        break;
-      case '=':
-        this.addToken(
-          this.match('=') ? TokenType.EQUAL_EQUAL : TokenType.EQUAL,
-        );
-        break;
-      case '<':
-        this.addToken(this.match('=') ? TokenType.LESS_EQUAL : TokenType.LESS);
-        break;
-      case '>':
-        this.addToken(
-          this.match('=') ? TokenType.GREATER_EQUAL : TokenType.GREATER,
-        );
-        break;
-      case '/':
-        if (this.match('/')) {
-          // A comment goes until the end of the line.
-          while (this.peek() != '\n' && !this.isAtEnd()) this.advance();
-        } else {
-          this.addToken(TokenType.SLASH);
-        }
-        break;
-      case ' ':
-      case '\r':
-      case '\t':
-        // Ignore whitespace.
-        break;
-      case '\n':
-        this.line++;
-        break;
-      case '"':
-        this.string();
-        break;
-      default:
-        if (this.isDigit(c)) {
-          return this.number();
-        } else if (this.isAlpha(c)) {
-          return this.identifier();
-        } else {
-          console.log('Unexpected character on line ' + this.line);
-          this.hasError = true;
-        }
-        break;
-    }
+  function advance() {
+    return source.charAt(current++);
   }
 
-  private advance() {
-    return this.source.charAt(this.current++);
+  function addToken(type: TokenType, literal?: any) {
+    const text = source.substring(start, current);
+    tokens.push(new Token(type, text, literal, line));
   }
 
-  private addToken(type: TokenType, literal?: any) {
-    const text = this.source.substring(this.start, this.current);
-    this.tokens.push(new Token(type, text, literal, this.line));
-  }
-
-  private match(expected: string) {
-    if (this.isAtEnd()) return false;
-    if (this.source.charAt(this.current) !== expected) return false;
-    this.current++;
+  function match(expected: string) {
+    if (isAtEnd()) return false;
+    if (source.charAt(current) !== expected) return false;
+    current++;
     return true;
   }
 
-  private peek() {
-    if (this.isAtEnd()) return '\0';
-    return this.source.charAt(this.current);
+  function peek() {
+    if (isAtEnd()) return '\0';
+    return source.charAt(current);
   }
 
-  private string() {
-    while (this.peek() !== '"' && !this.isAtEnd()) {
-      if (this.peek() === '\n') this.line++;
-      this.advance();
+  function string() {
+    while (peek() !== '"' && !isAtEnd()) {
+      if (peek() === '\n') {
+        console.error('Unterminated string on line ' + line);
+        return;
+      }
+      advance();
     }
-
-    // Unterminated string.
-    if (this.isAtEnd()) {
-      console.log('Unterminated string on line ' + this.line);
+    if (isAtEnd()) {
+      console.error('Unterminated string on line ' + line);
       return;
     }
-
-    // The closing ".
-    this.advance();
-
-    // Trim the surrounding quotes.
-    const value = this.source.substring(this.start + 1, this.current - 1);
-    this.addToken(TokenType.STRING, value);
+    advance(); // consume the closing "
+    const value = source.substring(start + 1, current - 1);
+    addToken(STRING, value);
   }
 
-  private isDigit(c: string) {
+  function slash() {
+    if (match('/')) {
+      while (peek() != '\n' && !isAtEnd()) advance(); // till end of line
+    } else {
+      addToken(SLASH);
+    }
+  }
+
+  function eol() {
+    addToken(EOL);
+    line++;
+  }
+
+  function number() {
+    while (isDigit(peek())) advance();
+    if (peek() === '.' && isDigit(peekNext())) {
+      advance(); // consume the "."
+      while (isDigit(peek())) advance();
+    }
+    addToken(NUMBER, parseFloat(source.substring(start, current)));
+  }
+
+  function identifier() {
+    while (isAlphaNumeric(peek())) advance();
+    const text = source.substring(start, current);
+    const type = keywords.get(text) || IDENTIFIER;
+    addToken(type);
+  }
+
+  function peekNext() {
+    if (current + 1 >= source.length) return '\0';
+    return source.charAt(current + 1);
+  }
+
+  function isAtEnd() {
+    return current >= source.length;
+  }
+
+  function isDigit(c: string) {
     return c >= '0' && c <= '9';
   }
 
-  private isAlpha(c: string) {
+  function isAlpha(c: string) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c === '_';
   }
 
-  isAlphaNumeric(c: string) {
-    return this.isAlpha(c) || this.isDigit(c);
-  }
-
-  private number() {
-    while (this.isDigit(this.peek())) this.advance();
-
-    // Look for a fractional part.
-    if (this.peek() === '.' && this.isDigit(this.peekNext())) {
-      // Consume the "."
-      this.advance();
-
-      while (this.isDigit(this.peek())) this.advance();
-    }
-
-    this.addToken(
-      TokenType.NUMBER,
-      parseFloat(this.source.substring(this.start, this.current)),
-    );
-  }
-
-  identifier() {
-    while (this.isAlphaNumeric(this.peek())) this.advance();
-
-    // See if the identifier is a reserved word.
-    const text = this.source.substring(this.start, this.current);
-    const type = keywords.get(text) || TokenType.IDENTIFIER;
-    this.addToken(type);
-  }
-
-  peekNext() {
-    if (this.current + 1 >= this.source.length) return '\0';
-    return this.source.charAt(this.current + 1);
-  }
-
-  isAtEnd() {
-    return this.current >= this.source.length;
+  function isAlphaNumeric(c: string) {
+    return isAlpha(c) || isDigit(c);
   }
 }
