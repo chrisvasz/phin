@@ -302,7 +302,20 @@ export default function parse(tokens: Token[]): Stmt[] {
       let right = unary();
       return new expr.Unary(operator, right);
     }
-    return primary();
+    return call();
+  }
+
+  function call(): Expr {
+    let result = primary();
+    if (!match(LEFT_PAREN)) return result;
+    if (match(RIGHT_PAREN)) return new expr.Call(result, []);
+    let args = [expression()];
+    while (match(COMMA)) {
+      if (check(RIGHT_PAREN)) break; // support trailing commas
+      args.push(expression());
+    }
+    consume('Expect ")" after arguments', RIGHT_PAREN);
+    return new expr.Call(result, args);
   }
 
   function primary(): Expr {

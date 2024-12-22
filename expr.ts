@@ -6,6 +6,7 @@ function indent(depth: number): string {
 
 export interface Visitor<T> {
   visitAssignExpr(expr: Assign): T;
+  visitCallExpr(expr: Call): T;
   visitBinaryExpr(expr: Binary): T;
   visitGroupingExpr(expr: Grouping): T;
   visitNumberLiteralExpr(expr: NumberLiteral): T;
@@ -27,6 +28,18 @@ export class Assign extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitAssignExpr(this);
+  }
+  toString(depth?: number): string {
+    return 'TODO';
+  }
+}
+
+export class Call extends Expr {
+  constructor(public readonly callee: Expr, public readonly args: Expr[]) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitCallExpr(this);
   }
   toString(depth?: number): string {
     return 'TODO';
