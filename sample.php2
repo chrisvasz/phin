@@ -1,0 +1,71 @@
+abstract class Price {
+  abstract fun amount(daysRented: int): float
+  fun points(daysRented: int): int = 1
+}
+
+class Regular extends Price {
+  fun amount(daysRented: int): float {
+    return daysRented > 2 ? 2 + (daysRented - 2) * 1.5 : 2.0
+  }
+}
+
+class NewRelease extends Price {
+  fun amount(daysRented: int): float = daysRented * 3.0
+  fun points(daysRented: int): int {
+    return daysRented > 1 ? 2 : 1
+  }
+}
+
+class Childrens extends Price {
+  fun amount(daysRented: int): float {
+    return daysRented > 3 ? 1.5 + (daysRented - 3) * 1.5 : 1.5
+  }
+}
+
+class PriceFactory {
+  const REGULAR = 0
+  const NEW_RELEASE = 1
+  const CHILDRENS = 2
+
+  fun from(priceCode: int): Price = match (priceCode) {
+    REGULAR => new Regular()
+    NEW_RELEASE => new NewRelease()
+    CHILDRENS => new Childrens()
+    else => throw new InvalidArgumentException("Invalid price code")
+  }
+}
+
+class Movie(val title: string, val price: Price) {}
+
+class Rental(movie: Movie, daysRented: int) {
+  val title: string = movie.title
+  fun points(): int = movie.price.points(daysRented)
+  fun amount(): float = movie.price.amount(daysRented)
+}
+
+class Rentals(rentals: array<Rental>) iterates rentals {
+  init {
+    if (count(rentals) > 5) {
+      throw new DomainException("Customers cannot rent more than 5 movies at a time")
+    }
+  }
+
+  fun totalPoints(): int = rentals.array_map(fun(r) = r.points()).array_sum()
+  fun totalAmount(): float = rentals.array_map(fun(r) = r.amount()).array_sum()
+}
+
+class Customer(val name: string, val rentals: Rentals) {}
+
+interface TaxCalculator {
+  fun calculate(amount: float): float
+}
+
+class Statement(tax: TaxCalculator, val customer: Customer) {
+  val rentals: Rentals = customer.rentals
+  fun amount(): float = tax.calculate(rentals.totalAmount())
+  fun points(): int = rentals.totalPoints()
+}
+
+class StatementFactory(tax: TaxCalculator) {
+  fun from(customer: Customer): Statement = new Statement(tax, customer)
+}
