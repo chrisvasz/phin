@@ -50,6 +50,9 @@ const {
   PIPE,
   PLUS_PLUS,
   PLUS,
+  PRIVATE,
+  PROTECTED,
+  PUBLIC,
   QUESTION,
   RETURN,
   RIGHT_BRACE,
@@ -154,19 +157,37 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function classMember():
-    | stmt.Function
-    | stmt.Var
+    | stmt.ClassMethod
+    | stmt.ClassProperty
     | stmt.ClassConst
     | stmt.ClassInitializer {
-    if (match(FUN)) return functionDeclaration();
-    if (match(VAR)) return varDeclaration();
-    if (match(CONST)) return classConst();
+    let visibility = classVisibilityFrom(
+      match(PUBLIC, PROTECTED, PRIVATE) ? previous() : null,
+    );
+    if (match(FUN)) return classMethod(visibility);
+    if (match(VAR)) return classProperty(visibility);
+    if (match(CONST)) return classConst(visibility);
     if (matchIdentifier('init')) return classInitializer();
     throw error(peek(), 'Expect class member');
   }
 
-  function classConst(): stmt.ClassConst {
-    return new stmt.ClassConst(varDeclaration());
+  function classVisibilityFrom(visibility: Token | null): stmt.Visibility {
+    if (visibility?.type === PUBLIC) return 'public';
+    if (visibility?.type === PROTECTED) return 'protected';
+    if (visibility?.type === PRIVATE) return 'private';
+    return null;
+  }
+
+  function classProperty(visibility: stmt.Visibility): stmt.ClassProperty {
+    return new stmt.ClassProperty(varDeclaration(), visibility);
+  }
+
+  function classMethod(visibility: stmt.Visibility): stmt.ClassMethod {
+    return new stmt.ClassMethod(functionDeclaration(), visibility);
+  }
+
+  function classConst(visibility: stmt.Visibility): stmt.ClassConst {
+    return new stmt.ClassConst(varDeclaration(), visibility);
   }
 
   function classInitializer(): stmt.ClassInitializer {

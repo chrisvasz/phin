@@ -10,6 +10,8 @@ export abstract class Stmt {
   abstract accept<T>(visitor: Visitor<T>): T;
 }
 
+export type Visibility = 'public' | 'protected' | 'private' | null;
+
 export interface Visitor<T> {
   visitBlockStmt(stmt: Block): T;
   visitIfStmt(stmt: If): T;
@@ -22,8 +24,10 @@ export interface Visitor<T> {
   visitFunctionStmt(stmt: Function): T;
   visitReturnStmt(stmt: Return): T;
   visitClassStmt(stmt: Class): T;
+  visitClassPropertyStmt(stmt: ClassProperty): T;
   visitClassConstStmt(stmt: ClassConst): T;
   visitClassInitializerStmt(stmt: ClassInitializer): T;
+  visitClassMethodStmt(stmt: ClassMethod): T;
 }
 
 export class If extends Stmt {
@@ -146,7 +150,7 @@ export class Class extends Stmt {
     public readonly superclass: string | null,
     public readonly interfaces: string[],
     public readonly members: Array<
-      Function | Var | ClassConst | ClassInitializer
+      ClassMethod | ClassProperty | ClassConst | ClassInitializer
     >,
   ) {
     super();
@@ -156,8 +160,35 @@ export class Class extends Stmt {
   }
 }
 
+export class ClassProperty extends Stmt {
+  constructor(
+    public readonly variable: Var,
+    public readonly visibility: Visibility,
+  ) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitClassPropertyStmt(this);
+  }
+}
+
+export class ClassMethod extends Stmt {
+  constructor(
+    public readonly method: Function,
+    public readonly visibility: Visibility,
+  ) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitClassMethodStmt(this);
+  }
+}
+
 export class ClassConst extends Stmt {
-  constructor(public readonly variable: Var) {
+  constructor(
+    public readonly variable: Var,
+    public readonly visibility: Visibility,
+  ) {
     super();
   }
   accept<T>(visitor: Visitor<T>): T {

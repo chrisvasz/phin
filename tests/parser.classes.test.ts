@@ -27,11 +27,14 @@ describe('class declarations', () => {
         null,
         [],
         [
-          new stmt.Function(
-            new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
-            [],
+          new stmt.ClassMethod(
+            new stmt.Function(
+              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
+              [],
+              null,
+              [],
+            ),
             null,
-            [],
           ),
         ],
       ),
@@ -48,17 +51,20 @@ describe('class declarations', () => {
         null,
         [],
         [
-          new stmt.Function(
-            new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
-            [
-              new stmt.Var(
-                new Token(TokenType.IDENTIFIER, 'c', undefined, 1),
-                new types.Union([new types.Number(), new types.String()]),
-                new expr.NumberLiteral(3),
-              ),
-            ],
-            new types.True(),
-            new expr.BooleanLiteral(true),
+          new stmt.ClassMethod(
+            new stmt.Function(
+              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
+              [
+                new stmt.Var(
+                  new Token(TokenType.IDENTIFIER, 'c', undefined, 1),
+                  new types.Union([new types.Number(), new types.String()]),
+                  new expr.NumberLiteral(3),
+                ),
+              ],
+              new types.True(),
+              new expr.BooleanLiteral(true),
+            ),
+            null,
           ),
         ],
       ),
@@ -75,11 +81,14 @@ describe('class declarations', () => {
         null,
         [],
         [
-          new stmt.Function(
-            new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
-            [],
+          new stmt.ClassMethod(
+            new stmt.Function(
+              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
+              [],
+              null,
+              [new stmt.Return(new expr.NumberLiteral(3))],
+            ),
             null,
-            [new stmt.Return(new expr.NumberLiteral(3))],
           ),
         ],
       ),
@@ -96,10 +105,13 @@ describe('class declarations', () => {
         null,
         [],
         [
-          new stmt.Var(
-            new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
-            new types.Number(),
-            new expr.NumberLiteral(3),
+          new stmt.ClassProperty(
+            new stmt.Var(
+              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
+              new types.Number(),
+              new expr.NumberLiteral(3),
+            ),
+            null,
           ),
         ],
       ),
@@ -116,16 +128,22 @@ describe('class declarations', () => {
         null,
         [],
         [
-          new stmt.Var(
-            new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
-            null,
+          new stmt.ClassProperty(
+            new stmt.Var(
+              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
+              null,
+              null,
+            ),
             null,
           ),
-          new stmt.Function(
-            new Token(TokenType.IDENTIFIER, 'c', undefined, 1),
-            [],
+          new stmt.ClassMethod(
+            new stmt.Function(
+              new Token(TokenType.IDENTIFIER, 'c', undefined, 1),
+              [],
+              null,
+              [],
+            ),
             null,
-            [],
           ),
         ],
       ),
@@ -219,6 +237,7 @@ describe('class declarations', () => {
               null,
               new expr.NumberLiteral(3),
             ),
+            null,
           ),
         ],
       ),
@@ -259,6 +278,76 @@ describe('class declarations', () => {
           new stmt.ClassInitializer([
             new stmt.Expression(new expr.NumberLiteral(2)),
           ]),
+        ],
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('class A { private var b; }', () => {
+    let source = 'class A { private var b; }';
+    let expected = [
+      new stmt.Class(
+        'A',
+        [],
+        null,
+        [],
+        [
+          new stmt.ClassProperty(
+            new stmt.Var(
+              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
+              null,
+              null,
+            ),
+            'private',
+          ),
+        ],
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('class A { protected const b = 4; }', () => {
+    let source = 'class A { protected const b = 4; }';
+    let expected = [
+      new stmt.Class(
+        'A',
+        [],
+        null,
+        [],
+        [
+          new stmt.ClassConst(
+            new stmt.Var(
+              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
+              null,
+              new expr.NumberLiteral(4),
+            ),
+            'protected',
+          ),
+        ],
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('class A { public fun b() {} }', () => {
+    let source = 'class A { public fun b() {} }';
+    let expected = [
+      new stmt.Class(
+        'A',
+        [],
+        null,
+        [],
+        [
+          new stmt.ClassMethod(
+            new stmt.Function(
+              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
+              [],
+              null,
+              [],
+            ),
+            'public',
+          ),
         ],
       ),
     ];
