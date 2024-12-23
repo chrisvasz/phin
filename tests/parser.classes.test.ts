@@ -225,4 +225,43 @@ describe('class declarations', () => {
     ];
     expect(ast(source)).toEqual(expected);
   });
+
+  test('class A { init { echo "hello"; } }', () => {
+    let source = 'class A { init { echo "hello"; } }';
+    let expected = [
+      new stmt.Class(
+        'A',
+        [],
+        null,
+        [],
+        [
+          new stmt.ClassInitializer([
+            new stmt.Echo(new expr.StringLiteral('hello')),
+          ]),
+        ],
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('class A { init { 1; } init { 2; } }', () => {
+    let source = 'class A { init { 1; } init { 2; } }';
+    let expected = [
+      new stmt.Class(
+        'A',
+        [],
+        null,
+        [],
+        [
+          new stmt.ClassInitializer([
+            new stmt.Expression(new expr.NumberLiteral(1)),
+          ]),
+          new stmt.ClassInitializer([
+            new stmt.Expression(new expr.NumberLiteral(2)),
+          ]),
+        ],
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
 });

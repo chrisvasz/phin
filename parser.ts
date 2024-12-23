@@ -153,15 +153,25 @@ export default function parse(tokens: Token[]): Stmt[] {
     return members;
   }
 
-  function classMember(): stmt.Function | stmt.Var | stmt.ClassConst {
+  function classMember():
+    | stmt.Function
+    | stmt.Var
+    | stmt.ClassConst
+    | stmt.ClassInitializer {
     if (match(FUN)) return functionDeclaration();
     if (match(VAR)) return varDeclaration();
     if (match(CONST)) return classConst();
+    if (matchIdentifier('init')) return classInitializer();
     throw error(peek(), 'Expect class member');
   }
 
   function classConst(): stmt.ClassConst {
     return new stmt.ClassConst(varDeclaration());
+  }
+
+  function classInitializer(): stmt.ClassInitializer {
+    consume('Expect "{" before class initializer body', LEFT_BRACE);
+    return new stmt.ClassInitializer(block());
   }
 
   function functionDeclaration(): stmt.Function {
@@ -507,6 +517,14 @@ export default function parse(tokens: Token[]): Stmt[] {
         advance();
         return true;
       }
+    }
+    return false;
+  }
+
+  function matchIdentifier(name: string): boolean {
+    if (check(IDENTIFIER) && peek().lexeme === name) {
+      advance();
+      return true;
     }
     return false;
   }

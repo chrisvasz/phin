@@ -22,7 +22,8 @@ export interface Visitor<T> {
   visitFunctionStmt(stmt: Function): T;
   visitReturnStmt(stmt: Return): T;
   visitClassStmt(stmt: Class): T;
-  visitConstStmt(stmt: ClassConst): T;
+  visitClassConstStmt(stmt: ClassConst): T;
+  visitClassInitializerStmt(stmt: ClassInitializer): T;
 }
 
 export class If extends Stmt {
@@ -144,7 +145,9 @@ export class Class extends Stmt {
     public readonly params: Var[],
     public readonly superclass: string | null,
     public readonly interfaces: string[],
-    public readonly members: Array<Function | Var | ClassConst>,
+    public readonly members: Array<
+      Function | Var | ClassConst | ClassInitializer
+    >,
   ) {
     super();
   }
@@ -158,6 +161,15 @@ export class ClassConst extends Stmt {
     super();
   }
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitConstStmt(this);
+    return visitor.visitClassConstStmt(this);
+  }
+}
+
+export class ClassInitializer extends Stmt {
+  constructor(public readonly body: Stmt[]) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitClassInitializerStmt(this);
   }
 }
