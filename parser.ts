@@ -25,6 +25,7 @@ const {
   EQUAL_EQUAL_EQUAL,
   EQUAL_EQUAL,
   EQUAL,
+  EXTENDS,
   FALSE,
   FOREACH,
   FOR,
@@ -33,6 +34,7 @@ const {
   GREATER,
   IDENTIFIER,
   IF,
+  IMPLEMENTS,
   LEFT_BRACE,
   LEFT_PAREN,
   LESS_EQUAL,
@@ -100,6 +102,7 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function declaration(): Stmt | null {
     try {
+      if (match(CLASS)) return classDeclaration();
       if (match(FUN)) return functionDeclaration();
       if (match(VAR)) return varDeclaration();
       return statement();
@@ -110,11 +113,56 @@ export default function parse(tokens: Token[]): Stmt[] {
     }
   }
 
+  function classDeclaration(): stmt.Class {
+    let name = consume('Expect class name', IDENTIFIER).lexeme;
+    let params = match(LEFT_PAREN) ? classParams() : [];
+    let superclass = match(EXTENDS) ? classSuperclass() : null;
+    let interfaces = match(IMPLEMENTS) ? classInterfaces() : [];
+    consume('Expect "{" before class body', LEFT_BRACE);
+    let members = classMembers();
+    consume('Expect "}" after class body', RIGHT_BRACE);
+    return new stmt.Class(name, params, superclass, interfaces, members);
+  }
+
+  function classParams(): stmt.Var[] {
+    let result = functionParams(); // happens to be the same
+    consume('Expect ")" after class params', RIGHT_PAREN);
+    return result;
+  }
+
+  function classSuperclass(): string {
+    return consume('Expect superclass name', IDENTIFIER).lexeme;
+  }
+
+  function classInterfaces(): string[] {
+    let interfaces = [consume('Expect interface name', IDENTIFIER).lexeme];
+    while (match(COMMA)) {
+      if (check(RIGHT_BRACE)) break; // support trailing commas
+      interfaces.push(consume('Expect interface name', IDENTIFIER).lexeme);
+    }
+    return interfaces;
+  }
+
+  function classMembers(): Array<ReturnType<typeof classMember>> {
+    let members: Array<ReturnType<typeof classMember>> = [];
+    while (!check(RIGHT_BRACE) && !isAtEnd()) {
+      members.push(classMember());
+      match(SEMICOLON); // support trailing semicolon
+    }
+    return members;
+  }
+
+  function classMember(): stmt.Function | stmt.Var {
+    if (match(FUN)) return functionDeclaration();
+    if (match(VAR)) return varDeclaration();
+    throw error(peek(), 'Expect class member');
+  }
+
   function functionDeclaration(): stmt.Function {
     let name = consume('Expect function name', IDENTIFIER);
     consume('Expect "(" after function name', LEFT_PAREN);
     let params = functionParams();
-    consume('Expect ")" after function parameters', RIGHT_PAREN);
+    consume('Expect ")" after function params', RIGHT_PAREN);
     let returnType = match(COLON) ? typeAnnotation() : null;
     return new stmt.Function(name, params, returnType, functionBody());
   }
@@ -123,7 +171,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     let name = match(IDENTIFIER) ? previous() : null;
     consume('Expect "(" after function name', LEFT_PAREN);
     let params = functionParams();
-    consume('Expect ")" after function parameters', RIGHT_PAREN);
+    consume('Expect ")" after function params', RIGHT_PAREN);
     let returnType = match(COLON) ? typeAnnotation() : null;
     return new expr.Function(name, params, returnType, functionBody());
   }
@@ -150,7 +198,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   function functionBody(): Expr | Stmt[] {
     if (match(ARROW)) return expression();
     if (match(LEFT_BRACE)) return block();
-    throw error(peek(), 'Expect "=" or "{" before function body');
+    throw error(peek(), 'Expect "=>" or "{" before function body');
   }
 
   function varDeclaration(): stmt.Var {

@@ -21,6 +21,7 @@ export interface Visitor<T> {
   visitForeachStmt(stmt: Foreach): T;
   visitFunctionStmt(stmt: Function): T;
   visitReturnStmt(stmt: Return): T;
+  visitClassStmt(stmt: Class): T;
 }
 
 export class If extends Stmt {
@@ -47,7 +48,7 @@ export class Block extends Stmt {
 
 export class Var extends Stmt {
   constructor(
-    public readonly name: Token,
+    public readonly name: Token | string,
     public readonly type: Type | null,
     public readonly initializer: Expr | null,
   ) {
@@ -116,7 +117,7 @@ export class Foreach extends Stmt {
 export class Function extends Stmt {
   constructor(
     public readonly name: Token,
-    public readonly parameters: Var[],
+    public readonly params: Var[],
     public readonly returnType: Type | null,
     public readonly body: Stmt[] | Expr,
   ) {
@@ -133,5 +134,20 @@ export class Return extends Stmt {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitReturnStmt(this);
+  }
+}
+
+export class Class extends Stmt {
+  constructor(
+    public readonly name: string,
+    public readonly params: Var[],
+    public readonly superclass: string | null,
+    public readonly interfaces: string[],
+    public readonly members: Array<Function | Var>,
+  ) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitClassStmt(this);
   }
 }
