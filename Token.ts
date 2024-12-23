@@ -69,6 +69,7 @@ export enum TokenType {
   IF,
   IMPLEMENTS,
   MATCH,
+  NEW,
   NULL,
   PRIVATE,
   PROTECTED,

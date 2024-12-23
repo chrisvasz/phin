@@ -284,6 +284,7 @@ test('keywords', () => {
     if: TokenType.IF,
     implements: TokenType.IMPLEMENTS,
     match: TokenType.MATCH,
+    new: TokenType.NEW,
     null: TokenType.NULL,
     return: TokenType.RETURN,
     private: TokenType.PRIVATE,

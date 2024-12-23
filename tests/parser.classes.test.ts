@@ -10,6 +10,24 @@ function ast(source: string) {
   return parse(scan(source));
 }
 
+describe('new expressions', () => {
+  test('new a', () => {
+    let source = 'new a';
+    let expected = [new stmt.Expression(new expr.New(new expr.Variable('a')))];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('new A()', () => {
+    let source = 'new A()';
+    let expected = [
+      new stmt.Expression(
+        new expr.New(new expr.Call(new expr.Variable('A'), [])),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+});
+
 describe('class declarations', () => {
   test('class A {}', () => {
     let source = 'class A {}';

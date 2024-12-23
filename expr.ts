@@ -18,6 +18,7 @@ export interface Visitor<T> {
   visitUnaryExpr(expr: Unary): T;
   visitVariableExpr(expr: Variable): T;
   visitFunctionExpr(expr: Function): T;
+  visitNewExpr(expr: New): T;
 }
 
 export abstract class Expr {
@@ -157,6 +158,18 @@ export class Function extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitFunctionExpr(this);
+  }
+  toString(depth?: number): string {
+    return 'TODO';
+  }
+}
+
+export class New extends Expr {
+  constructor(public readonly expression: Expr) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitNewExpr(this);
   }
   toString(depth?: number): string {
     return 'TODO';

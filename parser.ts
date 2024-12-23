@@ -45,6 +45,7 @@ const {
   MATCH,
   MINUS_MINUS,
   MINUS,
+  NEW,
   NULL,
   NUMBER,
   PIPE,
@@ -359,7 +360,12 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function expression(): Expr {
     if (match(FUN)) return functionExpression();
+    if (match(NEW)) return newExpression();
     return assignment();
+  }
+
+  function newExpression(): Expr {
+    return new expr.New(expression());
   }
 
   function assignment(): Expr {
