@@ -74,6 +74,7 @@ export enum TokenType {
   PROTECTED,
   PUBLIC,
   RETURN,
+  STATIC,
   SUPER,
   THIS,
   TRUE,

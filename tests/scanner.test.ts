@@ -289,6 +289,7 @@ test('keywords', () => {
     private: TokenType.PRIVATE,
     protected: TokenType.PROTECTED,
     public: TokenType.PUBLIC,
+    static: TokenType.STATIC,
     super: TokenType.SUPER,
     this: TokenType.THIS,
     true: TokenType.TRUE,

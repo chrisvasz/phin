@@ -61,6 +61,7 @@ const {
   SLASH,
   SPACESHIP,
   STAR,
+  STATIC,
   STRING,
   SUPER,
   THIS,
@@ -164,9 +165,10 @@ export default function parse(tokens: Token[]): Stmt[] {
     let visibility = classVisibilityFrom(
       match(PUBLIC, PROTECTED, PRIVATE) ? previous() : null,
     );
-    if (match(FUN)) return classMethod(visibility);
-    if (match(VAR)) return classProperty(visibility);
-    if (match(CONST)) return classConst(visibility);
+    let isStatic = match(STATIC);
+    if (match(FUN)) return classMethod(visibility, isStatic);
+    if (match(VAR)) return classProperty(visibility, isStatic);
+    if (match(CONST)) return classConst(visibility, isStatic);
     if (matchIdentifier('init')) return classInitializer();
     throw error(peek(), 'Expect class member');
   }
@@ -178,16 +180,25 @@ export default function parse(tokens: Token[]): Stmt[] {
     return null;
   }
 
-  function classProperty(visibility: stmt.Visibility): stmt.ClassProperty {
-    return new stmt.ClassProperty(varDeclaration(), visibility);
+  function classProperty(
+    visibility: stmt.Visibility,
+    isStatic: boolean,
+  ): stmt.ClassProperty {
+    return new stmt.ClassProperty(varDeclaration(), visibility, isStatic);
   }
 
-  function classMethod(visibility: stmt.Visibility): stmt.ClassMethod {
-    return new stmt.ClassMethod(functionDeclaration(), visibility);
+  function classMethod(
+    visibility: stmt.Visibility,
+    isStatic: boolean,
+  ): stmt.ClassMethod {
+    return new stmt.ClassMethod(functionDeclaration(), visibility, isStatic);
   }
 
-  function classConst(visibility: stmt.Visibility): stmt.ClassConst {
-    return new stmt.ClassConst(varDeclaration(), visibility);
+  function classConst(
+    visibility: stmt.Visibility,
+    isStatic: boolean,
+  ): stmt.ClassConst {
+    return new stmt.ClassConst(varDeclaration(), visibility, isStatic);
   }
 
   function classInitializer(): stmt.ClassInitializer {

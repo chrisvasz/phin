@@ -164,6 +164,7 @@ export class ClassProperty extends Stmt {
   constructor(
     public readonly variable: Var,
     public readonly visibility: Visibility,
+    public readonly isStatic: boolean,
   ) {
     super();
   }
@@ -176,6 +177,7 @@ export class ClassMethod extends Stmt {
   constructor(
     public readonly method: Function,
     public readonly visibility: Visibility,
+    public readonly isStatic: boolean,
   ) {
     super();
   }
@@ -188,6 +190,7 @@ export class ClassConst extends Stmt {
   constructor(
     public readonly variable: Var,
     public readonly visibility: Visibility,
+    public readonly isStatic: boolean,
   ) {
     super();
   }

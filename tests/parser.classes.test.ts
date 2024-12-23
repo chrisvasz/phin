@@ -35,6 +35,7 @@ describe('class declarations', () => {
               [],
             ),
             null,
+            false,
           ),
         ],
       ),
@@ -65,6 +66,7 @@ describe('class declarations', () => {
               new expr.BooleanLiteral(true),
             ),
             null,
+            false,
           ),
         ],
       ),
@@ -89,6 +91,7 @@ describe('class declarations', () => {
               [new stmt.Return(new expr.NumberLiteral(3))],
             ),
             null,
+            false,
           ),
         ],
       ),
@@ -112,6 +115,7 @@ describe('class declarations', () => {
               new expr.NumberLiteral(3),
             ),
             null,
+            false,
           ),
         ],
       ),
@@ -135,6 +139,7 @@ describe('class declarations', () => {
               null,
             ),
             null,
+            false,
           ),
           new stmt.ClassMethod(
             new stmt.Function(
@@ -144,6 +149,7 @@ describe('class declarations', () => {
               [],
             ),
             null,
+            false,
           ),
         ],
       ),
@@ -238,6 +244,7 @@ describe('class declarations', () => {
               new expr.NumberLiteral(3),
             ),
             null,
+            false,
           ),
         ],
       ),
@@ -300,6 +307,7 @@ describe('class declarations', () => {
               null,
             ),
             'private',
+            false,
           ),
         ],
       ),
@@ -323,6 +331,7 @@ describe('class declarations', () => {
               new expr.NumberLiteral(4),
             ),
             'protected',
+            false,
           ),
         ],
       ),
@@ -347,10 +356,86 @@ describe('class declarations', () => {
               [],
             ),
             'public',
+            false,
           ),
         ],
       ),
     ];
     expect(ast(source)).toEqual(expected);
   });
+
+  test('class A { static var b; }', () => {
+    let source = 'class A { static var b; }';
+    let expected = [
+      new stmt.Class(
+        'A',
+        [],
+        null,
+        [],
+        [
+          new stmt.ClassProperty(
+            new stmt.Var(
+              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
+              null,
+              null,
+            ),
+            null,
+            true,
+          ),
+        ],
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('class A { static fun b() {} }', () => {
+    let source = 'class A { static fun b() {} }';
+    let expected = [
+      new stmt.Class(
+        'A',
+        [],
+        null,
+        [],
+        [
+          new stmt.ClassMethod(
+            new stmt.Function(
+              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
+              [],
+              null,
+              [],
+            ),
+            null,
+            true,
+          ),
+        ],
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('class A { static const b = 4; }', () => {
+    let source = 'class A { static const b = 4; }';
+    let expected = [
+      new stmt.Class(
+        'A',
+        [],
+        null,
+        [],
+        [
+          new stmt.ClassConst(
+            new stmt.Var(
+              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
+              null,
+              new expr.NumberLiteral(4),
+            ),
+            null,
+            true,
+          ),
+        ],
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test.todo('readonly class A {}');
 });
