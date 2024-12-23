@@ -17,6 +17,7 @@ const {
   COLON_COLON,
   COLON,
   COMMA,
+  CONST,
   DOT,
   ECHO,
   ELSE,
@@ -152,10 +153,15 @@ export default function parse(tokens: Token[]): Stmt[] {
     return members;
   }
 
-  function classMember(): stmt.Function | stmt.Var {
+  function classMember(): stmt.Function | stmt.Var | stmt.ClassConst {
     if (match(FUN)) return functionDeclaration();
     if (match(VAR)) return varDeclaration();
+    if (match(CONST)) return classConst();
     throw error(peek(), 'Expect class member');
+  }
+
+  function classConst(): stmt.ClassConst {
+    return new stmt.ClassConst(varDeclaration());
   }
 
   function functionDeclaration(): stmt.Function {

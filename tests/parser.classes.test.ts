@@ -203,4 +203,26 @@ describe('class declarations', () => {
     let expected = [new stmt.Class('A', [], 'B', ['C', 'D'], [])];
     expect(ast(source)).toEqual(expected);
   });
+
+  test('class A { const b = 3; }', () => {
+    let source = 'class A { const b = 3; }';
+    let expected = [
+      new stmt.Class(
+        'A',
+        [],
+        null,
+        [],
+        [
+          new stmt.ClassConst(
+            new stmt.Var(
+              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
+              null,
+              new expr.NumberLiteral(3),
+            ),
+          ),
+        ],
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
 });

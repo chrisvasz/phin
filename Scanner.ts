@@ -11,6 +11,7 @@ const {
   COLON_COLON,
   COLON,
   COMMA,
+  CONST,
   DOT,
   ECHO,
   ELSE,
@@ -65,6 +66,7 @@ const {
 const keywords = new Map<string, TokenType>([
   ['as', AS],
   ['class', CLASS],
+  ['const', CONST],
   ['echo', ECHO],
   ['else', ELSE],
   ['extends', EXTENDS],

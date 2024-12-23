@@ -273,6 +273,7 @@ test('keywords', () => {
   const list = {
     as: TokenType.AS,
     class: TokenType.CLASS,
+    const: TokenType.CONST,
     echo: TokenType.ECHO,
     else: TokenType.ELSE,
     extends: TokenType.EXTENDS,

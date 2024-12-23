@@ -58,6 +58,7 @@ export enum TokenType {
   // Keywords
   AS,
   CLASS,
+  CONST,
   ECHO,
   ELSE,
   EXTENDS,
