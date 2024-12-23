@@ -1,4 +1,7 @@
+import { Stmt } from './stmt';
 import { Token } from './Token';
+import { Type } from './type';
+import * as stmt from './stmt';
 
 function indent(depth: number): string {
   return '  '.repeat(depth);
@@ -15,6 +18,7 @@ export interface Visitor<T> {
   visitNullLiteralExpr(expr: NullLiteral): T;
   visitUnaryExpr(expr: Unary): T;
   visitVariableExpr(expr: Variable): T;
+  visitFunctionExpr(expr: Function): T;
 }
 
 export abstract class Expr {
@@ -142,5 +146,22 @@ export class Variable extends Expr {
   }
   toString(depth = 0): string {
     return indent(depth) + this.name.lexeme;
+  }
+}
+
+export class Function extends Expr {
+  constructor(
+    public readonly name: Token | null,
+    public readonly params: stmt.Var[],
+    public readonly returnType: Type | null,
+    public readonly body: Expr | Stmt[],
+  ) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitFunctionExpr(this);
+  }
+  toString(depth?: number): string {
+    return 'TODO';
   }
 }

@@ -116,12 +116,16 @@ export default function parse(tokens: Token[]): Stmt[] {
     let params = functionParams();
     consume('Expect ")" after function parameters', RIGHT_PAREN);
     let returnType = match(COLON) ? typeAnnotation() : null;
-    if (match(EQUAL)) {
-      return new stmt.Function(name, params, returnType, expression());
-    } else if (match(LEFT_BRACE)) {
-      return new stmt.Function(name, params, returnType, block());
-    }
-    throw error(peek(), 'Expect "=" or "{" before function body');
+    return new stmt.Function(name, params, returnType, functionBody());
+  }
+
+  function functionExpression(): expr.Function {
+    let name = match(IDENTIFIER) ? previous() : null;
+    consume('Expect "(" after function name', LEFT_PAREN);
+    let params = functionParams();
+    consume('Expect ")" after function parameters', RIGHT_PAREN);
+    let returnType = match(COLON) ? typeAnnotation() : null;
+    return new expr.Function(name, params, returnType, functionBody());
   }
 
   function functionParams(): stmt.Var[] {
@@ -141,6 +145,12 @@ export default function parse(tokens: Token[]): Stmt[] {
     let type = match(COLON) ? typeAnnotation() : null;
     let initializer = match(EQUAL) ? expression() : null;
     return new stmt.Var(name, type, initializer);
+  }
+
+  function functionBody(): Expr | Stmt[] {
+    if (match(ARROW)) return expression();
+    if (match(LEFT_BRACE)) return block();
+    throw error(peek(), 'Expect "=" or "{" before function body');
   }
 
   function varDeclaration(): stmt.Var {
@@ -253,6 +263,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function expression(): Expr {
+    if (match(FUN)) return functionExpression();
     return assignment();
   }
 

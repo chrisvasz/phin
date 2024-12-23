@@ -286,8 +286,8 @@ describe('function declarations', () => {
     expect(ast).toEqual(expected);
   });
 
-  test('fun foo() = thing();', () => {
-    let source = 'fun foo() = thing();';
+  test('fun foo() => thing();', () => {
+    let source = 'fun foo() => thing();';
     let expected = [
       new stmt.Function(
         new Token(TokenType.IDENTIFIER, 'foo', undefined, 1),
@@ -298,6 +298,115 @@ describe('function declarations', () => {
             new Token(TokenType.IDENTIFIER, 'thing', undefined, 1),
           ),
           [],
+        ),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+});
+
+describe('function expressions', () => {
+  test('var a = fun() {};', () => {
+    let source = 'var a = fun() {};';
+    let expected = [
+      new stmt.Var(
+        new Token(TokenType.IDENTIFIER, 'a', undefined, 1),
+        null,
+        new expr.Function(null, [], null, []),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var a = fun(): number => 1;', () => {
+    let source = 'var a = fun(): number => 1;';
+    let expected = [
+      new stmt.Var(
+        new Token(TokenType.IDENTIFIER, 'a', undefined, 1),
+        null,
+        new expr.Function(
+          null,
+          [],
+          new types.Number(),
+          new expr.NumberLiteral(1),
+        ),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var a = fun(b: number|string = 4, c = 6,) { return 5; }', () => {
+    let source = 'var a = fun(b: number|string = 4, c = 6) { return 5; }';
+    let expected = [
+      new stmt.Var(
+        new Token(TokenType.IDENTIFIER, 'a', undefined, 1),
+        null,
+        new expr.Function(
+          null,
+          [
+            new stmt.Var(
+              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
+              new types.Union([new types.Number(), new types.String()]),
+              new expr.NumberLiteral(4),
+            ),
+            new stmt.Var(
+              new Token(TokenType.IDENTIFIER, 'c', undefined, 1),
+              null,
+              new expr.NumberLiteral(6),
+            ),
+          ],
+          null,
+          [new stmt.Return(new expr.NumberLiteral(5))],
+        ),
+      ),
+    ];
+    let tokens = scan(source);
+    let ast = parse(tokens);
+    expect(ast).toEqual(expected);
+  });
+
+  test('var a = fun(b) => fun(c) => b + c;', () => {
+    let source = 'var a = fun(b) => fun(c) => b + c;';
+    let expected = [
+      new stmt.Var(
+        new Token(TokenType.IDENTIFIER, 'a', undefined, 1),
+        null,
+        new expr.Function(
+          null,
+          [
+            new stmt.Var(
+              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
+              null,
+              null,
+            ),
+          ],
+          null,
+          new expr.Function(
+            null,
+            [
+              new stmt.Var(
+                new Token(TokenType.IDENTIFIER, 'c', undefined, 1),
+                null,
+                null,
+              ),
+            ],
+            null,
+            new expr.Binary(
+              new expr.Variable(
+                new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
+              ),
+              new Token(TokenType.PLUS, '+', undefined, 1),
+              new expr.Variable(
+                new Token(TokenType.IDENTIFIER, 'c', undefined, 1),
+              ),
+            ),
+          ),
         ),
       ),
     ];
