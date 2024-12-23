@@ -163,12 +163,25 @@ export default function parse(tokens: Token[]): Stmt[] {
     | stmt.ClassProperty
     | stmt.ClassConst
     | stmt.ClassInitializer {
+    let isFinal = matchIdentifier('final');
     let visibility = classVisibilityFrom(
       match(PUBLIC, PROTECTED, PRIVATE) ? previous() : null,
     );
     let isStatic = match(STATIC);
-    if (match(FUN)) return classMethod(visibility, isStatic);
-    if (match(VAR)) return classProperty(visibility, isStatic);
+    if (match(FUN))
+      return new stmt.ClassMethod(
+        functionDeclaration(),
+        visibility,
+        isStatic,
+        isFinal,
+      );
+    if (match(VAR))
+      return new stmt.ClassProperty(
+        varDeclaration(),
+        visibility,
+        isStatic,
+        isFinal,
+      );
     if (match(CONST)) return classConst(visibility, isStatic);
     if (matchIdentifier('init')) return classInitializer();
     throw error(peek(), 'Expect class member');
@@ -179,20 +192,6 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (visibility?.type === PROTECTED) return 'protected';
     if (visibility?.type === PRIVATE) return 'private';
     return null;
-  }
-
-  function classProperty(
-    visibility: stmt.Visibility,
-    isStatic: boolean,
-  ): stmt.ClassProperty {
-    return new stmt.ClassProperty(varDeclaration(), visibility, isStatic);
-  }
-
-  function classMethod(
-    visibility: stmt.Visibility,
-    isStatic: boolean,
-  ): stmt.ClassMethod {
-    return new stmt.ClassMethod(functionDeclaration(), visibility, isStatic);
   }
 
   function classConst(
@@ -266,9 +265,9 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(FOREACH)) return foreachStatement();
     if (match(FOR)) return forStatement();
     if (match(IF)) return ifStatement();
+    if (match(WHILE)) return whileStatement();
     if (match(ECHO)) return echoStatement();
     if (match(RETURN)) return new stmt.Return(expression());
-    if (match(WHILE)) return whileStatement();
     if (match(LEFT_BRACE)) return new stmt.Block(block());
     return expressionStatement();
   }
@@ -559,7 +558,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function matchIdentifier(name: string): boolean {
-    if (check(IDENTIFIER) && peek().lexeme === name) {
+    if (peek().type === IDENTIFIER && peek().lexeme === name) {
       advance();
       return true;
     }

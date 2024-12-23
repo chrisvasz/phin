@@ -164,6 +164,7 @@ export class ClassProperty extends Stmt {
     public readonly variable: Var,
     public readonly visibility: Visibility,
     public readonly isStatic: boolean,
+    public readonly isFinal: boolean,
   ) {
     super();
   }
@@ -177,6 +178,7 @@ export class ClassMethod extends Stmt {
     public readonly method: Function,
     public readonly visibility: Visibility,
     public readonly isStatic: boolean,
+    public readonly isFinal: boolean,
   ) {
     super();
   }

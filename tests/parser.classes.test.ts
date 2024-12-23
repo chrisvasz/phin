@@ -48,6 +48,7 @@ describe('class declarations', () => {
             new stmt.Function('b', [], null, []),
             null,
             false,
+            false,
           ),
         ],
       ),
@@ -79,6 +80,7 @@ describe('class declarations', () => {
             ),
             null,
             false,
+            false,
           ),
         ],
       ),
@@ -101,6 +103,7 @@ describe('class declarations', () => {
             ]),
             null,
             false,
+            false,
           ),
         ],
       ),
@@ -121,6 +124,7 @@ describe('class declarations', () => {
             new stmt.Var('b', new types.Number(), new expr.NumberLiteral(3)),
             null,
             false,
+            false,
           ),
         ],
       ),
@@ -137,10 +141,16 @@ describe('class declarations', () => {
         null,
         [],
         [
-          new stmt.ClassProperty(new stmt.Var('b', null, null), null, false),
+          new stmt.ClassProperty(
+            new stmt.Var('b', null, null),
+            null,
+            false,
+            false,
+          ),
           new stmt.ClassMethod(
             new stmt.Function('c', [], null, []),
             null,
+            false,
             false,
           ),
         ],
@@ -276,6 +286,7 @@ describe('class declarations', () => {
             new stmt.Var('b', null, null),
             'private',
             false,
+            false,
           ),
         ],
       ),
@@ -316,6 +327,7 @@ describe('class declarations', () => {
             new stmt.Function('b', [], null, []),
             'public',
             false,
+            false,
           ),
         ],
       ),
@@ -331,7 +343,14 @@ describe('class declarations', () => {
         [],
         null,
         [],
-        [new stmt.ClassProperty(new stmt.Var('b', null, null), null, true)],
+        [
+          new stmt.ClassProperty(
+            new stmt.Var('b', null, null),
+            null,
+            true,
+            false,
+          ),
+        ],
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -350,6 +369,7 @@ describe('class declarations', () => {
             new stmt.Function('b', [], null, []),
             null,
             true,
+            false,
           ),
         ],
       ),
@@ -377,5 +397,50 @@ describe('class declarations', () => {
     expect(ast(source)).toEqual(expected);
   });
 
+  test('class A { final fun b() {} }', () => {
+    let source = 'class A { final fun b() {} }';
+    let expected = [
+      new stmt.Class(
+        'A',
+        [],
+        null,
+        [],
+        [
+          new stmt.ClassMethod(
+            new stmt.Function('b', [], null, []),
+            null,
+            false,
+            true,
+          ),
+        ],
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('class A { final var b; }', () => {
+    let source = 'class A { final var b; }';
+    let expected = [
+      new stmt.Class(
+        'A',
+        [],
+        null,
+        [],
+        [
+          new stmt.ClassProperty(
+            new stmt.Var('b', null, null),
+            null,
+            false,
+            true,
+          ),
+        ],
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
   test.todo('readonly class A {}');
+  test.todo('final class A {}');
+  test.todo('final readonly class A {}');
+  test.todo('readonly property');
 });
