@@ -1,9 +1,13 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test';
-import scan from '../Scanner';
+import scan from '../scanner';
 import parse from '../parser';
 import * as stmt from '../stmt';
 import * as expr from '../expr';
+
+function ast(source: string) {
+  return parse(scan(source));
+}
 
 describe('if statements', () => {
   test('if (true) 2', () => {
@@ -15,9 +19,7 @@ describe('if statements', () => {
         null,
       ),
     ];
-    let tokens = scan(source);
-    let ast = parse(tokens);
-    expect(ast).toEqual(expected);
+    expect(ast(source)).toEqual(expected);
   });
 
   test('if (true) {2;"5";}', () => {
@@ -32,9 +34,7 @@ describe('if statements', () => {
         null,
       ),
     ];
-    let tokens = scan(source);
-    let ast = parse(tokens);
-    expect(ast).toEqual(expected);
+    expect(ast(source)).toEqual(expected);
   });
 
   test('if (true) 2; else 3', () => {
@@ -47,9 +47,7 @@ describe('if statements', () => {
         new stmt.Expression(new expr.NumberLiteral(3)),
       ),
     ];
-    let tokens = scan(source);
-    let ast = parse(tokens);
-    expect(ast).toEqual(expected);
+    expect(ast(source)).toEqual(expected);
   });
 
   test('if (true) 2; else {5;}', () => {
@@ -61,9 +59,7 @@ describe('if statements', () => {
         new stmt.Block([new stmt.Expression(new expr.NumberLiteral(5))]),
       ),
     ];
-    let tokens = scan(source);
-    let ast = parse(tokens);
-    expect(ast).toEqual(expected);
+    expect(ast(source)).toEqual(expected);
   });
 
   test('if (true) 2; else if (false) 5;', () => {
@@ -79,8 +75,6 @@ describe('if statements', () => {
         ),
       ),
     ];
-    let tokens = scan(source);
-    let ast = parse(tokens);
-    expect(ast).toEqual(expected);
+    expect(ast(source)).toEqual(expected);
   });
 });

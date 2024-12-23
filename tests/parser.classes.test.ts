@@ -1,11 +1,10 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test';
-import scan from '../Scanner';
+import scan from '../scanner';
 import parse from '../parser';
 import * as stmt from '../stmt';
 import * as expr from '../expr';
 import * as types from '../type';
-import { Token, TokenType } from '../Token';
 
 function ast(source: string) {
   return parse(scan(source));
@@ -28,12 +27,7 @@ describe('class declarations', () => {
         [],
         [
           new stmt.ClassMethod(
-            new stmt.Function(
-              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
-              [],
-              null,
-              [],
-            ),
+            new stmt.Function('b', [], null, []),
             null,
             false,
           ),
@@ -54,10 +48,10 @@ describe('class declarations', () => {
         [
           new stmt.ClassMethod(
             new stmt.Function(
-              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
+              'b',
               [
                 new stmt.Var(
-                  new Token(TokenType.IDENTIFIER, 'c', undefined, 1),
+                  'c',
                   new types.Union([new types.Number(), new types.String()]),
                   new expr.NumberLiteral(3),
                 ),
@@ -84,12 +78,9 @@ describe('class declarations', () => {
         [],
         [
           new stmt.ClassMethod(
-            new stmt.Function(
-              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
-              [],
-              null,
-              [new stmt.Return(new expr.NumberLiteral(3))],
-            ),
+            new stmt.Function('b', [], null, [
+              new stmt.Return(new expr.NumberLiteral(3)),
+            ]),
             null,
             false,
           ),
@@ -109,11 +100,7 @@ describe('class declarations', () => {
         [],
         [
           new stmt.ClassProperty(
-            new stmt.Var(
-              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
-              new types.Number(),
-              new expr.NumberLiteral(3),
-            ),
+            new stmt.Var('b', new types.Number(), new expr.NumberLiteral(3)),
             null,
             false,
           ),
@@ -132,22 +119,9 @@ describe('class declarations', () => {
         null,
         [],
         [
-          new stmt.ClassProperty(
-            new stmt.Var(
-              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
-              null,
-              null,
-            ),
-            null,
-            false,
-          ),
+          new stmt.ClassProperty(new stmt.Var('b', null, null), null, false),
           new stmt.ClassMethod(
-            new stmt.Function(
-              new Token(TokenType.IDENTIFIER, 'c', undefined, 1),
-              [],
-              null,
-              [],
-            ),
+            new stmt.Function('c', [], null, []),
             null,
             false,
           ),
@@ -160,19 +134,7 @@ describe('class declarations', () => {
   test('class A(b) {}', () => {
     let source = 'class A(b) {}';
     let expected = [
-      new stmt.Class(
-        'A',
-        [
-          new stmt.Var(
-            new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
-            null,
-            null,
-          ),
-        ],
-        null,
-        [],
-        [],
-      ),
+      new stmt.Class('A', [new stmt.Var('b', null, null)], null, [], []),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -184,15 +146,11 @@ describe('class declarations', () => {
         'A',
         [
           new stmt.Var(
-            new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
+            'b',
             new types.Union([new types.Number(), new types.String()]),
             new expr.NumberLiteral(5),
           ),
-          new stmt.Var(
-            new Token(TokenType.IDENTIFIER, 'c', undefined, 1),
-            new types.Boolean(),
-            null,
-          ),
+          new stmt.Var('c', new types.Boolean(), null),
         ],
         null,
         [],
@@ -238,11 +196,7 @@ describe('class declarations', () => {
         [],
         [
           new stmt.ClassConst(
-            new stmt.Var(
-              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
-              null,
-              new expr.NumberLiteral(3),
-            ),
+            new stmt.Var('b', null, new expr.NumberLiteral(3)),
             null,
             false,
           ),
@@ -301,11 +255,7 @@ describe('class declarations', () => {
         [],
         [
           new stmt.ClassProperty(
-            new stmt.Var(
-              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
-              null,
-              null,
-            ),
+            new stmt.Var('b', null, null),
             'private',
             false,
           ),
@@ -325,11 +275,7 @@ describe('class declarations', () => {
         [],
         [
           new stmt.ClassConst(
-            new stmt.Var(
-              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
-              null,
-              new expr.NumberLiteral(4),
-            ),
+            new stmt.Var('b', null, new expr.NumberLiteral(4)),
             'protected',
             false,
           ),
@@ -349,12 +295,7 @@ describe('class declarations', () => {
         [],
         [
           new stmt.ClassMethod(
-            new stmt.Function(
-              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
-              [],
-              null,
-              [],
-            ),
+            new stmt.Function('b', [], null, []),
             'public',
             false,
           ),
@@ -372,17 +313,7 @@ describe('class declarations', () => {
         [],
         null,
         [],
-        [
-          new stmt.ClassProperty(
-            new stmt.Var(
-              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
-              null,
-              null,
-            ),
-            null,
-            true,
-          ),
-        ],
+        [new stmt.ClassProperty(new stmt.Var('b', null, null), null, true)],
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -398,12 +329,7 @@ describe('class declarations', () => {
         [],
         [
           new stmt.ClassMethod(
-            new stmt.Function(
-              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
-              [],
-              null,
-              [],
-            ),
+            new stmt.Function('b', [], null, []),
             null,
             true,
           ),
@@ -423,11 +349,7 @@ describe('class declarations', () => {
         [],
         [
           new stmt.ClassConst(
-            new stmt.Var(
-              new Token(TokenType.IDENTIFIER, 'b', undefined, 1),
-              null,
-              new expr.NumberLiteral(4),
-            ),
+            new stmt.Var('b', null, new expr.NumberLiteral(4)),
             null,
             true,
           ),

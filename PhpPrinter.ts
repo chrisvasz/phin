@@ -41,7 +41,7 @@ export class PhpPrinter implements expr.Visitor<string>, stmt.Visitor<string> {
   }
 
   visitAssignExpr(expr: expr.Assign): string {
-    return `$${expr.name.lexeme} = ${expr.value.accept(this)}`;
+    return `$${expr.name} = ${expr.value.accept(this)}`;
   }
 
   visitNumberLiteralExpr(expr: expr.NumberLiteral): string {
@@ -76,6 +76,6 @@ export class PhpPrinter implements expr.Visitor<string>, stmt.Visitor<string> {
   }
 
   visitVariableExpr(expr: expr.Variable): string {
-    return `$${expr.name.lexeme}`;
+    return `$${expr.name}`;
   }
 }

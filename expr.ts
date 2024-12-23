@@ -1,7 +1,6 @@
-import { Stmt } from './stmt';
-import { Token } from './Token';
 import { Type } from './type';
 import * as stmt from './stmt';
+import { Stmt } from './stmt';
 
 function indent(depth: number): string {
   return '  '.repeat(depth);
@@ -27,7 +26,7 @@ export abstract class Expr {
 }
 
 export class Assign extends Expr {
-  constructor(public readonly name: Token, public readonly value: Expr) {
+  constructor(public readonly name: string, public readonly value: Expr) {
     super();
   }
   accept<T>(visitor: Visitor<T>): T {
@@ -53,7 +52,7 @@ export class Call extends Expr {
 export class Binary extends Expr {
   constructor(
     public readonly left: Expr,
-    public readonly operator: Token,
+    public readonly operator: string,
     public readonly right: Expr,
   ) {
     super();
@@ -124,7 +123,7 @@ export class NullLiteral extends Expr {
 }
 
 export class Unary extends Expr {
-  constructor(public readonly operator: Token, public readonly right: Expr) {
+  constructor(public readonly operator: string, public readonly right: Expr) {
     super();
   }
   accept<T>(visitor: Visitor<T>): T {
@@ -132,26 +131,24 @@ export class Unary extends Expr {
   }
   toString(depth = 0) {
     const { operator, right } = this;
-    const lexeme = operator.lexeme;
-    return `${indent(depth)}Unary ${lexeme} ${right.toString(depth + 1)}`;
+    return `${indent(depth)}Unary ${operator} ${right.toString(depth + 1)}`;
   }
 }
 
 export class Variable extends Expr {
-  constructor(public readonly name: Token) {
+  constructor(public readonly name: string) {
     super();
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitVariableExpr(this);
   }
   toString(depth = 0): string {
-    return indent(depth) + this.name.lexeme;
+    return indent(depth) + this.name;
   }
 }
 
 export class Function extends Expr {
   constructor(
-    public readonly name: Token | null,
     public readonly params: stmt.Var[],
     public readonly returnType: Type | null,
     public readonly body: Expr | Stmt[],

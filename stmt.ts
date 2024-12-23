@@ -1,5 +1,4 @@
 import { Expr } from './expr';
-import { Token } from './Token';
 import { Type } from './type';
 
 function indent(depth: number): string {
@@ -54,7 +53,7 @@ export class Block extends Stmt {
 
 export class Var extends Stmt {
   constructor(
-    public readonly name: Token | string,
+    public readonly name: string,
     public readonly type: Type | null,
     public readonly initializer: Expr | null,
   ) {
@@ -122,7 +121,7 @@ export class Foreach extends Stmt {
 
 export class Function extends Stmt {
   constructor(
-    public readonly name: Token,
+    public readonly name: string,
     public readonly params: Var[],
     public readonly returnType: Type | null,
     public readonly body: Stmt[] | Expr,

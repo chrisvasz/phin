@@ -207,7 +207,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function functionDeclaration(): stmt.Function {
-    let name = consume('Expect function name', IDENTIFIER);
+    let name = consume('Expect function name', IDENTIFIER).lexeme;
     consume('Expect "(" after function name', LEFT_PAREN);
     let params = functionParams();
     consume('Expect ")" after function params', RIGHT_PAREN);
@@ -216,12 +216,11 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function functionExpression(): expr.Function {
-    let name = match(IDENTIFIER) ? previous() : null;
     consume('Expect "(" after function name', LEFT_PAREN);
     let params = functionParams();
     consume('Expect ")" after function params', RIGHT_PAREN);
     let returnType = match(COLON) ? typeAnnotation() : null;
-    return new expr.Function(name, params, returnType, functionBody());
+    return new expr.Function(params, returnType, functionBody());
   }
 
   function functionParams(): stmt.Var[] {
@@ -237,7 +236,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function functionParam(): stmt.Var {
-    let name = consume('Expect parameter name', IDENTIFIER);
+    let name = consume('Expect parameter name', IDENTIFIER).lexeme;
     let type = match(COLON) ? typeAnnotation() : null;
     let initializer = match(EQUAL) ? expression() : null;
     return new stmt.Var(name, type, initializer);
@@ -257,7 +256,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function varWithType(): stmt.Var {
-    let name = consume('Expect variable name', IDENTIFIER);
+    let name = consume('Expect variable name', IDENTIFIER).lexeme;
     let type = match(COLON) ? typeAnnotation() : null;
     return new stmt.Var(name, type, null);
   }
@@ -381,7 +380,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     while (match(LOGICAL_OR)) {
       let operator = previous();
       let right = logicalAnd();
-      result = new expr.Binary(result, operator, right);
+      result = new expr.Binary(result, operator.lexeme, right);
     }
     return result;
   }
@@ -391,7 +390,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     while (match(LOGICAL_AND)) {
       let operator = previous();
       let right = equality();
-      result = new expr.Binary(result, operator, right);
+      result = new expr.Binary(result, operator.lexeme, right);
     }
     return result;
   }
@@ -403,7 +402,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     ) {
       let operator = previous();
       let right = comparison();
-      result = new expr.Binary(result, operator, right);
+      result = new expr.Binary(result, operator.lexeme, right);
     }
     return result;
   }
@@ -413,7 +412,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, SPACESHIP)) {
       let operator = previous();
       let right = term();
-      result = new expr.Binary(result, operator, right);
+      result = new expr.Binary(result, operator.lexeme, right);
     }
     return result;
   }
@@ -423,7 +422,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     while (match(MINUS, PLUS)) {
       let operator = previous();
       let right = factor();
-      result = new expr.Binary(result, operator, right);
+      result = new expr.Binary(result, operator.lexeme, right);
     }
     return result;
   }
@@ -433,7 +432,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     while (match(SLASH, STAR)) {
       let operator = previous();
       let right = unary();
-      result = new expr.Binary(result, operator, right);
+      result = new expr.Binary(result, operator.lexeme, right);
     }
     return result;
   }
@@ -442,7 +441,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(BANG, MINUS, PLUS, PLUS_PLUS, MINUS_MINUS)) {
       let operator = previous();
       let right = unary();
-      return new expr.Unary(operator, right);
+      return new expr.Unary(operator.lexeme, right);
     }
     return call();
   }
@@ -467,7 +466,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(TRUE)) return new expr.BooleanLiteral(true);
     if (match(FALSE)) return new expr.BooleanLiteral(false);
     if (match(LEFT_PAREN)) return grouping();
-    if (match(IDENTIFIER)) return new expr.Variable(previous());
+    if (match(IDENTIFIER)) return new expr.Variable(previous().lexeme);
     throw error(peek(), 'Expect expression');
   }
 
