@@ -1,6 +1,7 @@
 import { Token, TokenType } from './Token';
 
 const {
+  ABSTRACT,
   AMPERSAND,
   ARROW,
   AS,
@@ -74,6 +75,7 @@ const {
 } = TokenType;
 
 const keywords = new Map<string, TokenType>([
+  ['abstract', ABSTRACT],
   ['as', AS],
   ['catch', CATCH],
   ['class', CLASS],

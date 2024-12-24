@@ -239,6 +239,7 @@ export class ClassConst extends Stmt {
     public readonly variable: Var,
     public readonly visibility: Visibility,
     public readonly isStatic: boolean,
+    public readonly isFinal: boolean,
   ) {
     super();
   }

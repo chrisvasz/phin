@@ -271,6 +271,7 @@ test('eol', () => {
 
 test('keywords', () => {
   const list = {
+    abstract: TokenType.ABSTRACT,
     as: TokenType.AS,
     catch: TokenType.CATCH,
     class: TokenType.CLASS,

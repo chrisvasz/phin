@@ -227,7 +227,13 @@ export default function parse(tokens: Token[]): Stmt[] {
         isStatic,
         isFinal,
       );
-    if (match(CONST)) return classConst(visibility, isStatic);
+    if (match(CONST))
+      return new stmt.ClassConst(
+        varDeclaration(), // TODO must have initializer, be compile-time constant
+        visibility,
+        isStatic,
+        isFinal,
+      );
     if (matchIdentifier('init')) return classInitializer();
     throw error(peek(), 'Expect class member');
   }
@@ -237,13 +243,6 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (visibility?.type === PROTECTED) return 'protected';
     if (visibility?.type === PRIVATE) return 'private';
     return null;
-  }
-
-  function classConst(
-    visibility: stmt.Visibility,
-    isStatic: boolean,
-  ): stmt.ClassConst {
-    return new stmt.ClassConst(varDeclaration(), visibility, isStatic);
   }
 
   function classInitializer(): stmt.ClassInitializer {

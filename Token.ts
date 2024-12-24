@@ -56,6 +56,7 @@ export enum TokenType {
   NUMBER,
 
   // Keywords
+  ABSTRACT,
   AS,
   CATCH,
   CLASS,
