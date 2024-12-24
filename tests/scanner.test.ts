@@ -272,12 +272,14 @@ test('eol', () => {
 test('keywords', () => {
   const list = {
     as: TokenType.AS,
+    catch: TokenType.CATCH,
     class: TokenType.CLASS,
     const: TokenType.CONST,
     echo: TokenType.ECHO,
     else: TokenType.ELSE,
     extends: TokenType.EXTENDS,
     false: TokenType.FALSE,
+    finally: TokenType.FINALLY,
     fun: TokenType.FUN,
     foreach: TokenType.FOREACH,
     for: TokenType.FOR,
@@ -294,6 +296,7 @@ test('keywords', () => {
     super: TokenType.SUPER,
     this: TokenType.THIS,
     true: TokenType.TRUE,
+    try: TokenType.TRY,
     val: TokenType.VAL,
     var: TokenType.VAR,
     while: TokenType.WHILE,

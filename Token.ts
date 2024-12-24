@@ -57,12 +57,14 @@ export enum TokenType {
 
   // Keywords
   AS,
+  CATCH,
   CLASS,
   CONST,
   ECHO,
   ELSE,
   EXTENDS,
   FALSE,
+  FINALLY,
   FOREACH,
   FOR,
   FUN,
@@ -79,6 +81,7 @@ export enum TokenType {
   SUPER,
   THIS,
   TRUE,
+  TRY,
   VAL,
   VAR,
   WHILE,

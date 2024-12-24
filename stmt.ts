@@ -1,5 +1,6 @@
 import { Expr } from './expr';
 import { Type } from './type';
+import * as expr from './expr';
 
 function indent(depth: number): string {
   return '  '.repeat(depth);
@@ -22,6 +23,8 @@ export interface Visitor<T> {
   visitForeachStmt(stmt: Foreach): T;
   visitFunctionStmt(stmt: Function): T;
   visitReturnStmt(stmt: Return): T;
+  visitTryStmt(stmt: Try): T;
+  visitCatchStmt(stmt: Catch): T;
   visitClassStmt(stmt: Class): T;
   visitClassPropertyStmt(stmt: ClassProperty): T;
   visitClassConstStmt(stmt: ClassConst): T;
@@ -139,6 +142,40 @@ export class Return extends Stmt {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitReturnStmt(this);
+  }
+}
+
+export class Try extends Stmt {
+  constructor(
+    public readonly tryBlock: Stmt[],
+    public readonly catches: Catch[],
+    public readonly finallyBlock: null | Stmt[],
+  ) {
+    super();
+    if (catches.length === 0 && finallyBlock === null) {
+      throw new Error(
+        'Try statement must have at least one catch or finally block',
+      );
+    }
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitTryStmt(this);
+  }
+}
+
+export class Catch extends Stmt {
+  constructor(
+    public readonly variable: string,
+    public readonly types: string[],
+    public readonly body: Stmt[],
+  ) {
+    super();
+    if (types.length === 0) {
+      throw new Error('Catch exception must have at least one type');
+    }
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitCatchStmt(this);
   }
 }
 

@@ -13,6 +13,7 @@ const {
   BANG_EQUAL_EQUAL,
   BANG_EQUAL,
   BANG,
+  CATCH,
   CLASS,
   COLON_COLON,
   COLON,
@@ -28,6 +29,7 @@ const {
   EQUAL,
   EXTENDS,
   FALSE,
+  FINALLY,
   FOREACH,
   FOR,
   FUN,
@@ -67,6 +69,7 @@ const {
   SUPER,
   THIS,
   TRUE,
+  TRY,
   VAL,
   VAR,
   WHILE,
@@ -108,6 +111,7 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function declaration(): Stmt | null {
     try {
+      if (match(TRY)) return tryDeclaration();
       if (match(CLASS)) return classDeclaration();
       if (match(FUN)) return functionDeclaration();
       if (match(VAR)) return varDeclaration();
@@ -117,6 +121,40 @@ export default function parse(tokens: Token[]): Stmt[] {
       synchronize();
       return null;
     }
+  }
+
+  function tryDeclaration(): Stmt | null {
+    consume('Expect "{" before try body', LEFT_BRACE);
+    return new stmt.Try(block(), tryCatches(), tryFinally());
+  }
+
+  function tryCatches(): stmt.Catch[] {
+    let catches: stmt.Catch[] = [];
+    while (match(CATCH)) {
+      consume('Expect "(" after catch', LEFT_PAREN);
+      let name = consume('Expect variable name', IDENTIFIER).lexeme;
+      consume('Expect ":" after catch variable', COLON);
+      let types = tryCatchTypes();
+      consume('Expect ")" after catch', RIGHT_PAREN);
+      consume('Expect "{" before catch body', LEFT_BRACE);
+      let body = block();
+      catches.push(new stmt.Catch(name, types, body));
+    }
+    return catches;
+  }
+
+  function tryCatchTypes(): string[] {
+    let types = [consume('Expect exception type', IDENTIFIER).lexeme];
+    while (match(PIPE)) {
+      types.push(consume('Expect exception type', IDENTIFIER).lexeme);
+    }
+    return types;
+  }
+
+  function tryFinally(): Stmt[] | null {
+    if (!match(FINALLY)) return null;
+    consume('Expect "{" before finally body', LEFT_BRACE);
+    return block();
   }
 
   function classDeclaration(): stmt.Class {
