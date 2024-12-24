@@ -82,7 +82,7 @@ export class Grouping extends Expr {
 }
 
 export class NumberLiteral extends Expr {
-  constructor(public readonly value: number) {
+  constructor(public readonly value: string) {
     super();
   }
   accept<T>(visitor: Visitor<T>): T {

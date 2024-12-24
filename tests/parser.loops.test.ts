@@ -16,7 +16,7 @@ describe('while', () => {
     let expected = [
       new stmt.While(
         new expr.BooleanLiteral(true),
-        new stmt.Expression(new expr.NumberLiteral(2)),
+        new stmt.Expression(new expr.NumberLiteral('2')),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -27,11 +27,11 @@ describe('while', () => {
     let expected = [
       new stmt.While(
         new expr.Binary(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           '<',
-          new expr.NumberLiteral(2),
+          new expr.NumberLiteral('2'),
         ),
-        new stmt.Expression(new expr.NumberLiteral(2)),
+        new stmt.Expression(new expr.NumberLiteral('2')),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -42,7 +42,7 @@ describe('while', () => {
     let expected = [
       new stmt.While(
         new expr.NullLiteral(),
-        new stmt.Block([new stmt.Expression(new expr.NumberLiteral(2))]),
+        new stmt.Block([new stmt.Expression(new expr.NumberLiteral('2'))]),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -57,7 +57,7 @@ describe('for', () => {
         null,
         null,
         null,
-        new stmt.Expression(new expr.NumberLiteral(2)),
+        new stmt.Expression(new expr.NumberLiteral('2')),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -67,10 +67,10 @@ describe('for', () => {
     let source = 'for (var i = 0; ;) 2';
     let expected = [
       new stmt.For(
-        new stmt.Var('i', null, new expr.NumberLiteral(0)),
+        new stmt.Var('i', null, new expr.NumberLiteral('0')),
         null,
         null,
-        new stmt.Expression(new expr.NumberLiteral(2)),
+        new stmt.Expression(new expr.NumberLiteral('2')),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -80,14 +80,14 @@ describe('for', () => {
     let source = 'for (var i = 0; i < 10;) 2';
     let expected = [
       new stmt.For(
-        new stmt.Var('i', null, new expr.NumberLiteral(0)),
+        new stmt.Var('i', null, new expr.NumberLiteral('0')),
         new expr.Binary(
           new expr.Variable('i'),
           '<',
-          new expr.NumberLiteral(10),
+          new expr.NumberLiteral('10'),
         ),
         null,
-        new stmt.Expression(new expr.NumberLiteral(2)),
+        new stmt.Expression(new expr.NumberLiteral('2')),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -97,14 +97,14 @@ describe('for', () => {
     let source = 'for (var i: number = 0; i < 10; ++i) {2;}';
     let expected = [
       new stmt.For(
-        new stmt.Var('i', new types.Number(), new expr.NumberLiteral(0)),
+        new stmt.Var('i', new types.Number(), new expr.NumberLiteral('0')),
         new expr.Binary(
           new expr.Variable('i'),
           '<',
-          new expr.NumberLiteral(10),
+          new expr.NumberLiteral('10'),
         ),
         new expr.Unary('++', new expr.Variable('i')),
-        new stmt.Block([new stmt.Expression(new expr.NumberLiteral(2))]),
+        new stmt.Block([new stmt.Expression(new expr.NumberLiteral('2'))]),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -119,7 +119,7 @@ describe('foreach', () => {
         null,
         new stmt.Var('i', null, null),
         new expr.Variable('list'),
-        new stmt.Expression(new expr.NumberLiteral(2)),
+        new stmt.Expression(new expr.NumberLiteral('2')),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -132,7 +132,7 @@ describe('foreach', () => {
         null,
         new stmt.Var('i', null, null),
         new expr.Variable('list'),
-        new stmt.Block([new stmt.Expression(new expr.NumberLiteral(2))]),
+        new stmt.Block([new stmt.Expression(new expr.NumberLiteral('2'))]),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -145,7 +145,7 @@ describe('foreach', () => {
         null,
         new stmt.Var('i', new types.Number(), null),
         new expr.Variable('list'),
-        new stmt.Expression(new expr.NumberLiteral(2)),
+        new stmt.Expression(new expr.NumberLiteral('2')),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -158,7 +158,7 @@ describe('foreach', () => {
         new stmt.Var('i', null, null),
         new stmt.Var('l', null, null),
         new expr.Variable('list'),
-        new stmt.Expression(new expr.NumberLiteral(2)),
+        new stmt.Expression(new expr.NumberLiteral('2')),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -171,7 +171,7 @@ describe('foreach', () => {
         new stmt.Var('i', new types.Number(), null),
         new stmt.Var('l', new types.Identifier('Rental', []), null),
         new expr.Variable('list'),
-        new stmt.Expression(new expr.NumberLiteral(2)),
+        new stmt.Expression(new expr.NumberLiteral('2')),
       ),
     ];
     expect(ast(source)).toEqual(expected);

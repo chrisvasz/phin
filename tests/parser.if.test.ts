@@ -15,7 +15,7 @@ describe('if statements', () => {
     let expected = [
       new stmt.If(
         new expr.BooleanLiteral(true),
-        new stmt.Expression(new expr.NumberLiteral(2)),
+        new stmt.Expression(new expr.NumberLiteral('2')),
         null,
       ),
     ];
@@ -28,7 +28,7 @@ describe('if statements', () => {
       new stmt.If(
         new expr.BooleanLiteral(true),
         new stmt.Block([
-          new stmt.Expression(new expr.NumberLiteral(2)),
+          new stmt.Expression(new expr.NumberLiteral('2')),
           new stmt.Expression(new expr.StringLiteral('5')),
         ]),
         null,
@@ -43,8 +43,8 @@ describe('if statements', () => {
     let expected = [
       new stmt.If(
         new expr.BooleanLiteral(true),
-        new stmt.Expression(new expr.NumberLiteral(2)),
-        new stmt.Expression(new expr.NumberLiteral(3)),
+        new stmt.Expression(new expr.NumberLiteral('2')),
+        new stmt.Expression(new expr.NumberLiteral('3')),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -55,8 +55,8 @@ describe('if statements', () => {
     let expected = [
       new stmt.If(
         new expr.BooleanLiteral(true),
-        new stmt.Expression(new expr.NumberLiteral(2)),
-        new stmt.Block([new stmt.Expression(new expr.NumberLiteral(5))]),
+        new stmt.Expression(new expr.NumberLiteral('2')),
+        new stmt.Block([new stmt.Expression(new expr.NumberLiteral('5'))]),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -67,10 +67,10 @@ describe('if statements', () => {
     let expected = [
       new stmt.If(
         new expr.BooleanLiteral(true),
-        new stmt.Expression(new expr.NumberLiteral(2)),
+        new stmt.Expression(new expr.NumberLiteral('2')),
         new stmt.If(
           new expr.BooleanLiteral(false),
-          new stmt.Expression(new expr.NumberLiteral(5)),
+          new stmt.Expression(new expr.NumberLiteral('5')),
           null,
         ),
       ),

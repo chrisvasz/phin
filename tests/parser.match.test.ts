@@ -14,7 +14,9 @@ describe('match expressions', () => {
   test('match (1) {}', () => {
     let source = 'match (1) {}';
     let expected = [
-      new stmt.Expression(new expr.Match(new expr.NumberLiteral(1), [], null)),
+      new stmt.Expression(
+        new expr.Match(new expr.NumberLiteral('1'), [], null),
+      ),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -24,11 +26,11 @@ describe('match expressions', () => {
     let expected = [
       new stmt.Expression(
         new expr.Match(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           [
             new expr.MatchArm(
-              [new expr.NumberLiteral(1)],
-              new expr.NumberLiteral(2),
+              [new expr.NumberLiteral('1')],
+              new expr.NumberLiteral('2'),
             ),
           ],
           null,
@@ -43,11 +45,11 @@ describe('match expressions', () => {
     let expected = [
       new stmt.Expression(
         new expr.Match(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           [
             new expr.MatchArm(
-              [new expr.NumberLiteral(1), new expr.NumberLiteral(2)],
-              new expr.NumberLiteral(3),
+              [new expr.NumberLiteral('1'), new expr.NumberLiteral('2')],
+              new expr.NumberLiteral('3'),
             ),
           ],
           null,
@@ -62,15 +64,15 @@ describe('match expressions', () => {
     let expected = [
       new stmt.Expression(
         new expr.Match(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           [
             new expr.MatchArm(
-              [new expr.NumberLiteral(1), new expr.NumberLiteral(2)],
-              new expr.NumberLiteral(3),
+              [new expr.NumberLiteral('1'), new expr.NumberLiteral('2')],
+              new expr.NumberLiteral('3'),
             ),
             new expr.MatchArm(
-              [new expr.NumberLiteral(4), new expr.NumberLiteral(5)],
-              new expr.NumberLiteral(6),
+              [new expr.NumberLiteral('4'), new expr.NumberLiteral('5')],
+              new expr.NumberLiteral('6'),
             ),
           ],
           null,
@@ -85,15 +87,15 @@ describe('match expressions', () => {
     let expected = [
       new stmt.Expression(
         new expr.Match(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           [
             new expr.MatchArm(
-              [new expr.NumberLiteral(1)],
-              new expr.NumberLiteral(2),
+              [new expr.NumberLiteral('1')],
+              new expr.NumberLiteral('2'),
             ),
             new expr.MatchArm(
-              [new expr.NumberLiteral(3)],
-              new expr.NumberLiteral(4),
+              [new expr.NumberLiteral('3')],
+              new expr.NumberLiteral('4'),
             ),
           ],
           null,
@@ -108,9 +110,9 @@ describe('match expressions', () => {
     let expected = [
       new stmt.Expression(
         new expr.Match(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           [],
-          new expr.NumberLiteral(2),
+          new expr.NumberLiteral('2'),
         ),
       ),
     ];
@@ -122,14 +124,14 @@ describe('match expressions', () => {
     let expected = [
       new stmt.Expression(
         new expr.Match(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           [
             new expr.MatchArm(
-              [new expr.NumberLiteral(1)],
-              new expr.NumberLiteral(2),
+              [new expr.NumberLiteral('1')],
+              new expr.NumberLiteral('2'),
             ),
           ],
-          new expr.NumberLiteral(3),
+          new expr.NumberLiteral('3'),
         ),
       ),
     ];
@@ -146,9 +148,9 @@ describe('match expressions', () => {
             new expr.MatchArm(
               [
                 new expr.Binary(
-                  new expr.NumberLiteral(1),
+                  new expr.NumberLiteral('1'),
                   '>=',
-                  new expr.NumberLiteral(2),
+                  new expr.NumberLiteral('2'),
                 ),
               ],
               new expr.StringLiteral('worked'),

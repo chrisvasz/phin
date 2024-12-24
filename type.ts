@@ -65,7 +65,7 @@ export class Identifier extends Type {
 }
 
 export class NumberLiteral extends Type {
-  constructor(public readonly value: number) {
+  constructor(public readonly value: string) {
     super();
   }
   accept<T>(visitor: Visitor<T>): T {

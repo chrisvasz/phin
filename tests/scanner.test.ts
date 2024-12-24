@@ -1,5 +1,5 @@
 // @ts-ignore
-import { expect, test } from 'bun:test';
+import { expect, test, describe } from 'bun:test';
 import { Token, TokenType } from '../Token';
 import scan from '../scanner';
 
@@ -235,20 +235,6 @@ test('=>', () => {
   expect(actual).toEqual(expected);
 });
 
-test('123', () => {
-  let expected = [new Token(TokenType.NUMBER, '123', 123, 1), eof];
-  let source = '123';
-  let actual = scan(source);
-  expect(actual).toEqual(expected);
-});
-
-test('123.45', () => {
-  let expected = [new Token(TokenType.NUMBER, '123.45', 123.45, 1), eof];
-  let source = '123.45';
-  let actual = scan(source);
-  expect(actual).toEqual(expected);
-});
-
 test('"string literal"', () => {
   let expected = [
     new Token(TokenType.STRING, '"string literal"', 'string literal', 1),
@@ -312,4 +298,155 @@ test('keywords', () => {
   let expected = tokens;
   let actual = scan(source.join(' '));
   expect(actual).toEqual(expected);
+});
+
+describe('number literals', () => {
+  test('1', () => {
+    let expected = [new Token(TokenType.NUMBER, '1', '1', 1), eof];
+    let source = '1';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('1.2', () => {
+    let expected = [new Token(TokenType.NUMBER, '1.2', '1.2', 1), eof];
+    let source = '1.2';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('123', () => {
+    let expected = [new Token(TokenType.NUMBER, '123', '123', 1), eof];
+    let source = '123';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('123_', () => {
+    let expected = [new Token(TokenType.NUMBER, '123_', '123', 1), eof];
+    let source = '123_';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('123.45', () => {
+    let expected = [new Token(TokenType.NUMBER, '123.45', '123.45', 1), eof];
+    let source = '123.45';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('123_456', () => {
+    let expected = [new Token(TokenType.NUMBER, '123_456', '123456', 1), eof];
+    let source = '123_456';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('123_456.78', () => {
+    let expected = [
+      new Token(TokenType.NUMBER, '123_456.78', '123456.78', 1),
+      eof,
+    ];
+    let source = '123_456.78';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('123_456.78_90', () => {
+    let expected = [
+      new Token(TokenType.NUMBER, '123_456.78_90', '123456.7890', 1),
+      eof,
+    ];
+    let source = '123_456.78_90';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('1_2_3_4_5_6_7_8_9_0', () => {
+    let expected = [
+      new Token(TokenType.NUMBER, '1_2_3_4_5_6_7_8_9_0', '1234567890', 1),
+      eof,
+    ];
+    let source = '1_2_3_4_5_6_7_8_9_0';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('0x1', () => {
+    let expected = [new Token(TokenType.NUMBER, '0x1', '0x1', 1), eof];
+    let source = '0x1';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('0X12', () => {
+    let expected = [new Token(TokenType.NUMBER, '0X12', '0X12', 1), eof];
+    let source = '0X12';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('0x012_345_678_9AB_CDE_F', () => {
+    let expected = [
+      new Token(
+        TokenType.NUMBER,
+        '0x012_345_678_9AB_CDE_F',
+        '0x0123456789ABCDEF',
+        1,
+      ),
+      eof,
+    ];
+    let source = '0x012_345_678_9AB_CDE_F';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('0o1', () => {
+    let expected = [new Token(TokenType.NUMBER, '0o1', '0o1', 1), eof];
+    let source = '0o1';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('0O10', () => {
+    let expected = [new Token(TokenType.NUMBER, '0O10', '0O10', 1), eof];
+    let source = '0O10';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('0o012_345_67', () => {
+    let expected = [
+      new Token(TokenType.NUMBER, '0o012_345_67', '0o01234567', 1),
+      eof,
+    ];
+    let source = '0o012_345_67';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('0b1', () => {
+    let expected = [new Token(TokenType.NUMBER, '0b1', '0b1', 1), eof];
+    let source = '0b1';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('0B10', () => {
+    let expected = [new Token(TokenType.NUMBER, '0B10', '0B10', 1), eof];
+    let source = '0B10';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('0b010_101_011', () => {
+    let expected = [
+      new Token(TokenType.NUMBER, '0b010_101_011', '0b010101011', 1),
+      eof,
+    ];
+    let source = '0b010_101_011';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
 });

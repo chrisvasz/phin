@@ -30,17 +30,15 @@ describe('literals', () => {
 
   test('123', () => {
     let source = '123';
-    let expected = [new stmt.Expression(new expr.NumberLiteral(123))];
+    let expected = [new stmt.Expression(new expr.NumberLiteral('123'))];
     expect(ast(source)).toEqual(expected);
   });
 
   test('123.45', () => {
     let source = '123.45';
-    let expected = [new stmt.Expression(new expr.NumberLiteral(123.45))];
+    let expected = [new stmt.Expression(new expr.NumberLiteral('123.45'))];
     expect(ast(source)).toEqual(expected);
   });
-
-  test.todo('1_000_000');
 
   test('"hello"', () => {
     let source = '"hello"';

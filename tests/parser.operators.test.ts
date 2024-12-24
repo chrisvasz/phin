@@ -15,9 +15,9 @@ describe('math', () => {
     let expected = [
       new stmt.Expression(
         new expr.Binary(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           '+',
-          new expr.NumberLiteral(2),
+          new expr.NumberLiteral('2'),
         ),
       ),
     ];
@@ -29,12 +29,12 @@ describe('math', () => {
     let expected = [
       new stmt.Expression(
         new expr.Binary(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           '+',
           new expr.Binary(
-            new expr.NumberLiteral(2),
+            new expr.NumberLiteral('2'),
             '*',
-            new expr.NumberLiteral(3),
+            new expr.NumberLiteral('3'),
           ),
         ),
       ),
@@ -48,12 +48,12 @@ describe('math', () => {
       new stmt.Expression(
         new expr.Binary(
           new expr.Binary(
-            new expr.NumberLiteral(1),
+            new expr.NumberLiteral('1'),
             '*',
-            new expr.NumberLiteral(2),
+            new expr.NumberLiteral('2'),
           ),
           '-',
-          new expr.NumberLiteral(3),
+          new expr.NumberLiteral('3'),
         ),
       ),
     ];
@@ -66,12 +66,12 @@ describe('math', () => {
       new stmt.Expression(
         new expr.Binary(
           new expr.Binary(
-            new expr.NumberLiteral(1),
+            new expr.NumberLiteral('1'),
             '+',
-            new expr.NumberLiteral(2),
+            new expr.NumberLiteral('2'),
           ),
           '+',
-          new expr.NumberLiteral(3),
+          new expr.NumberLiteral('3'),
         ),
       ),
     ];
@@ -83,13 +83,13 @@ describe('math', () => {
     let expected = [
       new stmt.Expression(
         new expr.Binary(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           '+',
           new expr.Grouping(
             new expr.Binary(
-              new expr.NumberLiteral(2),
+              new expr.NumberLiteral('2'),
               '+',
-              new expr.NumberLiteral(3),
+              new expr.NumberLiteral('3'),
             ),
           ),
         ),
@@ -103,9 +103,23 @@ describe('math', () => {
     let expected = [
       new stmt.Expression(
         new expr.Binary(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           '/',
-          new expr.NumberLiteral(2),
+          new expr.NumberLiteral('2'),
+        ),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('expr() / expr()', () => {
+    let source = 'expr() / expr()';
+    let expected = [
+      new stmt.Expression(
+        new expr.Binary(
+          new expr.Call(new expr.Variable('expr'), []),
+          '/',
+          new expr.Call(new expr.Variable('expr'), []),
         ),
       ),
     ];
@@ -125,7 +139,7 @@ describe('unary operators', () => {
   test('-1', () => {
     let source = '-1';
     let expected = [
-      new stmt.Expression(new expr.Unary('-', new expr.NumberLiteral(1))),
+      new stmt.Expression(new expr.Unary('-', new expr.NumberLiteral('1'))),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -133,7 +147,7 @@ describe('unary operators', () => {
   test('+1', () => {
     let source = '+1';
     let expected = [
-      new stmt.Expression(new expr.Unary('+', new expr.NumberLiteral(1))),
+      new stmt.Expression(new expr.Unary('+', new expr.NumberLiteral('1'))),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -176,9 +190,9 @@ describe('binary operators', () => {
     let expected = [
       new stmt.Expression(
         new expr.Binary(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           '>',
-          new expr.NumberLiteral(2),
+          new expr.NumberLiteral('2'),
         ),
       ),
     ];
@@ -190,9 +204,9 @@ describe('binary operators', () => {
     let expected = [
       new stmt.Expression(
         new expr.Binary(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           '>=',
-          new expr.NumberLiteral(2),
+          new expr.NumberLiteral('2'),
         ),
       ),
     ];
@@ -204,9 +218,9 @@ describe('binary operators', () => {
     let expected = [
       new stmt.Expression(
         new expr.Binary(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           '<',
-          new expr.NumberLiteral(2),
+          new expr.NumberLiteral('2'),
         ),
       ),
     ];
@@ -218,9 +232,9 @@ describe('binary operators', () => {
     let expected = [
       new stmt.Expression(
         new expr.Binary(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           '<=',
-          new expr.NumberLiteral(2),
+          new expr.NumberLiteral('2'),
         ),
       ),
     ];
@@ -232,9 +246,9 @@ describe('binary operators', () => {
     let expected = [
       new stmt.Expression(
         new expr.Binary(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           '==',
-          new expr.NumberLiteral(2),
+          new expr.NumberLiteral('2'),
         ),
       ),
     ];
@@ -246,9 +260,9 @@ describe('binary operators', () => {
     let expected = [
       new stmt.Expression(
         new expr.Binary(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           '===',
-          new expr.NumberLiteral(2),
+          new expr.NumberLiteral('2'),
         ),
       ),
     ];
@@ -260,9 +274,9 @@ describe('binary operators', () => {
     let expected = [
       new stmt.Expression(
         new expr.Binary(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           '!=',
-          new expr.NumberLiteral(2),
+          new expr.NumberLiteral('2'),
         ),
       ),
     ];
@@ -274,9 +288,9 @@ describe('binary operators', () => {
     let expected = [
       new stmt.Expression(
         new expr.Binary(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           '!==',
-          new expr.NumberLiteral(2),
+          new expr.NumberLiteral('2'),
         ),
       ),
     ];
@@ -288,9 +302,9 @@ describe('binary operators', () => {
     let expected = [
       new stmt.Expression(
         new expr.Binary(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           '<=>',
-          new expr.NumberLiteral(2),
+          new expr.NumberLiteral('2'),
         ),
       ),
     ];
@@ -302,9 +316,9 @@ describe('binary operators', () => {
     let expected = [
       new stmt.Expression(
         new expr.Binary(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           '&&',
-          new expr.NumberLiteral(2),
+          new expr.NumberLiteral('2'),
         ),
       ),
     ];
@@ -316,9 +330,9 @@ describe('binary operators', () => {
     let expected = [
       new stmt.Expression(
         new expr.Binary(
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
           '||',
-          new expr.NumberLiteral(2),
+          new expr.NumberLiteral('2'),
         ),
       ),
     ];
@@ -330,8 +344,8 @@ describe('terminators', () => {
   test('1;2', () => {
     let source = '1;2';
     let expected = [
-      new stmt.Expression(new expr.NumberLiteral(1)),
-      new stmt.Expression(new expr.NumberLiteral(2)),
+      new stmt.Expression(new expr.NumberLiteral('1')),
+      new stmt.Expression(new expr.NumberLiteral('2')),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -339,8 +353,8 @@ describe('terminators', () => {
   test(`1\n2`, () => {
     let source = `1\n2`;
     let expected = [
-      new stmt.Expression(new expr.NumberLiteral(1)),
-      new stmt.Expression(new expr.NumberLiteral(2)),
+      new stmt.Expression(new expr.NumberLiteral('1')),
+      new stmt.Expression(new expr.NumberLiteral('2')),
     ];
     expect(ast(source)).toEqual(expected);
   });

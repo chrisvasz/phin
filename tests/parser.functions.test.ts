@@ -23,7 +23,9 @@ describe('call expressions', () => {
     let source = 'thing(1)';
     let expected = [
       new stmt.Expression(
-        new expr.Call(new expr.Variable('thing'), [new expr.NumberLiteral(1)]),
+        new expr.Call(new expr.Variable('thing'), [
+          new expr.NumberLiteral('1'),
+        ]),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -34,8 +36,8 @@ describe('call expressions', () => {
     let expected = [
       new stmt.Expression(
         new expr.Call(new expr.Variable('thing'), [
-          new expr.NumberLiteral(1),
-          new expr.NumberLiteral(2),
+          new expr.NumberLiteral('1'),
+          new expr.NumberLiteral('2'),
         ]),
       ),
     ];
@@ -48,14 +50,14 @@ describe('call expressions', () => {
       new stmt.Expression(
         new expr.Call(new expr.Variable('thing'), [
           new expr.Binary(
-            new expr.NumberLiteral(1),
+            new expr.NumberLiteral('1'),
             '+',
-            new expr.NumberLiteral(2),
+            new expr.NumberLiteral('2'),
           ),
           new expr.Binary(
-            new expr.NumberLiteral(3),
+            new expr.NumberLiteral('3'),
             '-',
-            new expr.NumberLiteral(4),
+            new expr.NumberLiteral('4'),
           ),
         ]),
       ),
@@ -79,7 +81,9 @@ describe('call expressions', () => {
     let source = 'thing(1,)';
     let expected = [
       new stmt.Expression(
-        new expr.Call(new expr.Variable('thing'), [new expr.NumberLiteral(1)]),
+        new expr.Call(new expr.Variable('thing'), [
+          new expr.NumberLiteral('1'),
+        ]),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -138,8 +142,8 @@ describe('function declarations', () => {
     let source = 'fun foo() {2;3;}';
     let expected = [
       new stmt.Function('foo', [], null, [
-        new stmt.Expression(new expr.NumberLiteral(2)),
-        new stmt.Expression(new expr.NumberLiteral(3)),
+        new stmt.Expression(new expr.NumberLiteral('2')),
+        new stmt.Expression(new expr.NumberLiteral('3')),
       ]),
     ];
     expect(ast(source)).toEqual(expected);
@@ -150,7 +154,7 @@ describe('function declarations', () => {
     let expected = [
       new stmt.Function(
         'foo',
-        [new stmt.Var('a', new types.Number(), new expr.NumberLiteral(1))],
+        [new stmt.Var('a', new types.Number(), new expr.NumberLiteral('1'))],
         null,
         [],
       ),
@@ -162,8 +166,8 @@ describe('function declarations', () => {
     let source = 'fun foo() { 3; return 1; }';
     let expected = [
       new stmt.Function('foo', [], null, [
-        new stmt.Expression(new expr.NumberLiteral(3)),
-        new stmt.Return(new expr.NumberLiteral(1)),
+        new stmt.Expression(new expr.NumberLiteral('3')),
+        new stmt.Return(new expr.NumberLiteral('1')),
       ]),
     ];
     expect(ast(source)).toEqual(expected);
@@ -206,7 +210,7 @@ describe('function expressions', () => {
       new stmt.Var(
         'a',
         null,
-        new expr.Function([], new types.Number(), new expr.NumberLiteral(1)),
+        new expr.Function([], new types.Number(), new expr.NumberLiteral('1')),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -223,12 +227,12 @@ describe('function expressions', () => {
             new stmt.Var(
               'b',
               new types.Union([new types.Number(), new types.String()]),
-              new expr.NumberLiteral(4),
+              new expr.NumberLiteral('4'),
             ),
-            new stmt.Var('c', null, new expr.NumberLiteral(6)),
+            new stmt.Var('c', null, new expr.NumberLiteral('6')),
           ],
           null,
-          [new stmt.Return(new expr.NumberLiteral(5))],
+          [new stmt.Return(new expr.NumberLiteral('5'))],
         ),
       ),
     ];

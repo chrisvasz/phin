@@ -162,7 +162,7 @@ export default function scan(source: string): Token[] {
     }
     if (isDigit(c)) return number();
     if (isAlpha(c)) return identifier();
-    console.log('Unexpected character on line ' + line);
+    console.error('Unexpected character on line ' + line);
     hasError = true;
   }
 
@@ -180,11 +180,6 @@ export default function scan(source: string): Token[] {
     if (source.charAt(current) !== expected) return false;
     current++;
     return true;
-  }
-
-  function peek() {
-    if (isAtEnd()) return '\0';
-    return source.charAt(current);
   }
 
   function bang() {
@@ -241,6 +236,7 @@ export default function scan(source: string): Token[] {
     }
     if (peek() !== '"') {
       console.error('Unterminated string on line ' + line);
+      hasError = true;
       return;
     }
     advance(); // consume the closing "
@@ -262,12 +258,46 @@ export default function scan(source: string): Token[] {
   }
 
   function number() {
-    while (isDigit(peek())) advance();
-    if (peek() === '.' && isDigit(peekNext())) {
-      advance(); // consume the "."
-      while (isDigit(peek())) advance();
+    if (previous() === '0') {
+      if ((peek() === 'x' || peek() === 'X') && isHexDigit(peekNext())) {
+        advance(); // consume the x
+        return hexNumber();
+      }
+      if ((peek() === 'o' || peek() === 'O') && isOctalDigit(peekNext())) {
+        advance(); // consume the o
+        return octalNumber();
+      }
+      if ((peek() === 'b' || peek() === 'B') && isBinaryDigit(peekNext())) {
+        advance(); // consume the b
+        return binaryNumber();
+      }
     }
-    addToken(NUMBER, parseFloat(source.substring(start, current)));
+
+    while (isDigitOr_(peek())) advance();
+    if (peek() === '.' && isDigit(peekNext())) {
+      advance(); // consume the .
+      advance(); // consume the digit after .
+      while (isDigitOr_(peek())) advance();
+    }
+    addToken(NUMBER, source.substring(start, current).replaceAll('_', ''));
+  }
+
+  function hexNumber() {
+    advance(); // consume the first digit
+    while (isHexDigitOr_(peek())) advance();
+    addToken(NUMBER, source.substring(start, current).replaceAll('_', ''));
+  }
+
+  function octalNumber() {
+    advance(); // consume the first digit
+    while (isOctalDigitOr_(peek())) advance();
+    addToken(NUMBER, source.substring(start, current).replaceAll('_', ''));
+  }
+
+  function binaryNumber() {
+    advance(); // consume the first digit
+    while (isBinaryDigitOr_(peek())) advance();
+    addToken(NUMBER, source.substring(start, current).replaceAll('_', ''));
   }
 
   function identifier() {
@@ -275,6 +305,16 @@ export default function scan(source: string): Token[] {
     const text = source.substring(start, current);
     const type = keywords.get(text) || IDENTIFIER;
     addToken(type);
+  }
+
+  function previous() {
+    if (current === 0) return '\0';
+    return source.charAt(current - 1);
+  }
+
+  function peek() {
+    if (isAtEnd()) return '\0';
+    return source.charAt(current);
   }
 
   function peekNext() {
@@ -288,6 +328,34 @@ export default function scan(source: string): Token[] {
 
   function isDigit(c: string) {
     return c >= '0' && c <= '9';
+  }
+
+  function isDigitOr_(c: string) {
+    return isDigit(c) || c === '_';
+  }
+
+  function isHexDigit(c: string) {
+    return isDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+  }
+
+  function isHexDigitOr_(c: string) {
+    return isHexDigit(c) || c === '_';
+  }
+
+  function isOctalDigit(c: string) {
+    return c >= '0' && c <= '7';
+  }
+
+  function isOctalDigitOr_(c: string) {
+    return isOctalDigit(c) || c === '_';
+  }
+
+  function isBinaryDigit(c: string) {
+    return c === '0' || c === '1';
+  }
+
+  function isBinaryDigitOr_(c: string) {
+    return isBinaryDigit(c) || c === '_';
   }
 
   function isAlpha(c: string) {

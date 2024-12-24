@@ -19,7 +19,7 @@ describe('variable declarations', () => {
 
   test('var x = 3', () => {
     let source = 'var x = 3';
-    let expected = [new stmt.Var('x', null, new expr.NumberLiteral(3))];
+    let expected = [new stmt.Var('x', null, new expr.NumberLiteral('3'))];
     expect(ast(source)).toEqual(expected);
   });
 
@@ -30,9 +30,9 @@ describe('variable declarations', () => {
         'x',
         null,
         new expr.Binary(
-          new expr.NumberLiteral(3),
+          new expr.NumberLiteral('3'),
           '+',
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
         ),
       ),
     ];
@@ -46,9 +46,9 @@ describe('variable declarations', () => {
         'x',
         null,
         new expr.Binary(
-          new expr.NumberLiteral(3),
+          new expr.NumberLiteral('3'),
           '+',
-          new expr.NumberLiteral(1),
+          new expr.NumberLiteral('1'),
         ),
       ),
       new stmt.Var('y', null, null),
@@ -66,7 +66,7 @@ describe('variable declarations', () => {
   test('var x: number = 3', () => {
     let source = 'var x: number = 3';
     let expected = [
-      new stmt.Var('x', new type.Number(), new expr.NumberLiteral(3)),
+      new stmt.Var('x', new type.Number(), new expr.NumberLiteral('3')),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -103,7 +103,7 @@ describe('variable declarations', () => {
 
   test('var x: 5', () => {
     let source = 'var x: 5';
-    let expected = [new stmt.Var('x', new type.NumberLiteral(5), null)];
+    let expected = [new stmt.Var('x', new type.NumberLiteral('5'), null)];
     expect(ast(source)).toEqual(expected);
   });
 
@@ -211,7 +211,7 @@ describe('variable declarations', () => {
         new type.Identifier('array', [
           new type.Union([new type.String(), new type.Number()]),
           new type.Intersection([new type.Number(), new type.Null()]),
-          new type.Nullable(new type.NumberLiteral(5)),
+          new type.Nullable(new type.NumberLiteral('5')),
         ]),
         null,
       ),
@@ -282,7 +282,9 @@ describe('variable declarations', () => {
   test('abc = 123', () => {
     let source = 'abc = 123';
     let expected = [
-      new stmt.Expression(new expr.Assign('abc', new expr.NumberLiteral(123))),
+      new stmt.Expression(
+        new expr.Assign('abc', new expr.NumberLiteral('123')),
+      ),
     ];
     expect(ast(source)).toEqual(expected);
   });

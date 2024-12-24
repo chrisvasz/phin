@@ -28,8 +28,8 @@ describe('blocks', () => {
     let source = '{ 1; 2; }';
     let expected = [
       new stmt.Block([
-        new stmt.Expression(new expr.NumberLiteral(1)),
-        new stmt.Expression(new expr.NumberLiteral(2)),
+        new stmt.Expression(new expr.NumberLiteral('1')),
+        new stmt.Expression(new expr.NumberLiteral('2')),
       ]),
     ];
     expect(ast(source)).toEqual(expected);

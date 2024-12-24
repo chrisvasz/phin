@@ -52,7 +52,7 @@ describe('class declarations', () => {
           new stmt.Var(
             'b',
             new types.Union([new types.Number(), new types.String()]),
-            new expr.NumberLiteral(5),
+            new expr.NumberLiteral('5'),
           ),
           new stmt.Var('c', new types.Boolean(), null),
         ],
@@ -118,10 +118,10 @@ describe('class declarations', () => {
         [],
         [
           new stmt.ClassInitializer([
-            new stmt.Expression(new expr.NumberLiteral(1)),
+            new stmt.Expression(new expr.NumberLiteral('1')),
           ]),
           new stmt.ClassInitializer([
-            new stmt.Expression(new expr.NumberLiteral(2)),
+            new stmt.Expression(new expr.NumberLiteral('2')),
           ]),
         ],
       ),
@@ -171,7 +171,7 @@ describe('class methods', () => {
                 new stmt.Var(
                   'c',
                   new types.Union([new types.Number(), new types.String()]),
-                  new expr.NumberLiteral(3),
+                  new expr.NumberLiteral('3'),
                 ),
               ],
               new types.True(),
@@ -198,7 +198,7 @@ describe('class methods', () => {
         [
           new stmt.ClassMethod(
             new stmt.Function('b', [], null, [
-              new stmt.Return(new expr.NumberLiteral(3)),
+              new stmt.Return(new expr.NumberLiteral('3')),
             ]),
             null,
             false,
@@ -306,7 +306,7 @@ describe('class constants', () => {
         [],
         [
           new stmt.ClassConst(
-            new stmt.Var('b', null, new expr.NumberLiteral(3)),
+            new stmt.Var('b', null, new expr.NumberLiteral('3')),
             null,
             false,
             false,
@@ -327,7 +327,7 @@ describe('class constants', () => {
         [],
         [
           new stmt.ClassConst(
-            new stmt.Var('b', null, new expr.NumberLiteral(4)),
+            new stmt.Var('b', null, new expr.NumberLiteral('4')),
             'protected',
             false,
             false,
@@ -348,7 +348,7 @@ describe('class constants', () => {
         [],
         [
           new stmt.ClassConst(
-            new stmt.Var('b', null, new expr.NumberLiteral(4)),
+            new stmt.Var('b', null, new expr.NumberLiteral('4')),
             null,
             true,
             false,
@@ -369,7 +369,7 @@ describe('class constants', () => {
         [],
         [
           new stmt.ClassConst(
-            new stmt.Var('b', null, new expr.NumberLiteral(4)),
+            new stmt.Var('b', null, new expr.NumberLiteral('4')),
             null,
             false,
             true,
@@ -390,7 +390,7 @@ describe('class constants', () => {
         [],
         [
           new stmt.ClassConst(
-            new stmt.Var('b', null, new expr.NumberLiteral(4)),
+            new stmt.Var('b', null, new expr.NumberLiteral('4')),
             'private',
             true,
             true,
@@ -413,7 +413,7 @@ describe('class properties', () => {
         [],
         [
           new stmt.ClassProperty(
-            new stmt.Var('b', new types.Number(), new expr.NumberLiteral(3)),
+            new stmt.Var('b', new types.Number(), new expr.NumberLiteral('3')),
             null,
             false,
             false,
