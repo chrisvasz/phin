@@ -69,3 +69,45 @@ class Statement(tax: TaxCalculator, val customer: Customer) {
 class StatementFactory(tax: TaxCalculator) {
   fun from(customer: Customer): Statement = new Statement(tax, customer)
 }
+
+/*
+OPTION 1
+class A(a) {}              // private readonly
+class A(val a) {}          // public readonly
+class A(var a) {}          // public read/write
+class A(private val a) {}  // private readonly
+class A(private var a) {}  // private read/write
+pros:
+  concise
+cons:
+  val class A {} doesn't make as much sense as readonly class A {}
+  val a: int = 3 isn't different from var a: int = 3 outside classes
+  another keyword (val)
+  var and val are easy to confuse because they're so similar
+
+OPTION 2
+class A(a) {}                   // private readonly
+class A(public a) {}            // public read/write
+class A(public readonly a) {}   // public readonly
+class A(private a) {}           // private read/write
+class A(private readonly a) {}  // private readonly
+pros:
+  aligns better with readonly class A
+cons:
+  more verbose than OPTION 1
+
+OPTION 3 (no-go)
+class A(a) {}                // private readonly
+class A(var a) {}            // public read/write
+class A(const a) {}          // public readonly
+class A(private var a) {}    // private read/write
+class A(private const a) {}  // private readonly
+const class A(a) {}          // private readonly
+pros:
+  concise
+  uses existing keyword (const)
+cons:
+  const a: int = 3 isn't different from var a: int = 3 outside classes
+  const constructor prop doesn't get promoted to class const, but prop :(
+
+*/
