@@ -275,6 +275,7 @@ test('keywords', () => {
     catch: TokenType.CATCH,
     class: TokenType.CLASS,
     const: TokenType.CONST,
+    default: TokenType.DEFAULT,
     echo: TokenType.ECHO,
     else: TokenType.ELSE,
     extends: TokenType.EXTENDS,

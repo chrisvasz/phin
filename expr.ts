@@ -19,6 +19,8 @@ export interface Visitor<T> {
   visitVariableExpr(expr: Variable): T;
   visitFunctionExpr(expr: Function): T;
   visitNewExpr(expr: New): T;
+  visitMatchExpr(expr: Match): T;
+  visitMatchArmExpr(expr: MatchArm): T;
 }
 
 export abstract class Expr {
@@ -170,6 +172,34 @@ export class New extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitNewExpr(this);
+  }
+  toString(depth?: number): string {
+    return 'TODO';
+  }
+}
+
+export class Match extends Expr {
+  constructor(
+    public readonly subject: Expr,
+    public readonly arms: MatchArm[],
+    public readonly defaultArm: Expr | null,
+  ) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitMatchExpr(this);
+  }
+  toString(depth?: number): string {
+    return 'TODO';
+  }
+}
+
+export class MatchArm extends Expr {
+  constructor(public readonly patterns: Expr[], public readonly body: Expr) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitMatchArmExpr(this);
   }
   toString(depth?: number): string {
     return 'TODO';

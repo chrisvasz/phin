@@ -31,7 +31,7 @@ class PriceFactory {
     REGULAR => new Regular()
     NEW_RELEASE => new NewRelease()
     CHILDRENS => new Childrens()
-    else => throw new InvalidArgumentException("Invalid price code")
+    default => throw new InvalidArgumentException("Invalid price code")
   }
 }
 

@@ -60,6 +60,7 @@ export enum TokenType {
   CATCH,
   CLASS,
   CONST,
+  DEFAULT,
   ECHO,
   ELSE,
   EXTENDS,

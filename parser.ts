@@ -19,6 +19,7 @@ const {
   COLON,
   COMMA,
   CONST,
+  DEFAULT,
   DOT,
   ECHO,
   ELSE,
@@ -404,11 +405,51 @@ export default function parse(tokens: Token[]): Stmt[] {
   function expression(): Expr {
     if (match(FUN)) return functionExpression();
     if (match(NEW)) return newExpression();
+    if (match(MATCH)) return matchExpression();
     return assignment();
   }
 
   function newExpression(): Expr {
     return new expr.New(expression());
+  }
+
+  function matchExpression(): expr.Match {
+    consume('Expect "(" after "match"', LEFT_PAREN);
+    let subject = expression();
+    consume('Expect ")" after match subject', RIGHT_PAREN);
+    consume('Expect "{" before match body', LEFT_BRACE);
+    let arms = matchArms();
+    let defaultArm = matchDefaultArm();
+    consume('Expect "}" after match body', RIGHT_BRACE);
+    return new expr.Match(subject, arms, defaultArm);
+  }
+
+  function matchArms(): expr.MatchArm[] {
+    let arms: expr.MatchArm[] = [];
+    while (!check(RIGHT_BRACE) && !check(DEFAULT) && !isAtEnd()) {
+      arms.push(matchArm());
+    }
+    return arms;
+  }
+
+  function matchArm(): expr.MatchArm {
+    let patterns: Expr[] = [expression()];
+    while (match(COMMA)) {
+      if (check(ARROW)) break; // support trailing commas
+      patterns.push(expression());
+    }
+    consume('Expect "=>" after match patterns', ARROW);
+    let body = expression();
+    match(COMMA); // optional trailing comma
+    return new expr.MatchArm(patterns, body);
+  }
+
+  function matchDefaultArm(): Expr | null {
+    if (!match(DEFAULT)) return null;
+    consume('Expect "=>" after "default"', ARROW);
+    let result = expression();
+    match(COMMA); // optional trailing comma
+    return result;
   }
 
   function assignment(): Expr {
