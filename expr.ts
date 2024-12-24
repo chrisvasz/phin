@@ -21,6 +21,7 @@ export interface Visitor<T> {
   visitNewExpr(expr: New): T;
   visitMatchExpr(expr: Match): T;
   visitMatchArmExpr(expr: MatchArm): T;
+  visitThrowExpr(expr: Throw): T;
 }
 
 export abstract class Expr {
@@ -200,6 +201,18 @@ export class MatchArm extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitMatchArmExpr(this);
+  }
+  toString(depth?: number): string {
+    return 'TODO';
+  }
+}
+
+export class Throw extends Expr {
+  constructor(public readonly expression: Expr) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitThrowExpr(this);
   }
   toString(depth?: number): string {
     return 'TODO';

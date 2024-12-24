@@ -405,6 +405,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(FUN)) return functionExpression();
     if (match(NEW)) return newExpression();
     if (match(MATCH)) return matchExpression();
+    if (match(THROW)) return throwExpression();
     return assignment();
   }
 
@@ -449,6 +450,10 @@ export default function parse(tokens: Token[]): Stmt[] {
     let result = expression();
     match(COMMA); // optional trailing comma
     return result;
+  }
+
+  function throwExpression(): Expr {
+    return new expr.Throw(expression());
   }
 
   function assignment(): Expr {

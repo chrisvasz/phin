@@ -71,4 +71,12 @@ describe('throw', () => {
     ];
     expect(ast(source)).toEqual(expected);
   });
+
+  test('var a = throw e', () => {
+    let source = 'var a = throw e';
+    let expected = [
+      new stmt.Var('a', null, new expr.Throw(new expr.Variable('e'))),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
 });

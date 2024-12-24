@@ -160,4 +160,18 @@ describe('match expressions', () => {
     ];
     expect(ast(source)).toEqual(expected);
   });
+
+  test('match(true) { default => throw a }', () => {
+    let source = 'match(true) { default => throw a }';
+    let expected = [
+      new stmt.Expression(
+        new expr.Match(
+          new expr.BooleanLiteral(true),
+          [],
+          new expr.Throw(new expr.Variable('a')),
+        ),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
 });
