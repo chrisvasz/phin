@@ -25,6 +25,7 @@ export interface Visitor<T> {
   visitReturnStmt(stmt: Return): T;
   visitTryStmt(stmt: Try): T;
   visitCatchStmt(stmt: Catch): T;
+  visitThrowStmt(stmt: Throw): T;
   visitClassStmt(stmt: Class): T;
   visitClassPropertyStmt(stmt: ClassProperty): T;
   visitClassConstStmt(stmt: ClassConst): T;
@@ -176,6 +177,15 @@ export class Catch extends Stmt {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitCatchStmt(this);
+  }
+}
+
+export class Throw extends Stmt {
+  constructor(public readonly expression: Expr) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitThrowStmt(this);
   }
 }
 

@@ -54,3 +54,21 @@ describe('try/catch', () => {
     expect(ast(source)).toEqual(expected);
   });
 });
+
+describe('throw', () => {
+  test('throw e', () => {
+    let source = 'throw e';
+    let expected = [new stmt.Throw(new expr.Variable('e'))];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('throw new Exception()', () => {
+    let source = 'throw new Exception()';
+    let expected = [
+      new stmt.Throw(
+        new expr.New(new expr.Call(new expr.Variable('Exception'), [])),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+});

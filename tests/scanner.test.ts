@@ -295,6 +295,7 @@ test('keywords', () => {
     static: TokenType.STATIC,
     super: TokenType.SUPER,
     this: TokenType.THIS,
+    throw: TokenType.THROW,
     true: TokenType.TRUE,
     try: TokenType.TRY,
     val: TokenType.VAL,

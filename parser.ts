@@ -68,6 +68,7 @@ const {
   STRING,
   SUPER,
   THIS,
+  THROW,
   TRUE,
   TRY,
   VAL,
@@ -112,6 +113,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   function declaration(): Stmt | null {
     try {
       if (match(TRY)) return tryDeclaration();
+      if (match(THROW)) return throwDeclaration();
       if (match(CLASS)) return classDeclaration();
       if (match(FUN)) return functionDeclaration();
       if (match(VAR)) return varDeclaration();
@@ -155,6 +157,10 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (!match(FINALLY)) return null;
     consume('Expect "{" before finally body', LEFT_BRACE);
     return block();
+  }
+
+  function throwDeclaration(): stmt.Throw {
+    return new stmt.Throw(expression());
   }
 
   function classDeclaration(): stmt.Class {

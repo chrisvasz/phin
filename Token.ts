@@ -80,6 +80,7 @@ export enum TokenType {
   STATIC,
   SUPER,
   THIS,
+  THROW,
   TRUE,
   TRY,
   VAL,
