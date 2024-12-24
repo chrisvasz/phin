@@ -15,6 +15,8 @@ export interface Visitor<T> {
   visitStringLiteralExpr(expr: StringLiteral): T;
   visitBooleanLiteralExpr(expr: BooleanLiteral): T;
   visitNullLiteralExpr(expr: NullLiteral): T;
+  visitArrayLiteralExpr(expr: ArrayLiteral): T;
+  visitArrayElementExpr(expr: ArrayElement): T;
   visitUnaryExpr(expr: Unary): T;
   visitVariableExpr(expr: Variable): T;
   visitFunctionExpr(expr: Function): T;
@@ -123,6 +125,33 @@ export class NullLiteral extends Expr {
   }
   toString(depth = 0) {
     return indent(depth) + 'NullLiteral';
+  }
+}
+
+export class ArrayLiteral extends Expr {
+  constructor(public readonly elements: ArrayElement[]) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitArrayLiteralExpr(this);
+  }
+  toString(depth?: number): string {
+    return 'TODO';
+  }
+}
+
+export class ArrayElement extends Expr {
+  constructor(
+    public readonly key: NumberLiteral | StringLiteral | null,
+    public readonly value: Expr,
+  ) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitArrayElementExpr(this);
+  }
+  toString(depth?: number): string {
+    return 'TODO';
   }
 }
 

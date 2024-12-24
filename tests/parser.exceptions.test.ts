@@ -16,7 +16,6 @@ describe('try/catch', () => {
     let expected = [
       new stmt.Try([], [new stmt.Catch('e', ['Exception'], [])], null),
     ];
-    console.log(ast(source));
     expect(ast(source)).toEqual(expected);
   });
 

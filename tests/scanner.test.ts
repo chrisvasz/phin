@@ -30,6 +30,17 @@ test('()', () => {
   expect(actual).toEqual(expected);
 });
 
+test('[]', () => {
+  let expected = [
+    new Token(TokenType.LEFT_BRACKET, '[', undefined, 1),
+    new Token(TokenType.RIGHT_BRACKET, ']', undefined, 1),
+    eof,
+  ];
+  let source = '[]';
+  let actual = scan(source);
+  expect(actual).toEqual(expected);
+});
+
 test('{}', () => {
   let expected = [
     new Token(TokenType.LEFT_BRACE, '{', undefined, 1),

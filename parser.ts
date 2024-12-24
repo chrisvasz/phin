@@ -40,6 +40,7 @@ const {
   IF,
   IMPLEMENTS,
   LEFT_BRACE,
+  LEFT_BRACKET,
   LEFT_PAREN,
   LESS_EQUAL,
   LESS,
@@ -60,6 +61,7 @@ const {
   QUESTION,
   RETURN,
   RIGHT_BRACE,
+  RIGHT_BRACKET,
   RIGHT_PAREN,
   SEMICOLON,
   SLASH,
@@ -406,6 +408,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(NEW)) return newExpression();
     if (match(MATCH)) return matchExpression();
     if (match(THROW)) return throwExpression();
+    if (match(LEFT_BRACKET)) return arrayLiteral();
     return assignment();
   }
 
@@ -555,8 +558,8 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function primary(): Expr {
     if (match(NULL)) return new expr.NullLiteral();
-    if (match(NUMBER)) return new expr.NumberLiteral(previous().literal);
-    if (match(STRING)) return new expr.StringLiteral(previous().literal);
+    if (match(NUMBER)) return numberLiteral();
+    if (match(STRING)) return stringLiteral();
     if (match(TRUE)) return new expr.BooleanLiteral(true);
     if (match(FALSE)) return new expr.BooleanLiteral(false);
     if (match(LEFT_PAREN)) return grouping();
@@ -564,10 +567,49 @@ export default function parse(tokens: Token[]): Stmt[] {
     throw error(peek(), 'Expect expression');
   }
 
+  function numberLiteral() {
+    return new expr.NumberLiteral(previous().literal);
+  }
+
+  function stringLiteral() {
+    return new expr.StringLiteral(previous().literal);
+  }
+
   function grouping(): Expr {
     let result = expression();
     consume('Expect ")" after expression', RIGHT_PAREN);
     return new expr.Grouping(result);
+  }
+
+  function arrayLiteral(): expr.ArrayLiteral {
+    let elements = arrayElements();
+    consume('Expect "]" after array literal', RIGHT_BRACKET);
+    return new expr.ArrayLiteral(elements);
+  }
+
+  function arrayElements(): expr.ArrayElement[] {
+    let elements: expr.ArrayElement[] = [];
+    while (!check(RIGHT_BRACKET) && !isAtEnd()) {
+      elements.push(arrayElement());
+      match(COMMA);
+    }
+    return elements;
+  }
+
+  function arrayElement(): expr.ArrayElement {
+    return new expr.ArrayElement(arrayKey(), expression());
+  }
+
+  function arrayKey(): expr.NumberLiteral | expr.StringLiteral | null {
+    if (check(NUMBER, STRING) && checkNext(ARROW)) {
+      try {
+        if (match(NUMBER)) return numberLiteral();
+        if (match(STRING)) return stringLiteral();
+      } finally {
+        match(ARROW);
+      }
+    }
+    return null;
   }
 
   function typeAnnotation(): Type {
@@ -667,14 +709,20 @@ export default function parse(tokens: Token[]): Stmt[] {
     return new ParseError(`[line ${token.line}] Error${token}: ${message}`);
   }
 
-  function check(type: TokenType): boolean {
+  function check(...anyOf: TokenType[]): boolean {
+    if (isAtEnd()) return anyOf.includes(EOF);
+    return anyOf.includes(peek().type);
+  }
+
+  function checkNext(type: TokenType): boolean {
     if (isAtEnd()) return type === EOF;
-    return peek().type === type;
+    return peekNext().type === type;
   }
 
   function advance(): Token {
+    let result = peek();
     if (!isAtEnd()) current++;
-    return previous();
+    return result;
   }
 
   function isAtEnd(): boolean {
@@ -683,6 +731,11 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function peek(): Token {
     return tokens[current];
+  }
+
+  function peekNext(): Token {
+    if (isAtEnd()) return peek();
+    return tokens[current + 1];
   }
 
   function previous(): Token {

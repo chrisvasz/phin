@@ -36,6 +36,7 @@ const {
   IF,
   IMPLEMENTS,
   LEFT_BRACE,
+  LEFT_BRACKET,
   LEFT_PAREN,
   LESS_EQUAL,
   LESS,
@@ -57,6 +58,7 @@ const {
   QUESTION,
   RETURN,
   RIGHT_BRACE,
+  RIGHT_BRACKET,
   RIGHT_PAREN,
   SEMICOLON,
   SLASH,
@@ -122,6 +124,8 @@ export default function scan(source: string): Token[] {
   chars[code(')')] = () => addToken(RIGHT_PAREN);
   chars[code('{')] = () => addToken(LEFT_BRACE);
   chars[code('}')] = () => addToken(RIGHT_BRACE);
+  chars[code('[')] = () => addToken(LEFT_BRACKET);
+  chars[code(']')] = () => addToken(RIGHT_BRACKET);
   chars[code(',')] = () => addToken(COMMA);
   chars[code('.')] = () => addToken(DOT);
   chars[code('-')] = () => addToken(match('-') ? MINUS_MINUS : MINUS);
