@@ -20,6 +20,7 @@ export interface Visitor<T> {
   visitArrayLiteralExpr(expr: ArrayLiteral): T;
   visitArrayElementExpr(expr: ArrayElement): T;
   visitUnaryExpr(expr: Unary): T;
+  visitPrefixExpr(expr: Prefix): T;
   visitIdentifierExpr(expr: Identifier): T;
   visitFunctionExpr(expr: Function): T;
   visitNewExpr(expr: New): T;
@@ -152,6 +153,18 @@ export class Unary extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitUnaryExpr(this);
+  }
+}
+
+export class Prefix extends Expr {
+  constructor(
+    public readonly operator: string,
+    public readonly right: Identifier,
+  ) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitPrefixExpr(this);
   }
 }
 

@@ -596,10 +596,22 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function unary(): Expr {
-    if (match(BANG, MINUS, PLUS, PLUS_PLUS, MINUS_MINUS)) {
+    if (match(BANG, MINUS, PLUS)) {
       let operator = previous();
       let right = unary();
       return new expr.Unary(operator.lexeme, right);
+    }
+    return prefix();
+  }
+
+  function prefix(): Expr {
+    if (match(PLUS_PLUS, MINUS_MINUS)) {
+      let operator = previous();
+      let right = consume('Expect identifier after unary operator', IDENTIFIER);
+      return new expr.Prefix(
+        operator.lexeme,
+        new expr.Identifier(right.lexeme),
+      );
     }
     return call();
   }

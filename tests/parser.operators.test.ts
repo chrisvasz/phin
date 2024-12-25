@@ -162,10 +162,15 @@ describe('unary operators', () => {
     expect(ast(source)).toEqual(expected);
   });
 
+  test.todo('i++');
+  test.todo('i--');
+});
+
+describe('prefix operators', () => {
   test('++i', () => {
     let source = '++i';
     let expected = [
-      new stmt.Expression(new expr.Unary('++', new expr.Identifier('i'))),
+      new stmt.Expression(new expr.Prefix('++', new expr.Identifier('i'))),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -173,15 +178,34 @@ describe('unary operators', () => {
   test('--i', () => {
     let source = '--i';
     let expected = [
-      new stmt.Expression(new expr.Unary('--', new expr.Identifier('i'))),
+      new stmt.Expression(new expr.Prefix('--', new expr.Identifier('i'))),
     ];
     expect(ast(source)).toEqual(expected);
   });
 
-  test.todo('i++');
-  test.todo('i--');
-  test.todo('++1'); // should fail
-  test.todo('1++'); // should fail
+  test('++x + !x', () => {
+    let source = '++x + !x';
+    let expected = [
+      new stmt.Expression(
+        new expr.Binary(
+          new expr.Prefix('++', new expr.Identifier('x')),
+          '+',
+          new expr.Unary('!', new expr.Identifier('x')),
+        ),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('!++x', () => {
+    let source = '!++x';
+    let expected = [
+      new stmt.Expression(
+        new expr.Unary('!', new expr.Prefix('++', new expr.Identifier('x'))),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
 });
 
 describe('binary operators', () => {
