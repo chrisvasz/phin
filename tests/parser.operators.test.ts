@@ -161,9 +161,6 @@ describe('unary operators', () => {
     ];
     expect(ast(source)).toEqual(expected);
   });
-
-  test.todo('i++');
-  test.todo('i--');
 });
 
 describe('prefix operators', () => {
@@ -202,6 +199,38 @@ describe('prefix operators', () => {
     let expected = [
       new stmt.Expression(
         new expr.Unary('!', new expr.Prefix('++', new expr.Identifier('x'))),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+});
+
+describe('postfix operators', () => {
+  test('i++', () => {
+    let source = 'i++';
+    let expected = [
+      new stmt.Expression(new expr.Postfix(new expr.Identifier('i'), '++')),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('i--', () => {
+    let source = 'i--';
+    let expected = [
+      new stmt.Expression(new expr.Postfix(new expr.Identifier('i'), '--')),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('i++ + ++i', () => {
+    let source = 'i++ + ++i';
+    let expected = [
+      new stmt.Expression(
+        new expr.Binary(
+          new expr.Postfix(new expr.Identifier('i'), '++'),
+          '+',
+          new expr.Prefix('++', new expr.Identifier('i')),
+        ),
       ),
     ];
     expect(ast(source)).toEqual(expected);

@@ -21,6 +21,7 @@ export interface Visitor<T> {
   visitArrayElementExpr(expr: ArrayElement): T;
   visitUnaryExpr(expr: Unary): T;
   visitPrefixExpr(expr: Prefix): T;
+  visitPostfixExpr(expr: Postfix): T;
   visitIdentifierExpr(expr: Identifier): T;
   visitFunctionExpr(expr: Function): T;
   visitNewExpr(expr: New): T;
@@ -165,6 +166,18 @@ export class Prefix extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitPrefixExpr(this);
+  }
+}
+
+export class Postfix extends Expr {
+  constructor(
+    public readonly left: Identifier,
+    public readonly operator: string,
+  ) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitPostfixExpr(this);
   }
 }
 

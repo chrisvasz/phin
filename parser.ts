@@ -607,13 +607,27 @@ export default function parse(tokens: Token[]): Stmt[] {
   function prefix(): Expr {
     if (match(PLUS_PLUS, MINUS_MINUS)) {
       let operator = previous();
-      let right = consume('Expect identifier after unary operator', IDENTIFIER);
+      let right = consume(
+        'Expect identifier after ' + operator.lexeme,
+        IDENTIFIER,
+      );
       return new expr.Prefix(
         operator.lexeme,
         new expr.Identifier(right.lexeme),
       );
     }
-    return call();
+    return postfix();
+  }
+
+  function postfix(): Expr {
+    let result = call();
+    if (match(PLUS_PLUS, MINUS_MINUS)) {
+      let operator = previous();
+      if (!(result instanceof expr.Identifier))
+        throw error(previous(), 'Invalid postfix target');
+      result = new expr.Postfix(result, operator.lexeme);
+    }
+    return result;
   }
 
   function call(): Expr {
@@ -817,9 +831,9 @@ export default function parse(tokens: Token[]): Stmt[] {
     return anyOf.includes(peek().type);
   }
 
-  function checkNext(type: TokenType): boolean {
-    if (isAtEnd()) return type === EOF;
-    return peekNext().type === type;
+  function checkNext(...anyOf: TokenType[]): boolean {
+    if (isAtEnd()) return anyOf.includes(EOF);
+    return anyOf.includes(peekNext().type);
   }
 
   function advance(): Token {
