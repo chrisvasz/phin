@@ -113,8 +113,8 @@ export class For extends Stmt {
 
 export class Foreach extends Stmt {
   constructor(
-    public readonly key: Var | null,
-    public readonly value: Var,
+    public readonly key: Var | null, // TODO don't use var for this, can't have initializer
+    public readonly value: Var, // TODO don't use var for this, can't have initializer
     public readonly iterable: Expr,
     public readonly body: Stmt,
   ) {
@@ -174,7 +174,7 @@ export class Catch extends Stmt {
   ) {
     super();
     if (types.length === 0) {
-      throw new Error('Catch exception must have at least one type');
+      throw new Error('Catch variable must have at least one type');
     }
   }
   accept<T>(visitor: Visitor<T>): T {

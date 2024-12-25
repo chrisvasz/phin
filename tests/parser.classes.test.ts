@@ -174,6 +174,7 @@ describe('class declarations', () => {
 
   test.todo('abstract class A { fun abstractMethod(); }'); // borrowed from dart
   test.todo('final class A {}', () => {});
+  test.todo('readonly class A {}', () => {});
 });
 
 describe('class methods', () => {
@@ -560,6 +561,8 @@ describe('class properties', () => {
     ];
     expect(ast(source)).toEqual(expected);
   });
+
+  test.todo('readonly properties somehow');
 });
 
 describe('kitchen sink', () => {

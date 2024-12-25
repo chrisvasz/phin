@@ -249,20 +249,8 @@ export default function parse(tokens: Token[]): Stmt[] {
     let isFinal = match(FINAL);
     let visibility = classVisibility();
     let isStatic = match(STATIC);
-    if (match(FUN))
-      return new stmt.ClassMethod(
-        functionDeclaration(),
-        visibility,
-        isStatic,
-        isFinal,
-      );
-    if (match(VAR))
-      return new stmt.ClassProperty(
-        varDeclaration(),
-        visibility,
-        isStatic,
-        isFinal,
-      );
+    if (match(FUN)) return classMethod(visibility, isStatic, isFinal);
+    if (match(VAR)) return classProperty(visibility, isStatic, isFinal);
     if (match(CONST)) return classConst(visibility, isStatic, isFinal);
     if (matchIdentifier('init')) return classInitializer();
     throw error(peek(), 'Expect class member');
@@ -275,6 +263,32 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (token.type === PROTECTED) return 'protected';
     if (token.type === PRIVATE) return 'private';
     return null;
+  }
+
+  function classMethod(
+    visibility: stmt.Visibility,
+    isStatic: boolean,
+    isFinal: boolean,
+  ): stmt.ClassMethod {
+    return new stmt.ClassMethod(
+      functionDeclaration(),
+      visibility,
+      isStatic,
+      isFinal,
+    );
+  }
+
+  function classProperty(
+    visibility: stmt.Visibility,
+    isStatic: boolean,
+    isFinal: boolean,
+  ): stmt.ClassProperty {
+    return new stmt.ClassProperty(
+      varDeclaration(),
+      visibility,
+      isStatic,
+      isFinal,
+    );
   }
 
   function classConst(
