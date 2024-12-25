@@ -719,4 +719,20 @@ describe('get expressions', () => {
     ];
     expect(ast(source)).toEqual(expected);
   });
+
+  test('this.hello', () => {
+    let source = 'this.hello';
+    let expected = [
+      new stmt.Expression(new expr.Get(new expr.This(), 'hello')),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('super.hello', () => {
+    let source = 'super.hello';
+    let expected = [
+      new stmt.Expression(new expr.Get(new expr.Super(), 'hello')),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
 });

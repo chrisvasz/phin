@@ -634,6 +634,8 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(FALSE)) return new expr.BooleanLiteral(false);
     if (match(LEFT_PAREN)) return grouping();
     if (match(LEFT_BRACKET)) return arrayLiteral();
+    if (match(THIS)) return new expr.This();
+    if (match(SUPER)) return new expr.Super();
     if (match(IDENTIFIER)) return variable();
     throw error(peek(), 'Expect expression');
   }

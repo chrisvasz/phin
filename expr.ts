@@ -26,6 +26,8 @@ export interface Visitor<T> {
   visitMatchExpr(expr: Match): T;
   visitMatchArmExpr(expr: MatchArm): T;
   visitThrowExpr(expr: Throw): T;
+  visitThisExpr(): T;
+  visitSuperExpr(): T;
 }
 
 export abstract class Expr {
@@ -212,5 +214,17 @@ export class Throw extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitThrowExpr(this);
+  }
+}
+
+export class This extends Expr {
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitThisExpr();
+  }
+}
+
+export class Super extends Expr {
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitSuperExpr();
   }
 }
