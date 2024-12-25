@@ -95,6 +95,7 @@ export enum TokenType {
   FOR,
   FUN,
   IF,
+  INSTANCEOF,
   IMPLEMENTS,
   MATCH,
   NEW,

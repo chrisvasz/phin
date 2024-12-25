@@ -15,6 +15,7 @@ const {
   BANG,
   CATCH,
   CLASS,
+  CLONE,
   COLON_COLON,
   COLON,
   COMMA,
@@ -39,6 +40,7 @@ const {
   IDENTIFIER,
   IF,
   IMPLEMENTS,
+  INSTANCEOF,
   LEFT_BRACE,
   LEFT_BRACKET,
   LEFT_PAREN,
@@ -79,6 +81,7 @@ const {
   SLASH,
   SPACESHIP,
   STAR_STAR_EQUAL,
+  STAR_STAR,
   STAR_EQUAL,
   STAR,
   STATIC,
@@ -480,14 +483,9 @@ export default function parse(tokens: Token[]): Stmt[] {
   function expression(): Expr {
     // TODO are these in the right places? think they need to be AFTER assign
     if (match(FUN)) return functionExpression();
-    if (match(NEW)) return newExpression();
     if (match(MATCH)) return matchExpression();
     if (match(THROW)) return throwExpression();
     return assignment();
-  }
-
-  function newExpression(): Expr {
-    return new expr.New(expression());
   }
 
   function matchExpression(): expr.Match {
@@ -561,10 +559,10 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function ternary(): Expr {
     let result = nullCoalesce();
-    if (match(QUESTION)) {
-      let left = expression();
+    while (match(QUESTION)) {
+      let left = nullCoalesce();
       consume('Expect ":" after ternary condition', COLON);
-      let right = expression();
+      let right = nullCoalesce();
       result = new expr.Ternary(result, left, right);
     }
     return result;
@@ -574,7 +572,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     let result = logicalOr();
     while (match(NULL_COALESCE)) {
       let right = nullCoalesce();
-      result = new expr.NullCoalesce(result, right);
+      result = new expr.Binary(result, '??', right);
     }
     return result;
   }
@@ -648,41 +646,46 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function factor(): Expr {
-    let result = unary();
+    let result = instanceOf();
     while (match(SLASH, STAR, PERCENT)) {
       let operator = previous();
-      let right = unary();
+      let right = instanceOf();
+      result = new expr.Binary(result, operator.lexeme, right);
+    }
+    return result;
+  }
+
+  function instanceOf(): Expr {
+    let result = exponentiation();
+    while (match(INSTANCEOF)) {
+      let operator = previous();
+      let right = exponentiation();
+      result = new expr.Binary(result, operator.lexeme, right);
+    }
+    return result;
+  }
+
+  function exponentiation(): Expr {
+    let result = unary();
+    while (match(STAR_STAR)) {
+      let operator = previous();
+      let right = exponentiation();
       result = new expr.Binary(result, operator.lexeme, right);
     }
     return result;
   }
 
   function unary(): Expr {
-    if (match(BANG, MINUS, PLUS)) {
+    if (match(BANG, MINUS, PLUS, MINUS_MINUS, PLUS_PLUS)) {
       let operator = previous();
       let right = unary();
       return new expr.Unary(operator.lexeme, right);
-    }
-    return prefix();
-  }
-
-  function prefix(): Expr {
-    if (match(PLUS_PLUS, MINUS_MINUS)) {
-      let operator = previous();
-      let right = consume(
-        'Expect identifier after ' + operator.lexeme,
-        IDENTIFIER,
-      );
-      return new expr.Prefix(
-        operator.lexeme,
-        new expr.Identifier(right.lexeme),
-      );
     }
     return postfix();
   }
 
   function postfix(): Expr {
-    let result = call();
+    let result = newClone();
     if (match(PLUS_PLUS, MINUS_MINUS)) {
       let operator = previous();
       if (!(result instanceof expr.Identifier))
@@ -690,6 +693,12 @@ export default function parse(tokens: Token[]): Stmt[] {
       result = new expr.Postfix(result, operator.lexeme);
     }
     return result;
+  }
+
+  function newClone(): Expr {
+    if (match(NEW)) return new expr.New(call());
+    if (match(CLONE)) return new expr.Clone(call());
+    return call();
   }
 
   function call(): Expr {

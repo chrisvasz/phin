@@ -4,638 +4,276 @@ import scan from '../scanner';
 import parse from '../parser';
 import * as stmt from '../stmt';
 import * as expr from '../expr';
+import { Expr } from '../expr';
 
 function ast(source: string) {
   return parse(scan(source));
 }
 
-describe('math', () => {
-  test('1 + 2', () => {
-    let source = '1 + 2';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.NumberLiteral('1'),
-          '+',
-          new expr.NumberLiteral('2'),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+// https://www.php.net/manual/en/language.operators.precedence.php
+// TODO bitwise operators << >> & ^ | ~
 
-  test('1 + 2 * 3', () => {
-    let source = '1 + 2 * 3';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.NumberLiteral('1'),
-          '+',
-          new expr.Binary(
-            new expr.NumberLiteral('2'),
-            '*',
-            new expr.NumberLiteral('3'),
-          ),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+function expressions(ex: Expr) {
+  return [new stmt.Expression(ex)];
+}
 
-  test('1 * 2 - 3', () => {
-    let source = '1 * 2 - 3';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.Binary(
-            new expr.NumberLiteral('1'),
-            '*',
-            new expr.NumberLiteral('2'),
-          ),
-          '-',
-          new expr.NumberLiteral('3'),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+function unary(operator: string, right: Expr) {
+  return new expr.Unary(operator, right);
+}
 
-  test('1 + 2 + 3', () => {
-    let source = '1 + 2 + 3';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.Binary(
-            new expr.NumberLiteral('1'),
-            '+',
-            new expr.NumberLiteral('2'),
-          ),
-          '+',
-          new expr.NumberLiteral('3'),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+function binary(left: Expr, operator: string, right: Expr) {
+  return new expr.Binary(left, operator, right);
+}
 
-  test('1 + (2 + 3)', () => {
-    let source = '1 + (2 + 3)';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.NumberLiteral('1'),
-          '+',
-          new expr.Grouping(
-            new expr.Binary(
-              new expr.NumberLiteral('2'),
-              '+',
-              new expr.NumberLiteral('3'),
-            ),
-          ),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+function ternary(condition: Expr, left: Expr, right: Expr) {
+  return new expr.Ternary(condition, left, right);
+}
 
-  test('1 / 2', () => {
-    let source = '1 / 2';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.NumberLiteral('1'),
-          '/',
-          new expr.NumberLiteral('2'),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+function assign(name: string, operator: string, right: Expr) {
+  return new expr.Assign(name, operator, right);
+}
 
-  test('1 % 2', () => {
-    let source = '1 % 2';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.NumberLiteral('1'),
-          '%',
-          new expr.NumberLiteral('2'),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+function new_(ex: Expr) {
+  return new expr.New(ex);
+}
 
-  test('expr() / expr()', () => {
-    let source = 'expr() / expr()';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.Call(new expr.Identifier('expr'), []),
-          '/',
-          new expr.Call(new expr.Identifier('expr'), []),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+function clone(ex: Expr) {
+  return new expr.Clone(ex);
+}
+
+function identifier(name: string) {
+  return new expr.Identifier(name);
+}
+
+const a = identifier('a');
+const b = identifier('b');
+const c = identifier('c');
+const d = identifier('d');
+const e = identifier('e');
+
+describe('binary', () => {
+  const binaryOperators = [
+    testRightAssociative('**'),
+    testLeftAssociative('instanceof'),
+    testLeftAssociative('*', '/', '%'),
+    testLeftAssociative('+', '-'),
+    testLeftAssociative('+.'),
+    testNonAssociative('<', '<=', '>', '>='),
+    testNonAssociative('==', '===', '!=', '!==', '<=>'),
+    testLeftAssociative('&&'),
+    testLeftAssociative('||'),
+    testRightAssociative('??'),
+    // TODO where should ?: go? associativity?
+  ];
+  for (let i = 0; i < binaryOperators.length; i++) {
+    let ops = binaryOperators[i];
+    let lowerOps = binaryOperators[i + 1] ?? [];
+    for (let op of ops) {
+      describe(op, () => {
+        testBasicBinaryOp(op);
+        for (let lowerOp of lowerOps) {
+          testBinaryOpPrecedenceOrder(lowerOp, op);
+        }
+      });
+    }
+  }
+
+  function testBasicBinaryOp(op: string) {
+    test(`${op}`, () => {
+      let source = `a ${op} b`;
+      let expected = expressions(binary(a, op, b));
+      expect(ast(source)).toEqual(expected);
+    });
+  }
+
+  function testLeftAssociative(...ops: string[]): string[] {
+    for (let op of ops) {
+      test(`${op} is left associative`, () => {
+        let source = `a ${op} b ${op} c`;
+        let expected = expressions(binary(binary(a, op, b), op, c));
+        expect(ast(source)).toEqual(expected);
+      });
+    }
+    return ops;
+  }
+
+  function testRightAssociative(...ops: string[]): string[] {
+    for (let op of ops) {
+      test(`${op} is right associative`, () => {
+        let source = `a ${op} b ${op} c`;
+        let expected = expressions(binary(a, op, binary(b, op, c)));
+        expect(ast(source)).toEqual(expected);
+      });
+    }
+    return ops;
+  }
+
+  function testNonAssociative(...ops: string[]): string[] {
+    for (let op of ops) {
+      test.todo(`${op} is non-associative`);
+    }
+    return ops;
+  }
+
+  function testBinaryOpPrecedenceOrder(
+    lowerOperator: string,
+    higherOperator: string,
+  ) {
+    test(`${lowerOperator} lower precedence than ${higherOperator}`, () => {
+      let source = `a ${lowerOperator} b ${higherOperator} c`;
+      let expected = expressions(
+        binary(a, lowerOperator, binary(b, higherOperator, c)),
+      );
+      expect(ast(source)).toEqual(expected);
+    });
+  }
 });
 
 describe('unary', () => {
-  test('!true', () => {
-    let source = '!true';
-    let expected = [
-      new stmt.Expression(new expr.Unary('!', new expr.BooleanLiteral(true))),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+  // all prefix versions
+  const unaryOperators = ['+', '-', '++', '--', '!'];
+  for (let op of unaryOperators) {
+    testBasicUnaryOp(op);
+    testUnaryOpHigherPrecedenceThanExponentiation(op);
+    testUnaryOpLowerPrecedenceThanNew(op);
+  }
 
-  test('-1', () => {
-    let source = '-1';
-    let expected = [
-      new stmt.Expression(new expr.Unary('-', new expr.NumberLiteral('1'))),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+  function testBasicUnaryOp(op: string) {
+    test(`${op}`, () => {
+      let source = `${op}a`;
+      let expected = expressions(unary(op, a));
+      expect(ast(source)).toEqual(expected);
+    });
+  }
 
-  test('+1', () => {
-    let source = '+1';
-    let expected = [
-      new stmt.Expression(new expr.Unary('+', new expr.NumberLiteral('1'))),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+  function testUnaryOpHigherPrecedenceThanExponentiation(op: string) {
+    test(`${op} higher precedence than **`, () => {
+      let source = `${op} a ** b`;
+      let expected = expressions(binary(unary(op, a), '**', b));
+      expect(ast(source)).toEqual(expected);
+    });
+  }
 
-  test('!!true', () => {
-    let source = '!!true';
-    let expected = [
-      new stmt.Expression(
-        new expr.Unary('!', new expr.Unary('!', new expr.BooleanLiteral(true))),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-});
-
-describe('prefix', () => {
-  test('++i', () => {
-    let source = '++i';
-    let expected = [
-      new stmt.Expression(new expr.Prefix('++', new expr.Identifier('i'))),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('--i', () => {
-    let source = '--i';
-    let expected = [
-      new stmt.Expression(new expr.Prefix('--', new expr.Identifier('i'))),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('++x + !x', () => {
-    let source = '++x + !x';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.Prefix('++', new expr.Identifier('x')),
-          '+',
-          new expr.Unary('!', new expr.Identifier('x')),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('!++x', () => {
-    let source = '!++x';
-    let expected = [
-      new stmt.Expression(
-        new expr.Unary('!', new expr.Prefix('++', new expr.Identifier('x'))),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+  function testUnaryOpLowerPrecedenceThanNew(op: string) {
+    test(`${op} lower precedence than new`, () => {
+      let source = `${op} new a`;
+      let expected = expressions(unary(op, new_(a)));
+      expect(ast(source)).toEqual(expected);
+    });
+  }
 });
 
 describe('postfix', () => {
-  test('i++', () => {
-    let source = 'i++';
-    let expected = [
-      new stmt.Expression(new expr.Postfix(new expr.Identifier('i'), '++')),
-    ];
+  test('a++', () => {
+    let source = 'a++';
+    let expected = expressions(new expr.Postfix(a, '++'));
     expect(ast(source)).toEqual(expected);
   });
 
-  test('i--', () => {
-    let source = 'i--';
-    let expected = [
-      new stmt.Expression(new expr.Postfix(new expr.Identifier('i'), '--')),
-    ];
+  test('a--', () => {
+    let source = 'a--';
+    let expected = expressions(new expr.Postfix(a, '--'));
     expect(ast(source)).toEqual(expected);
   });
 
-  test('i++ + ++i', () => {
-    let source = 'i++ + ++i';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.Postfix(new expr.Identifier('i'), '++'),
-          '+',
-          new expr.Prefix('++', new expr.Identifier('i')),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-});
-
-describe('comparison', () => {
-  test('1 > 2', () => {
-    let source = '1 > 2';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.NumberLiteral('1'),
-          '>',
-          new expr.NumberLiteral('2'),
-        ),
-      ),
-    ];
+  test('a++ + ++a', () => {
+    let source = 'a++ + ++a';
+    let expected = expressions(
+      binary(new expr.Postfix(a, '++'), '+', new expr.Prefix('++', a)),
+    );
     expect(ast(source)).toEqual(expected);
   });
 
-  test('1 >= 2', () => {
-    let source = '1 >= 2';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.NumberLiteral('1'),
-          '>=',
-          new expr.NumberLiteral('2'),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('1 < 2', () => {
-    let source = '1 < 2';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.NumberLiteral('1'),
-          '<',
-          new expr.NumberLiteral('2'),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('1 <= 2', () => {
-    let source = '1 <= 2';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.NumberLiteral('1'),
-          '<=',
-          new expr.NumberLiteral('2'),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('1 == 2', () => {
-    let source = '1 == 2';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.NumberLiteral('1'),
-          '==',
-          new expr.NumberLiteral('2'),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('1 === 2', () => {
-    let source = '1 === 2';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.NumberLiteral('1'),
-          '===',
-          new expr.NumberLiteral('2'),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('1 != 2', () => {
-    let source = '1 != 2';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.NumberLiteral('1'),
-          '!=',
-          new expr.NumberLiteral('2'),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('1 !== 2', () => {
-    let source = '1 !== 2';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.NumberLiteral('1'),
-          '!==',
-          new expr.NumberLiteral('2'),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('1 <=> 2', () => {
-    let source = '1 <=> 2';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.NumberLiteral('1'),
-          '<=>',
-          new expr.NumberLiteral('2'),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-});
-
-describe('conditional', () => {
-  test('1 && 2', () => {
-    let source = '1 && 2';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.NumberLiteral('1'),
-          '&&',
-          new expr.NumberLiteral('2'),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('1 || 2', () => {
-    let source = '1 || 2';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.NumberLiteral('1'),
-          '||',
-          new expr.NumberLiteral('2'),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('a ?? b', () => {
-    let source = 'a ?? b';
-    let expected = [
-      new stmt.Expression(
-        new expr.NullCoalesce(
-          new expr.Identifier('a'),
-          new expr.Identifier('b'),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('a ?? b ?? c', () => {
-    let source = 'a ?? b ?? c';
-    let expected = [
-      new stmt.Expression(
-        new expr.NullCoalesce(
-          new expr.Identifier('a'),
-          new expr.NullCoalesce(
-            new expr.Identifier('b'),
-            new expr.Identifier('c'),
-          ),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+  test.todo('precedence');
 });
 
 describe('ternary', () => {
-  test('true ? 1 : 2', () => {
-    let source = 'true ? 1 : 2';
-    let expected = [
-      new stmt.Expression(
-        new expr.Ternary(
-          new expr.BooleanLiteral(true),
-          new expr.NumberLiteral('1'),
-          new expr.NumberLiteral('2'),
-        ),
-      ),
-    ];
+  test('a ? b : c', () => {
+    let source = 'a ? b : c';
+    let expected = expressions(ternary(a, b, c));
     expect(ast(source)).toEqual(expected);
   });
 
-  test('true ? a = 3 : 4', () => {
-    let source = 'true ? a = 3 : 4';
-    let expected = [
-      new stmt.Expression(
-        new expr.Ternary(
-          new expr.BooleanLiteral(true),
-          new expr.Assign('a', '=', new expr.NumberLiteral('3')),
-          new expr.NumberLiteral('4'),
-        ),
-      ),
-    ];
+  test.todo('ternary operator is non-associative');
+
+  /*
+  test('a ? b : c ? d : e', () => {
+    // old behavior pre-php-8.0
+    // https://www.php.net/manual/en/language.operators.comparison.php#language.operators.comparison.ternary
+    let source = 'a ? b : c ? d : e';
+    let expected = expressions(ternary(ternary(a, b, c), d, e));
     expect(ast(source)).toEqual(expected);
   });
+  */
 
-  test('true ? 1 : false ? 2 : 3', () => {
-    let source = 'true ? 1 : false ? 2 : 3';
-    let expected = [
-      new stmt.Expression(
-        new expr.Ternary(
-          new expr.BooleanLiteral(true),
-          new expr.NumberLiteral('1'),
-          new expr.Ternary(
-            new expr.BooleanLiteral(false),
-            new expr.NumberLiteral('2'),
-            new expr.NumberLiteral('3'),
-          ),
-        ),
-      ),
-    ];
+  test('ternary lower precedence than ??', () => {
+    let source = 'a ? b : c ?? d';
+    let expected = expressions(ternary(a, b, binary(c, '??', d)));
     expect(ast(source)).toEqual(expected);
   });
 });
 
 describe('assign', () => {
-  test('a = 1', () => {
-    let source = 'a = 1';
-    let expected = [
-      new stmt.Expression(
-        new expr.Assign('a', '=', new expr.NumberLiteral('1')),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+  const operators = [
+    '=',
+    '+=',
+    '-=',
+    '*=',
+    '/=',
+    '%=',
+    '**=',
+    '??=',
+    '||=',
+    '+.=',
+  ];
+  for (let op of operators) {
+    testBasicAssign(op);
+    testRightAssociative(op);
+    testAssignLowerPrecedenceThanTernary(op);
+  }
 
-  test('a = b = 1', () => {
-    let source = 'a = b = 1';
-    let expected = [
-      new stmt.Expression(
-        new expr.Assign(
-          'a',
-          '=',
-          new expr.Assign('b', '=', new expr.NumberLiteral('1')),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+  function testBasicAssign(op: string) {
+    test(`${op}`, () => {
+      let source = `a ${op} b`;
+      let expected = expressions(assign('a', op, b));
+      expect(ast(source)).toEqual(expected);
+    });
+  }
 
-  test('a += 1', () => {
-    let source = 'a += 1';
-    let expected = [
-      new stmt.Expression(
-        new expr.Assign('a', '+=', new expr.NumberLiteral('1')),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+  function testRightAssociative(...ops: string[]): string[] {
+    for (let op of ops) {
+      test(`${op} is right associative`, () => {
+        let source = `a ${op} b ${op} c`;
+        let expected = expressions(assign('a', op, assign('b', op, c)));
+        expect(ast(source)).toEqual(expected);
+      });
+    }
+    return ops;
+  }
 
-  test('a -= 1', () => {
-    let source = 'a -= 1';
-    let expected = [
-      new stmt.Expression(
-        new expr.Assign('a', '-=', new expr.NumberLiteral('1')),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('a *= 1', () => {
-    let source = 'a *= 1';
-    let expected = [
-      new stmt.Expression(
-        new expr.Assign('a', '*=', new expr.NumberLiteral('1')),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('a /= 1', () => {
-    let source = 'a /= 1';
-    let expected = [
-      new stmt.Expression(
-        new expr.Assign('a', '/=', new expr.NumberLiteral('1')),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('a %= 1', () => {
-    let source = 'a %= 1';
-    let expected = [
-      new stmt.Expression(
-        new expr.Assign('a', '%=', new expr.NumberLiteral('1')),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('a **= 1', () => {
-    let source = 'a **= 1';
-    let expected = [
-      new stmt.Expression(
-        new expr.Assign('a', '**=', new expr.NumberLiteral('1')),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('a ??= 1', () => {
-    let source = 'a ??= 1';
-    let expected = [
-      new stmt.Expression(
-        new expr.Assign('a', '??=', new expr.NumberLiteral('1')),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('a ||= 1', () => {
-    let source = 'a ||= 1';
-    let expected = [
-      new stmt.Expression(
-        new expr.Assign('a', '||=', new expr.NumberLiteral('1')),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('a +.= b', () => {
-    let source = 'a +.= b';
-    let expected = [
-      new stmt.Expression(
-        new expr.Assign('a', '+.=', new expr.Identifier('b')),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('a +. b', () => {
-    let source = 'a +. b';
-    let expected = [
-      new stmt.Expression(
-        new expr.Binary(
-          new expr.Identifier('a'),
-          '+.',
-          new expr.Identifier('b'),
-        ),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+  function testAssignLowerPrecedenceThanTernary(op: string) {
+    test(`${op} lower precedence than ternary`, () => {
+      let source = `a ${op} a ? b : c`;
+      let expected = expressions(assign('a', op, ternary(a, b, c)));
+      expect(ast(source)).toEqual(expected);
+    });
+  }
 });
 
 describe('new/clone', () => {
-  test('new a()', () => {
-    let source = 'new a()';
-    let expected = [
-      new stmt.Expression(
-        new expr.New(new expr.Call(new expr.Identifier('a'), [])),
-      ),
-    ];
+  test('new a', () => {
+    let source = 'new a';
+    let expected = expressions(new_(a));
     expect(ast(source)).toEqual(expected);
   });
 
-  test('clone a()', () => {
-    let source = 'clone a()';
-    let expected = [
-      new stmt.Expression(
-        new expr.Clone(new expr.Call(new expr.Identifier('a'), [])),
-      ),
-    ];
+  test('clone a', () => {
+    let source = 'clone a';
+    let expected = expressions(clone(a));
     expect(ast(source)).toEqual(expected);
   });
+
+  test.todo('precedence');
 });
 
 describe('terminators', () => {
@@ -649,6 +287,6 @@ describe('terminators', () => {
   });
 });
 
-describe('precedence', () => {
-  // https://www.php.net/manual/en/language.operators.precedence.php
-});
+test.todo('call operator');
+test.todo('dot operator');
+test.todo('array access operator');
