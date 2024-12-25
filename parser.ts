@@ -466,6 +466,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function expression(): Expr {
+    // TODO are these in the right places?
     if (match(FUN)) return functionExpression();
     if (match(NEW)) return newExpression();
     if (match(MATCH)) return matchExpression();
@@ -521,7 +522,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function assignment(): Expr {
-    let result = logicalOr();
+    let result = ternary();
     if (match(EQUAL)) {
       let equals = previous();
       let value = assignment();
@@ -529,6 +530,17 @@ export default function parse(tokens: Token[]): Stmt[] {
         return new expr.Assign(result.name, value);
       }
       throw error(equals, 'Invalid assignment target');
+    }
+    return result;
+  }
+
+  function ternary(): Expr {
+    let result = logicalOr();
+    if (match(QUESTION)) {
+      let left = expression();
+      consume('Expect ":" after ternary condition', COLON);
+      let right = expression();
+      result = new expr.Ternary(result, left, right);
     }
     return result;
   }

@@ -393,6 +393,54 @@ describe('binary operators', () => {
   });
 });
 
+describe('ternary operator', () => {
+  test('true ? 1 : 2', () => {
+    let source = 'true ? 1 : 2';
+    let expected = [
+      new stmt.Expression(
+        new expr.Ternary(
+          new expr.BooleanLiteral(true),
+          new expr.NumberLiteral('1'),
+          new expr.NumberLiteral('2'),
+        ),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('true ? a = 3 : 4', () => {
+    let source = 'true ? a = 3 : 4';
+    let expected = [
+      new stmt.Expression(
+        new expr.Ternary(
+          new expr.BooleanLiteral(true),
+          new expr.Assign('a', new expr.NumberLiteral('3')),
+          new expr.NumberLiteral('4'),
+        ),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('true ? 1 : false ? 2 : 3', () => {
+    let source = 'true ? 1 : false ? 2 : 3';
+    let expected = [
+      new stmt.Expression(
+        new expr.Ternary(
+          new expr.BooleanLiteral(true),
+          new expr.NumberLiteral('1'),
+          new expr.Ternary(
+            new expr.BooleanLiteral(false),
+            new expr.NumberLiteral('2'),
+            new expr.NumberLiteral('3'),
+          ),
+        ),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+});
+
 describe('terminators', () => {
   test('1;2', () => {
     let source = '1;2';

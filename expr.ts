@@ -12,6 +12,7 @@ export interface Visitor<T> {
   visitGetExpr(expr: Get): T;
   visitOptionalGetExpr(expr: OptionalGet): T;
   visitBinaryExpr(expr: Binary): T;
+  visitTernaryExpr(expr: Ternary): T;
   visitGroupingExpr(expr: Grouping): T;
   visitNumberLiteralExpr(expr: NumberLiteral): T;
   visitStringLiteralExpr(expr: StringLiteral): T;
@@ -82,6 +83,19 @@ export class Binary extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitBinaryExpr(this);
+  }
+}
+
+export class Ternary extends Expr {
+  constructor(
+    public readonly condition: Expr,
+    public readonly left: Expr,
+    public readonly right: Expr,
+  ) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitTernaryExpr(this);
   }
 }
 
