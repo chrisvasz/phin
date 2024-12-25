@@ -251,7 +251,7 @@ describe('postfix', () => {
   });
 });
 
-describe('binary', () => {
+describe('comparison', () => {
   test('1 > 2', () => {
     let source = '1 > 2';
     let expected = [
@@ -377,7 +377,9 @@ describe('binary', () => {
     ];
     expect(ast(source)).toEqual(expected);
   });
+});
 
+describe('conditional', () => {
   test('1 && 2', () => {
     let source = '1 && 2';
     let expected = [
@@ -400,6 +402,35 @@ describe('binary', () => {
           new expr.NumberLiteral('1'),
           '||',
           new expr.NumberLiteral('2'),
+        ),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('a ?? b', () => {
+    let source = 'a ?? b';
+    let expected = [
+      new stmt.Expression(
+        new expr.NullCoalesce(
+          new expr.Identifier('a'),
+          new expr.Identifier('b'),
+        ),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('a ?? b ?? c', () => {
+    let source = 'a ?? b ?? c';
+    let expected = [
+      new stmt.Expression(
+        new expr.NullCoalesce(
+          new expr.Identifier('a'),
+          new expr.NullCoalesce(
+            new expr.Identifier('b'),
+            new expr.Identifier('c'),
+          ),
         ),
       ),
     ];

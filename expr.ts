@@ -12,6 +12,7 @@ export interface Visitor<T> {
   visitGetExpr(expr: Get): T;
   visitOptionalGetExpr(expr: OptionalGet): T;
   visitBinaryExpr(expr: Binary): T;
+  visitNullCoalesceExpr(expr: NullCoalesce): T;
   visitTernaryExpr(expr: Ternary): T;
   visitGroupingExpr(expr: Grouping): T;
   visitNumberLiteralExpr(expr: NumberLiteral): T;
@@ -74,6 +75,15 @@ export class OptionalGet extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitOptionalGetExpr(this);
+  }
+}
+
+export class NullCoalesce extends Expr {
+  constructor(public readonly left: Expr, public readonly right: Expr) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitNullCoalesceExpr(this);
   }
 }
 

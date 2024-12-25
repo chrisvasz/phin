@@ -557,12 +557,21 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function ternary(): Expr {
-    let result = logicalOr();
+    let result = nullCoalesce();
     if (match(QUESTION)) {
       let left = expression();
       consume('Expect ":" after ternary condition', COLON);
       let right = expression();
       result = new expr.Ternary(result, left, right);
+    }
+    return result;
+  }
+
+  function nullCoalesce(): Expr {
+    let result = logicalOr();
+    while (match(NULL_COALESCE)) {
+      let right = nullCoalesce();
+      result = new expr.NullCoalesce(result, right);
     }
     return result;
   }
