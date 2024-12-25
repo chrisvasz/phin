@@ -26,6 +26,7 @@ export enum TokenType {
   QUESTION,
   AMPERSAND,
   PIPE,
+  PLUS_DOT, // string concat
 
   // math operators
   MINUS,
@@ -48,6 +49,7 @@ export enum TokenType {
   PERCENT_EQUAL,
   NULL_COALESCE_EQUAL,
   LOGICAL_OR_EQUAL,
+  PLUS_DOT_EQUAL, // string concat assign
 
   // comparison operators
   BANG_EQUAL,

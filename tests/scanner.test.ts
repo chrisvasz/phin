@@ -59,6 +59,8 @@ const {
   PERCENT_EQUAL,
   PERCENT,
   PIPE,
+  PLUS_DOT_EQUAL,
+  PLUS_DOT,
   PLUS_EQUAL,
   PLUS_PLUS,
   PLUS,
@@ -283,6 +285,20 @@ describe('tokens', () => {
   test('??=', () => {
     let expected = [new Token(NULL_COALESCE_EQUAL, '??=', undefined, 1), eof()];
     let source = '??=';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('+.', () => {
+    let expected = [new Token(PLUS_DOT, '+.', undefined, 1), eof()];
+    let source = '+.';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('+.=', () => {
+    let expected = [new Token(PLUS_DOT_EQUAL, '+.=', undefined, 1), eof()];
+    let source = '+.=';
     let actual = scan(source);
     expect(actual).toEqual(expected);
   });

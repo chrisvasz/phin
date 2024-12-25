@@ -60,6 +60,8 @@ const {
   PERCENT_EQUAL,
   PERCENT,
   PIPE,
+  PLUS_DOT_EQUAL,
+  PLUS_DOT,
   PLUS_EQUAL,
   PLUS_PLUS,
   PLUS,
@@ -476,7 +478,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function expression(): Expr {
-    // TODO are these in the right places?
+    // TODO are these in the right places? think they need to be AFTER assign
     if (match(FUN)) return functionExpression();
     if (match(NEW)) return newExpression();
     if (match(MATCH)) return matchExpression();
@@ -544,6 +546,7 @@ export default function parse(tokens: Token[]): Stmt[] {
         PERCENT_EQUAL,
         NULL_COALESCE_EQUAL,
         LOGICAL_OR_EQUAL,
+        PLUS_DOT_EQUAL,
       )
     ) {
       let operator = previous();
@@ -599,7 +602,13 @@ export default function parse(tokens: Token[]): Stmt[] {
   function equality(): Expr {
     let result = comparison();
     while (
-      match(BANG_EQUAL, EQUAL_EQUAL, BANG_EQUAL_EQUAL, EQUAL_EQUAL_EQUAL)
+      match(
+        BANG_EQUAL,
+        EQUAL_EQUAL,
+        BANG_EQUAL_EQUAL,
+        EQUAL_EQUAL_EQUAL,
+        SPACESHIP,
+      )
     ) {
       let operator = previous();
       let right = comparison();
@@ -609,8 +618,18 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function comparison(): Expr {
+    let result = stringConcat();
+    while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
+      let operator = previous();
+      let right = stringConcat();
+      result = new expr.Binary(result, operator.lexeme, right);
+    }
+    return result;
+  }
+
+  function stringConcat(): Expr {
     let result = term();
-    while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, SPACESHIP)) {
+    while (match(PLUS_DOT)) {
       let operator = previous();
       let right = term();
       result = new expr.Binary(result, operator.lexeme, right);

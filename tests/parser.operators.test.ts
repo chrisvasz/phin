@@ -590,6 +590,30 @@ describe('assign', () => {
     ];
     expect(ast(source)).toEqual(expected);
   });
+
+  test('a +.= b', () => {
+    let source = 'a +.= b';
+    let expected = [
+      new stmt.Expression(
+        new expr.Assign('a', '+.=', new expr.Identifier('b')),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('a +. b', () => {
+    let source = 'a +. b';
+    let expected = [
+      new stmt.Expression(
+        new expr.Binary(
+          new expr.Identifier('a'),
+          '+.',
+          new expr.Identifier('b'),
+        ),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
 });
 
 describe('terminators', () => {
@@ -601,4 +625,8 @@ describe('terminators', () => {
     ];
     expect(ast(source)).toEqual(expected);
   });
+});
+
+describe('precedence', () => {
+  // https://www.php.net/manual/en/language.operators.precedence.php
 });

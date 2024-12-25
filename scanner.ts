@@ -56,6 +56,8 @@ const {
   PERCENT_EQUAL,
   PERCENT,
   PIPE,
+  PLUS_DOT_EQUAL,
+  PLUS_DOT,
   PLUS_EQUAL,
   PLUS_PLUS,
   PLUS,
@@ -202,7 +204,10 @@ export default function scan(source: string): Token[] {
   function plus() {
     if (match('=')) addToken(PLUS_EQUAL);
     else if (match('+')) addToken(PLUS_PLUS);
-    else addToken(PLUS);
+    else if (match('.')) {
+      if (match('=')) addToken(PLUS_DOT_EQUAL);
+      else addToken(PLUS_DOT);
+    } else addToken(PLUS);
   }
 
   function minus() {
