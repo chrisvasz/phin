@@ -508,3 +508,85 @@ describe('class properties', () => {
     expect(ast(source)).toEqual(expected);
   });
 });
+
+describe('kitchen sink', () => {
+  test('kitchen sink', () => {
+    let source = `
+      class A (
+        a,
+        b: string,
+        c: array<number> = [3],
+      ) extends B implements C, D {
+        private const b: int = 3;
+        protected var c: string = "hello";
+        // comment
+        public static fun d(e: bool): number => 3;
+        fun f() {
+          echo "hello";
+        }
+        init {
+          echo "world";
+        }
+      }
+    `.trim();
+    let expected = [
+      new stmt.Class(
+        'A',
+        [
+          new stmt.Var('a', null, null),
+          new stmt.Var('b', new types.String(), null),
+          new stmt.Var(
+            'c',
+            new types.Identifier('array', [new types.Number()]),
+            new expr.ArrayLiteral([
+              new expr.ArrayElement(null, new expr.NumberLiteral('3')),
+            ]),
+          ),
+        ],
+        'B',
+        ['C', 'D'],
+        [
+          new stmt.ClassConst(
+            new stmt.Var('b', new types.Int(), new expr.NumberLiteral('3')),
+            'private',
+            false,
+            false,
+          ),
+          new stmt.ClassProperty(
+            new stmt.Var(
+              'c',
+              new types.String(),
+              new expr.StringLiteral('hello'),
+            ),
+            'protected',
+            false,
+            false,
+          ),
+          new stmt.ClassMethod(
+            new stmt.Function(
+              'd',
+              [new stmt.Var('e', new types.Boolean(), null)],
+              new types.Number(),
+              new expr.NumberLiteral('3'),
+            ),
+            'public',
+            true,
+            false,
+          ),
+          new stmt.ClassMethod(
+            new stmt.Function('f', [], null, [
+              new stmt.Echo(new expr.StringLiteral('hello')),
+            ]),
+            null,
+            false,
+            false,
+          ),
+          new stmt.ClassInitializer([
+            new stmt.Echo(new expr.StringLiteral('world')),
+          ]),
+        ],
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+});
