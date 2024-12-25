@@ -112,6 +112,20 @@ describe('math', () => {
     expect(ast(source)).toEqual(expected);
   });
 
+  test('1 % 2', () => {
+    let source = '1 % 2';
+    let expected = [
+      new stmt.Expression(
+        new expr.Binary(
+          new expr.NumberLiteral('1'),
+          '%',
+          new expr.NumberLiteral('2'),
+        ),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
   test('expr() / expr()', () => {
     let source = 'expr() / expr()';
     let expected = [
@@ -127,7 +141,7 @@ describe('math', () => {
   });
 });
 
-describe('unary operators', () => {
+describe('unary', () => {
   test('!true', () => {
     let source = '!true';
     let expected = [
@@ -163,7 +177,7 @@ describe('unary operators', () => {
   });
 });
 
-describe('prefix operators', () => {
+describe('prefix', () => {
   test('++i', () => {
     let source = '++i';
     let expected = [
@@ -205,7 +219,7 @@ describe('prefix operators', () => {
   });
 });
 
-describe('postfix operators', () => {
+describe('postfix', () => {
   test('i++', () => {
     let source = 'i++';
     let expected = [
@@ -237,7 +251,7 @@ describe('postfix operators', () => {
   });
 });
 
-describe('binary operators', () => {
+describe('binary', () => {
   test('1 > 2', () => {
     let source = '1 > 2';
     let expected = [
@@ -393,7 +407,7 @@ describe('binary operators', () => {
   });
 });
 
-describe('ternary operator', () => {
+describe('ternary', () => {
   test('true ? 1 : 2', () => {
     let source = 'true ? 1 : 2';
     let expected = [
@@ -414,7 +428,7 @@ describe('ternary operator', () => {
       new stmt.Expression(
         new expr.Ternary(
           new expr.BooleanLiteral(true),
-          new expr.Assign('a', new expr.NumberLiteral('3')),
+          new expr.Assign('a', '=', new expr.NumberLiteral('3')),
           new expr.NumberLiteral('4'),
         ),
       ),
@@ -435,6 +449,112 @@ describe('ternary operator', () => {
             new expr.NumberLiteral('3'),
           ),
         ),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+});
+
+describe('assign', () => {
+  test('a = 1', () => {
+    let source = 'a = 1';
+    let expected = [
+      new stmt.Expression(
+        new expr.Assign('a', '=', new expr.NumberLiteral('1')),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('a = b = 1', () => {
+    let source = 'a = b = 1';
+    let expected = [
+      new stmt.Expression(
+        new expr.Assign(
+          'a',
+          '=',
+          new expr.Assign('b', '=', new expr.NumberLiteral('1')),
+        ),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('a += 1', () => {
+    let source = 'a += 1';
+    let expected = [
+      new stmt.Expression(
+        new expr.Assign('a', '+=', new expr.NumberLiteral('1')),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('a -= 1', () => {
+    let source = 'a -= 1';
+    let expected = [
+      new stmt.Expression(
+        new expr.Assign('a', '-=', new expr.NumberLiteral('1')),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('a *= 1', () => {
+    let source = 'a *= 1';
+    let expected = [
+      new stmt.Expression(
+        new expr.Assign('a', '*=', new expr.NumberLiteral('1')),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('a /= 1', () => {
+    let source = 'a /= 1';
+    let expected = [
+      new stmt.Expression(
+        new expr.Assign('a', '/=', new expr.NumberLiteral('1')),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('a %= 1', () => {
+    let source = 'a %= 1';
+    let expected = [
+      new stmt.Expression(
+        new expr.Assign('a', '%=', new expr.NumberLiteral('1')),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('a **= 1', () => {
+    let source = 'a **= 1';
+    let expected = [
+      new stmt.Expression(
+        new expr.Assign('a', '**=', new expr.NumberLiteral('1')),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('a ??= 1', () => {
+    let source = 'a ??= 1';
+    let expected = [
+      new stmt.Expression(
+        new expr.Assign('a', '??=', new expr.NumberLiteral('1')),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('a ||= 1', () => {
+    let source = 'a ||= 1';
+    let expected = [
+      new stmt.Expression(
+        new expr.Assign('a', '||=', new expr.NumberLiteral('1')),
       ),
     ];
     expect(ast(source)).toEqual(expected);

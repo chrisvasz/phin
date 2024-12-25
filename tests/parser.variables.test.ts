@@ -278,14 +278,4 @@ describe('variable declarations', () => {
     ];
     expect(ast(source)).toEqual(expected);
   });
-
-  test('abc = 123', () => {
-    let source = 'abc = 123';
-    let expected = [
-      new stmt.Expression(
-        new expr.Assign('abc', new expr.NumberLiteral('123')),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
 });

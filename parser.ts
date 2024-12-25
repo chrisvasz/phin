@@ -45,15 +45,22 @@ const {
   LESS_EQUAL,
   LESS,
   LOGICAL_AND,
+  LOGICAL_OR_EQUAL,
   LOGICAL_OR,
   MATCH,
+  MINUS_EQUAL,
   MINUS_MINUS,
   MINUS,
   NEW,
+  NULL_COALESCE_EQUAL,
+  NULL_COALESCE,
   NULL,
   NUMBER,
   OPTIONAL_CHAIN,
+  PERCENT_EQUAL,
+  PERCENT,
   PIPE,
+  PLUS_EQUAL,
   PLUS_PLUS,
   PLUS,
   PRIVATE,
@@ -66,8 +73,11 @@ const {
   RIGHT_BRACKET,
   RIGHT_PAREN,
   SEMICOLON,
+  SLASH_EQUAL,
   SLASH,
   SPACESHIP,
+  STAR_STAR_EQUAL,
+  STAR_EQUAL,
   STAR,
   STATIC,
   STRING,
@@ -523,13 +533,25 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function assignment(): Expr {
     let result = ternary();
-    if (match(EQUAL)) {
-      let equals = previous();
+    if (
+      match(
+        EQUAL,
+        PLUS_EQUAL,
+        MINUS_EQUAL,
+        STAR_EQUAL,
+        STAR_STAR_EQUAL,
+        SLASH_EQUAL,
+        PERCENT_EQUAL,
+        NULL_COALESCE_EQUAL,
+        LOGICAL_OR_EQUAL,
+      )
+    ) {
+      let operator = previous();
       let value = assignment();
       if (result instanceof expr.Identifier) {
-        return new expr.Assign(result.name, value);
+        return new expr.Assign(result.name, operator.lexeme, value);
       }
-      throw error(equals, 'Invalid assignment target');
+      throw error(operator, 'Invalid assignment target');
     }
     return result;
   }
@@ -599,7 +621,7 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function factor(): Expr {
     let result = unary();
-    while (match(SLASH, STAR)) {
+    while (match(SLASH, STAR, PERCENT)) {
       let operator = previous();
       let right = unary();
       result = new expr.Binary(result, operator.lexeme, right);

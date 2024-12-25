@@ -41,16 +41,22 @@ const {
   LESS_EQUAL,
   LESS,
   LOGICAL_AND,
+  LOGICAL_OR_EQUAL,
   LOGICAL_OR,
   MATCH,
+  MINUS_EQUAL,
   MINUS_MINUS,
   MINUS,
   NEW,
+  NULL_COALESCE_EQUAL,
   NULL_COALESCE,
   NULL,
   NUMBER,
   OPTIONAL_CHAIN,
+  PERCENT_EQUAL,
+  PERCENT,
   PIPE,
+  PLUS_EQUAL,
   PLUS_PLUS,
   PLUS,
   PRIVATE,
@@ -63,8 +69,12 @@ const {
   RIGHT_BRACKET,
   RIGHT_PAREN,
   SEMICOLON,
+  SLASH_EQUAL,
   SLASH,
   SPACESHIP,
+  STAR_EQUAL,
+  STAR_STAR_EQUAL,
+  STAR_STAR,
   STAR,
   STATIC,
   STRING,
@@ -132,18 +142,19 @@ export default function scan(source: string): Token[] {
   chars[code(']')] = () => addToken(RIGHT_BRACKET);
   chars[code(',')] = () => addToken(COMMA);
   chars[code('.')] = () => addToken(DOT);
-  chars[code('-')] = () => addToken(match('-') ? MINUS_MINUS : MINUS);
-  chars[code('+')] = () => addToken(match('+') ? PLUS_PLUS : PLUS);
+  chars[code('+')] = plus;
+  chars[code('-')] = minus;
   chars[code(';')] = () => addToken(SEMICOLON);
-  chars[code('*')] = () => addToken(STAR);
+  chars[code('*')] = star;
   chars[code('!')] = bang;
   chars[code('=')] = equal;
   chars[code('<')] = less;
   chars[code('>')] = () => addToken(match('=') ? GREATER_EQUAL : GREATER);
   chars[code(':')] = () => addToken(match(':') ? COLON_COLON : COLON);
   chars[code('?')] = question;
-  chars[code('|')] = () => addToken(match('|') ? LOGICAL_OR : PIPE);
+  chars[code('|')] = pipe;
   chars[code('&')] = () => addToken(match('&') ? LOGICAL_AND : AMPERSAND);
+  chars[code('%')] = percent;
   chars[code('"')] = string;
   chars[code('/')] = slash;
   chars[code(' ')] = () => {};
@@ -188,30 +199,51 @@ export default function scan(source: string): Token[] {
     return true;
   }
 
+  function plus() {
+    if (match('=')) addToken(PLUS_EQUAL);
+    else if (match('+')) addToken(PLUS_PLUS);
+    else addToken(PLUS);
+  }
+
+  function minus() {
+    if (match('=')) addToken(MINUS_EQUAL);
+    else if (match('-')) addToken(MINUS_MINUS);
+    else addToken(MINUS);
+  }
+
+  function star() {
+    if (match('*')) {
+      if (match('=')) addToken(STAR_STAR_EQUAL);
+      else addToken(STAR_STAR);
+    } else if (match('=')) addToken(STAR_EQUAL);
+    else addToken(STAR);
+  }
+
+  function slash() {
+    if (match('/')) {
+      while (peek() != '\n' && !isAtEnd()) advance(); // till end of line
+    } else if (match('=')) addToken(SLASH_EQUAL);
+    else addToken(SLASH);
+  }
+
+  function percent() {
+    if (match('=')) addToken(PERCENT_EQUAL);
+    else addToken(PERCENT);
+  }
+
   function bang() {
     if (match('=')) {
-      if (match('=')) {
-        addToken(BANG_EQUAL_EQUAL);
-      } else {
-        addToken(BANG_EQUAL);
-      }
-    } else {
-      addToken(BANG);
-    }
+      if (match('=')) addToken(BANG_EQUAL_EQUAL);
+      else addToken(BANG_EQUAL);
+    } else addToken(BANG);
   }
 
   function equal() {
     if (match('=')) {
-      if (match('=')) {
-        addToken(EQUAL_EQUAL_EQUAL);
-      } else {
-        addToken(EQUAL_EQUAL);
-      }
-    } else if (match('>')) {
-      addToken(ARROW);
-    } else {
-      addToken(EQUAL);
-    }
+      if (match('=')) addToken(EQUAL_EQUAL_EQUAL);
+      else addToken(EQUAL_EQUAL);
+    } else if (match('>')) addToken(ARROW);
+    else addToken(EQUAL);
   }
 
   function less() {
@@ -228,14 +260,18 @@ export default function scan(source: string): Token[] {
 
   function question() {
     if (match('?')) {
-      addToken(NULL_COALESCE);
-    } else if (match(':')) {
-      addToken(ELVIS);
-    } else if (match('.')) {
-      addToken(OPTIONAL_CHAIN);
-    } else {
-      addToken(QUESTION);
-    }
+      if (match('=')) addToken(NULL_COALESCE_EQUAL);
+      else addToken(NULL_COALESCE);
+    } else if (match(':')) addToken(ELVIS);
+    else if (match('.')) addToken(OPTIONAL_CHAIN);
+    else addToken(QUESTION);
+  }
+
+  function pipe() {
+    if (match('|')) {
+      if (match('=')) addToken(LOGICAL_OR_EQUAL);
+      else addToken(LOGICAL_OR);
+    } else addToken(PIPE);
   }
 
   function string() {
@@ -250,14 +286,6 @@ export default function scan(source: string): Token[] {
     advance(); // consume the closing "
     const value = source.substring(start + 1, current - 1);
     addToken(STRING, value);
-  }
-
-  function slash() {
-    if (match('/')) {
-      while (peek() != '\n' && !isAtEnd()) advance(); // till end of line
-    } else {
-      addToken(SLASH);
-    }
   }
 
   function eol() {

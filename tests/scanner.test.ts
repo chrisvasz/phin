@@ -44,16 +44,22 @@ const {
   LESS_EQUAL,
   LESS,
   LOGICAL_AND,
+  LOGICAL_OR_EQUAL,
   LOGICAL_OR,
   MATCH,
+  MINUS_EQUAL,
   MINUS_MINUS,
   MINUS,
   NEW,
+  NULL_COALESCE_EQUAL,
   NULL_COALESCE,
   NULL,
   NUMBER,
   OPTIONAL_CHAIN,
+  PERCENT_EQUAL,
+  PERCENT,
   PIPE,
+  PLUS_EQUAL,
   PLUS_PLUS,
   PLUS,
   PRIVATE,
@@ -66,8 +72,12 @@ const {
   RIGHT_BRACKET,
   RIGHT_PAREN,
   SEMICOLON,
+  SLASH_EQUAL,
   SLASH,
   SPACESHIP,
+  STAR_EQUAL,
+  STAR_STAR_EQUAL,
+  STAR_STAR,
   STAR,
   STATIC,
   STRING,
@@ -158,6 +168,20 @@ describe('tokens', () => {
     expect(actual).toEqual(expected);
   });
 
+  test('**', () => {
+    let expected = [new Token(STAR_STAR, '**', undefined, 1), eof()];
+    let source = '**';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('%', () => {
+    let expected = [new Token(PERCENT, '%', undefined, 1), eof()];
+    let source = '%';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
   test('!', () => {
     let expected = [new Token(BANG, '!', undefined, 1), eof()];
     let source = '!';
@@ -203,6 +227,62 @@ describe('tokens', () => {
   test('=', () => {
     let expected = [new Token(EQUAL, '=', undefined, 1), eof()];
     let source = '=';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('+=', () => {
+    let expected = [new Token(PLUS_EQUAL, '+=', undefined, 1), eof()];
+    let source = '+=';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('-=', () => {
+    let expected = [new Token(MINUS_EQUAL, '-=', undefined, 1), eof()];
+    let source = '-=';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('*=', () => {
+    let expected = [new Token(STAR_EQUAL, '*=', undefined, 1), eof()];
+    let source = '*=';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('/=', () => {
+    let expected = [new Token(SLASH_EQUAL, '/=', undefined, 1), eof()];
+    let source = '/=';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('%=', () => {
+    let expected = [new Token(PERCENT_EQUAL, '%=', undefined, 1), eof()];
+    let source = '%=';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('**=', () => {
+    let expected = [new Token(STAR_STAR_EQUAL, '**=', undefined, 1), eof()];
+    let source = '**=';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('||=', () => {
+    let expected = [new Token(LOGICAL_OR_EQUAL, '||=', undefined, 1), eof()];
+    let source = '||=';
+    let actual = scan(source);
+    expect(actual).toEqual(expected);
+  });
+
+  test('??=', () => {
+    let expected = [new Token(NULL_COALESCE_EQUAL, '??=', undefined, 1), eof()];
+    let source = '??=';
     let actual = scan(source);
     expect(actual).toEqual(expected);
   });

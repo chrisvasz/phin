@@ -38,7 +38,11 @@ export abstract class Expr {
 }
 
 export class Assign extends Expr {
-  constructor(public readonly name: string, public readonly value: Expr) {
+  constructor(
+    public readonly name: string,
+    public readonly operator: string,
+    public readonly value: Expr,
+  ) {
     super();
   }
   accept<T>(visitor: Visitor<T>): T {
