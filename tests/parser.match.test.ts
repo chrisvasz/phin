@@ -170,7 +170,7 @@ describe('match expressions', () => {
         new expr.Match(
           new expr.BooleanLiteral(true),
           [],
-          new expr.Throw(new expr.Variable('a')),
+          new expr.Throw(new expr.Identifier('a')),
         ),
       ),
     ];

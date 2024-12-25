@@ -53,14 +53,14 @@ describe('array literals', () => {
           new expr.ArrayElement(null, new expr.StringLiteral('a')),
           new expr.ArrayElement(
             null,
-            new expr.Call(new expr.Variable('b'), []),
+            new expr.Call(new expr.Identifier('b'), []),
           ),
           new expr.ArrayElement(
             null,
             new expr.Binary(
-              new expr.Variable('c'),
+              new expr.Identifier('c'),
               '<',
-              new expr.Variable('d'),
+              new expr.Identifier('d'),
             ),
           ),
         ]),
@@ -128,7 +128,7 @@ describe('array literals', () => {
           ),
           new expr.ArrayElement(
             null,
-            new expr.Call(new expr.Variable('a'), []),
+            new expr.Call(new expr.Identifier('a'), []),
           ),
         ]),
       ),

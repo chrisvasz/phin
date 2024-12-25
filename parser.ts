@@ -511,7 +511,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(EQUAL)) {
       let equals = previous();
       let value = assignment();
-      if (result instanceof expr.Variable) {
+      if (result instanceof expr.Identifier) {
         return new expr.Assign(result.name, value);
       }
       throw error(equals, 'Invalid assignment target');
@@ -636,7 +636,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(LEFT_BRACKET)) return arrayLiteral();
     if (match(THIS)) return new expr.This();
     if (match(SUPER)) return new expr.Super();
-    if (match(IDENTIFIER)) return variable();
+    if (match(IDENTIFIER)) return identifier();
     throw error(peek(), 'Expect expression');
   }
 
@@ -673,8 +673,8 @@ export default function parse(tokens: Token[]): Stmt[] {
     return new expr.ArrayElement(arrayKey(), expression());
   }
 
-  function variable(): expr.Variable {
-    return new expr.Variable(previous().lexeme);
+  function identifier(): expr.Identifier {
+    return new expr.Identifier(previous().lexeme);
   }
 
   function arrayKey(): expr.NumberLiteral | expr.StringLiteral | null {

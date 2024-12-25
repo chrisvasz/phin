@@ -13,7 +13,9 @@ function ast(source: string) {
 describe('new expressions', () => {
   test('new a', () => {
     let source = 'new a';
-    let expected = [new stmt.Expression(new expr.New(new expr.Variable('a')))];
+    let expected = [
+      new stmt.Expression(new expr.New(new expr.Identifier('a'))),
+    ];
     expect(ast(source)).toEqual(expected);
   });
 
@@ -21,7 +23,7 @@ describe('new expressions', () => {
     let source = 'new A()';
     let expected = [
       new stmt.Expression(
-        new expr.New(new expr.Call(new expr.Variable('A'), [])),
+        new expr.New(new expr.Call(new expr.Identifier('A'), [])),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -96,7 +98,7 @@ describe('class declarations', () => {
         'A',
         [new stmt.ClassParam('a', null, null, null, false, false)],
         new stmt.ClassSuperclass('B', [
-          new expr.Call(new expr.Variable('a'), []),
+          new expr.Call(new expr.Identifier('a'), []),
         ]),
         [],
         [],
@@ -609,8 +611,8 @@ describe('kitchen sink', () => {
           new stmt.ClassParam('d', null, null, 'public', true, false),
         ],
         new stmt.ClassSuperclass('B', [
-          new expr.Variable('c'),
-          new expr.Call(new expr.Variable('d'), []),
+          new expr.Identifier('c'),
+          new expr.Call(new expr.Identifier('d'), []),
         ]),
         ['C', 'D'],
         [
@@ -665,7 +667,7 @@ describe('get expressions', () => {
   test('a.b', () => {
     let source = 'a.b';
     let expected = [
-      new stmt.Expression(new expr.Get(new expr.Variable('a'), 'b')),
+      new stmt.Expression(new expr.Get(new expr.Identifier('a'), 'b')),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -673,7 +675,7 @@ describe('get expressions', () => {
   test('a?.b', () => {
     let source = 'a?.b';
     let expected = [
-      new stmt.Expression(new expr.OptionalGet(new expr.Variable('a'), 'b')),
+      new stmt.Expression(new expr.OptionalGet(new expr.Identifier('a'), 'b')),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -682,7 +684,7 @@ describe('get expressions', () => {
     let source = 'a.b.c';
     let expected = [
       new stmt.Expression(
-        new expr.Get(new expr.Get(new expr.Variable('a'), 'b'), 'c'),
+        new expr.Get(new expr.Get(new expr.Identifier('a'), 'b'), 'c'),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -693,7 +695,10 @@ describe('get expressions', () => {
     let expected = [
       new stmt.Expression(
         new expr.Get(
-          new expr.OptionalGet(new expr.Get(new expr.Variable('a'), 'b'), 'c'),
+          new expr.OptionalGet(
+            new expr.Get(new expr.Identifier('a'), 'b'),
+            'c',
+          ),
           'd',
         ),
       ),
@@ -708,7 +713,7 @@ describe('get expressions', () => {
         new expr.Get(
           new expr.Call(
             new expr.OptionalGet(
-              new expr.Call(new expr.Variable('a'), []),
+              new expr.Call(new expr.Identifier('a'), []),
               'b',
             ),
             [new expr.NumberLiteral('1'), new expr.NumberLiteral('2')],

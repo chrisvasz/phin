@@ -82,7 +82,7 @@ describe('for', () => {
       new stmt.For(
         new stmt.Var('i', null, new expr.NumberLiteral('0')),
         new expr.Binary(
-          new expr.Variable('i'),
+          new expr.Identifier('i'),
           '<',
           new expr.NumberLiteral('10'),
         ),
@@ -99,11 +99,11 @@ describe('for', () => {
       new stmt.For(
         new stmt.Var('i', new types.Number(), new expr.NumberLiteral('0')),
         new expr.Binary(
-          new expr.Variable('i'),
+          new expr.Identifier('i'),
           '<',
           new expr.NumberLiteral('10'),
         ),
-        new expr.Unary('++', new expr.Variable('i')),
+        new expr.Unary('++', new expr.Identifier('i')),
         new stmt.Block([new stmt.Expression(new expr.NumberLiteral('2'))]),
       ),
     ];
@@ -118,7 +118,7 @@ describe('foreach', () => {
       new stmt.Foreach(
         null,
         new stmt.Var('i', null, null),
-        new expr.Variable('list'),
+        new expr.Identifier('list'),
         new stmt.Expression(new expr.NumberLiteral('2')),
       ),
     ];
@@ -131,7 +131,7 @@ describe('foreach', () => {
       new stmt.Foreach(
         null,
         new stmt.Var('i', null, null),
-        new expr.Variable('list'),
+        new expr.Identifier('list'),
         new stmt.Block([new stmt.Expression(new expr.NumberLiteral('2'))]),
       ),
     ];
@@ -144,7 +144,7 @@ describe('foreach', () => {
       new stmt.Foreach(
         null,
         new stmt.Var('i', new types.Number(), null),
-        new expr.Variable('list'),
+        new expr.Identifier('list'),
         new stmt.Expression(new expr.NumberLiteral('2')),
       ),
     ];
@@ -157,7 +157,7 @@ describe('foreach', () => {
       new stmt.Foreach(
         new stmt.Var('i', null, null),
         new stmt.Var('l', null, null),
-        new expr.Variable('list'),
+        new expr.Identifier('list'),
         new stmt.Expression(new expr.NumberLiteral('2')),
       ),
     ];
@@ -170,7 +170,7 @@ describe('foreach', () => {
       new stmt.Foreach(
         new stmt.Var('i', new types.Number(), null),
         new stmt.Var('l', new types.Identifier('Rental', []), null),
-        new expr.Variable('list'),
+        new expr.Identifier('list'),
         new stmt.Expression(new expr.NumberLiteral('2')),
       ),
     ];

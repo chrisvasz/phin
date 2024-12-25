@@ -117,9 +117,9 @@ describe('math', () => {
     let expected = [
       new stmt.Expression(
         new expr.Binary(
-          new expr.Call(new expr.Variable('expr'), []),
+          new expr.Call(new expr.Identifier('expr'), []),
           '/',
-          new expr.Call(new expr.Variable('expr'), []),
+          new expr.Call(new expr.Identifier('expr'), []),
         ),
       ),
     ];
@@ -165,7 +165,7 @@ describe('unary operators', () => {
   test('++i', () => {
     let source = '++i';
     let expected = [
-      new stmt.Expression(new expr.Unary('++', new expr.Variable('i'))),
+      new stmt.Expression(new expr.Unary('++', new expr.Identifier('i'))),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -173,7 +173,7 @@ describe('unary operators', () => {
   test('--i', () => {
     let source = '--i';
     let expected = [
-      new stmt.Expression(new expr.Unary('--', new expr.Variable('i'))),
+      new stmt.Expression(new expr.Unary('--', new expr.Identifier('i'))),
     ];
     expect(ast(source)).toEqual(expected);
   });

@@ -57,7 +57,7 @@ describe('try/catch', () => {
 describe('throw', () => {
   test('throw e', () => {
     let source = 'throw e';
-    let expected = [new stmt.Throw(new expr.Variable('e'))];
+    let expected = [new stmt.Throw(new expr.Identifier('e'))];
     expect(ast(source)).toEqual(expected);
   });
 
@@ -65,7 +65,7 @@ describe('throw', () => {
     let source = 'throw new Exception()';
     let expected = [
       new stmt.Throw(
-        new expr.New(new expr.Call(new expr.Variable('Exception'), [])),
+        new expr.New(new expr.Call(new expr.Identifier('Exception'), [])),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -74,7 +74,7 @@ describe('throw', () => {
   test('var a = throw e', () => {
     let source = 'var a = throw e';
     let expected = [
-      new stmt.Var('a', null, new expr.Throw(new expr.Variable('e'))),
+      new stmt.Var('a', null, new expr.Throw(new expr.Identifier('e'))),
     ];
     expect(ast(source)).toEqual(expected);
   });

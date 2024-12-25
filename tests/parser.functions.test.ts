@@ -14,7 +14,7 @@ describe('call expressions', () => {
   test('thing()', () => {
     let source = 'thing()';
     let expected = [
-      new stmt.Expression(new expr.Call(new expr.Variable('thing'), [])),
+      new stmt.Expression(new expr.Call(new expr.Identifier('thing'), [])),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -23,7 +23,7 @@ describe('call expressions', () => {
     let source = 'thing(1)';
     let expected = [
       new stmt.Expression(
-        new expr.Call(new expr.Variable('thing'), [
+        new expr.Call(new expr.Identifier('thing'), [
           new expr.NumberLiteral('1'),
         ]),
       ),
@@ -35,7 +35,7 @@ describe('call expressions', () => {
     let source = 'thing(1, 2)';
     let expected = [
       new stmt.Expression(
-        new expr.Call(new expr.Variable('thing'), [
+        new expr.Call(new expr.Identifier('thing'), [
           new expr.NumberLiteral('1'),
           new expr.NumberLiteral('2'),
         ]),
@@ -48,7 +48,7 @@ describe('call expressions', () => {
     let source = 'thing(1 + 2, 3 - 4)';
     let expected = [
       new stmt.Expression(
-        new expr.Call(new expr.Variable('thing'), [
+        new expr.Call(new expr.Identifier('thing'), [
           new expr.Binary(
             new expr.NumberLiteral('1'),
             '+',
@@ -69,8 +69,8 @@ describe('call expressions', () => {
     let source = 'thing(thing2())';
     let expected = [
       new stmt.Expression(
-        new expr.Call(new expr.Variable('thing'), [
-          new expr.Call(new expr.Variable('thing2'), []),
+        new expr.Call(new expr.Identifier('thing'), [
+          new expr.Call(new expr.Identifier('thing2'), []),
         ]),
       ),
     ];
@@ -81,7 +81,7 @@ describe('call expressions', () => {
     let source = 'thing(1,)';
     let expected = [
       new stmt.Expression(
-        new expr.Call(new expr.Variable('thing'), [
+        new expr.Call(new expr.Identifier('thing'), [
           new expr.NumberLiteral('1'),
         ]),
       ),
@@ -190,7 +190,7 @@ describe('function declarations', () => {
         'foo',
         [],
         null,
-        new expr.Call(new expr.Variable('thing'), []),
+        new expr.Call(new expr.Identifier('thing'), []),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -252,9 +252,9 @@ describe('function expressions', () => {
             [new stmt.Var('c', null, null)],
             null,
             new expr.Binary(
-              new expr.Variable('b'),
+              new expr.Identifier('b'),
               '+',
-              new expr.Variable('c'),
+              new expr.Identifier('c'),
             ),
           ),
         ),
