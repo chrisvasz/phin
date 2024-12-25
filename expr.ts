@@ -27,6 +27,7 @@ export interface Visitor<T> {
   visitIdentifierExpr(expr: Identifier): T;
   visitFunctionExpr(expr: Function): T;
   visitNewExpr(expr: New): T;
+  visitCloneExpr(expr: Clone): T;
   visitMatchExpr(expr: Match): T;
   visitMatchArmExpr(expr: MatchArm): T;
   visitThrowExpr(expr: Throw): T;
@@ -237,6 +238,15 @@ export class New extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitNewExpr(this);
+  }
+}
+
+export class Clone extends Expr {
+  constructor(public readonly expression: Expr) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitCloneExpr(this);
   }
 }
 

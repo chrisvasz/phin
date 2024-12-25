@@ -82,6 +82,7 @@ export enum TokenType {
   AS,
   CATCH,
   CLASS,
+  CLONE,
   CONST,
   DEFAULT,
   ECHO,

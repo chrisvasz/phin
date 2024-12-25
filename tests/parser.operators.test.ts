@@ -616,6 +616,28 @@ describe('assign', () => {
   });
 });
 
+describe('new/clone', () => {
+  test('new a()', () => {
+    let source = 'new a()';
+    let expected = [
+      new stmt.Expression(
+        new expr.New(new expr.Call(new expr.Identifier('a'), [])),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('clone a()', () => {
+    let source = 'clone a()';
+    let expected = [
+      new stmt.Expression(
+        new expr.Clone(new expr.Call(new expr.Identifier('a'), [])),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+});
+
 describe('terminators', () => {
   test('1;2', () => {
     let source = '1;2';
