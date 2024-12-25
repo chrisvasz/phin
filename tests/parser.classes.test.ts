@@ -306,7 +306,9 @@ describe('class constants', () => {
         [],
         [
           new stmt.ClassConst(
-            new stmt.Var('b', null, new expr.NumberLiteral('3')),
+            'b',
+            null,
+            new expr.NumberLiteral('3'),
             null,
             false,
             false,
@@ -317,8 +319,8 @@ describe('class constants', () => {
     expect(ast(source)).toEqual(expected);
   });
 
-  test('class A { protected const b = 4; }', () => {
-    let source = 'class A { protected const b = 4; }';
+  test('class A { protected const b: int|string = 4; }', () => {
+    let source = 'class A { protected const b: int|string = 4; }';
     let expected = [
       new stmt.Class(
         'A',
@@ -327,7 +329,9 @@ describe('class constants', () => {
         [],
         [
           new stmt.ClassConst(
-            new stmt.Var('b', null, new expr.NumberLiteral('4')),
+            'b',
+            new types.Union([new types.Int(), new types.String()]),
+            new expr.NumberLiteral('4'),
             'protected',
             false,
             false,
@@ -348,7 +352,9 @@ describe('class constants', () => {
         [],
         [
           new stmt.ClassConst(
-            new stmt.Var('b', null, new expr.NumberLiteral('4')),
+            'b',
+            null,
+            new expr.NumberLiteral('4'),
             null,
             true,
             false,
@@ -369,7 +375,9 @@ describe('class constants', () => {
         [],
         [
           new stmt.ClassConst(
-            new stmt.Var('b', null, new expr.NumberLiteral('4')),
+            'b',
+            null,
+            new expr.NumberLiteral('4'),
             null,
             false,
             true,
@@ -390,7 +398,9 @@ describe('class constants', () => {
         [],
         [
           new stmt.ClassConst(
-            new stmt.Var('b', null, new expr.NumberLiteral('4')),
+            'b',
+            null,
+            new expr.NumberLiteral('4'),
             'private',
             true,
             true,
@@ -547,7 +557,9 @@ describe('kitchen sink', () => {
         ['C', 'D'],
         [
           new stmt.ClassConst(
-            new stmt.Var('b', new types.Int(), new expr.NumberLiteral('3')),
+            'b',
+            new types.Int(),
+            new expr.NumberLiteral('3'),
             'private',
             false,
             false,

@@ -28,7 +28,6 @@ export interface Visitor<T> {
 
 export abstract class Expr {
   abstract accept<T>(visitor: Visitor<T>): T;
-  abstract toString(depth?: number): string;
 }
 
 export class Assign extends Expr {
@@ -38,9 +37,6 @@ export class Assign extends Expr {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitAssignExpr(this);
   }
-  toString(depth?: number): string {
-    return 'TODO';
-  }
 }
 
 export class Call extends Expr {
@@ -49,9 +45,6 @@ export class Call extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitCallExpr(this);
-  }
-  toString(depth?: number): string {
-    return 'TODO';
   }
 }
 
@@ -66,9 +59,6 @@ export class Binary extends Expr {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitBinaryExpr(this);
   }
-  toString(depth?: number): string {
-    return 'TODO';
-  }
 }
 
 export class Grouping extends Expr {
@@ -77,9 +67,6 @@ export class Grouping extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitGroupingExpr(this);
-  }
-  toString(depth?: number): string {
-    return 'TODO';
   }
 }
 
@@ -90,9 +77,6 @@ export class NumberLiteral extends Expr {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitNumberLiteralExpr(this);
   }
-  toString(depth?: number): string {
-    return 'TODO';
-  }
 }
 
 export class StringLiteral extends Expr {
@@ -101,9 +85,6 @@ export class StringLiteral extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitStringLiteralExpr(this);
-  }
-  toString(depth?: number): string {
-    return 'TODO';
   }
 }
 
@@ -114,17 +95,11 @@ export class BooleanLiteral extends Expr {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitBooleanLiteralExpr(this);
   }
-  toString(depth?: number): string {
-    return 'TODO';
-  }
 }
 
 export class NullLiteral extends Expr {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitNullLiteralExpr(this);
-  }
-  toString(depth = 0) {
-    return indent(depth) + 'NullLiteral';
   }
 }
 
@@ -134,9 +109,6 @@ export class ArrayLiteral extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitArrayLiteralExpr(this);
-  }
-  toString(depth?: number): string {
-    return 'TODO';
   }
 }
 
@@ -150,9 +122,6 @@ export class ArrayElement extends Expr {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitArrayElementExpr(this);
   }
-  toString(depth?: number): string {
-    return 'TODO';
-  }
 }
 
 export class Unary extends Expr {
@@ -162,10 +131,6 @@ export class Unary extends Expr {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitUnaryExpr(this);
   }
-  toString(depth = 0) {
-    const { operator, right } = this;
-    return `${indent(depth)}Unary ${operator} ${right.toString(depth + 1)}`;
-  }
 }
 
 export class Variable extends Expr {
@@ -174,9 +139,6 @@ export class Variable extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitVariableExpr(this);
-  }
-  toString(depth = 0): string {
-    return indent(depth) + this.name;
   }
 }
 
@@ -191,9 +153,6 @@ export class Function extends Expr {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitFunctionExpr(this);
   }
-  toString(depth?: number): string {
-    return 'TODO';
-  }
 }
 
 export class New extends Expr {
@@ -202,9 +161,6 @@ export class New extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitNewExpr(this);
-  }
-  toString(depth?: number): string {
-    return 'TODO';
   }
 }
 
@@ -219,9 +175,6 @@ export class Match extends Expr {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitMatchExpr(this);
   }
-  toString(depth?: number): string {
-    return 'TODO';
-  }
 }
 
 export class MatchArm extends Expr {
@@ -231,9 +184,6 @@ export class MatchArm extends Expr {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitMatchArmExpr(this);
   }
-  toString(depth?: number): string {
-    return 'TODO';
-  }
 }
 
 export class Throw extends Expr {
@@ -242,8 +192,5 @@ export class Throw extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitThrowExpr(this);
-  }
-  toString(depth?: number): string {
-    return 'TODO';
   }
 }

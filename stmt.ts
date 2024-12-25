@@ -236,7 +236,9 @@ export class ClassMethod extends Stmt {
 
 export class ClassConst extends Stmt {
   constructor(
-    public readonly variable: Var,
+    public readonly name: string,
+    public readonly type: Type | null,
+    public readonly initializer: Expr, // TODO must be compile-time constant
     public readonly visibility: Visibility,
     public readonly isStatic: boolean,
     public readonly isFinal: boolean,

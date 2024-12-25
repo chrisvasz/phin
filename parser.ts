@@ -228,13 +228,7 @@ export default function parse(tokens: Token[]): Stmt[] {
         isStatic,
         isFinal,
       );
-    if (match(CONST))
-      return new stmt.ClassConst(
-        varDeclaration(), // TODO must have initializer, be compile-time constant
-        visibility,
-        isStatic,
-        isFinal,
-      );
+    if (match(CONST)) return classConst(visibility, isStatic, isFinal);
     if (matchIdentifier('init')) return classInitializer();
     throw error(peek(), 'Expect class member');
   }
@@ -244,6 +238,25 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (visibility?.type === PROTECTED) return 'protected';
     if (visibility?.type === PRIVATE) return 'private';
     return null;
+  }
+
+  function classConst(
+    visibility: stmt.Visibility,
+    isStatic: boolean,
+    isFinal: boolean,
+  ): stmt.ClassConst {
+    let name = consume('Expect class constant name', IDENTIFIER).lexeme;
+    let type = match(COLON) ? typeAnnotation() : null;
+    consume('Expect "=" after class constant name', EQUAL);
+    let initializer = expression();
+    return new stmt.ClassConst(
+      name,
+      type,
+      initializer,
+      visibility,
+      isStatic,
+      isFinal,
+    );
   }
 
   function classInitializer(): stmt.ClassInitializer {
