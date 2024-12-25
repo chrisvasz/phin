@@ -660,3 +660,63 @@ describe('kitchen sink', () => {
     expect(ast(source)).toEqual(expected);
   });
 });
+
+describe('get expressions', () => {
+  test('a.b', () => {
+    let source = 'a.b';
+    let expected = [
+      new stmt.Expression(new expr.Get(new expr.Variable('a'), 'b')),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('a?.b', () => {
+    let source = 'a?.b';
+    let expected = [
+      new stmt.Expression(new expr.OptionalGet(new expr.Variable('a'), 'b')),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('a.b.c', () => {
+    let source = 'a.b.c';
+    let expected = [
+      new stmt.Expression(
+        new expr.Get(new expr.Get(new expr.Variable('a'), 'b'), 'c'),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('a.b?.c.d', () => {
+    let source = 'a.b?.c.d';
+    let expected = [
+      new stmt.Expression(
+        new expr.Get(
+          new expr.OptionalGet(new expr.Get(new expr.Variable('a'), 'b'), 'c'),
+          'd',
+        ),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('a()?.b(1,2).c', () => {
+    let source = 'a()?.b(1,2).c';
+    let expected = [
+      new stmt.Expression(
+        new expr.Get(
+          new expr.Call(
+            new expr.OptionalGet(
+              new expr.Call(new expr.Variable('a'), []),
+              'b',
+            ),
+            [new expr.NumberLiteral('1'), new expr.NumberLiteral('2')],
+          ),
+          'c',
+        ),
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+});

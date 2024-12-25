@@ -9,6 +9,8 @@ function indent(depth: number): string {
 export interface Visitor<T> {
   visitAssignExpr(expr: Assign): T;
   visitCallExpr(expr: Call): T;
+  visitGetExpr(expr: Get): T;
+  visitOptionalGetExpr(expr: OptionalGet): T;
   visitBinaryExpr(expr: Binary): T;
   visitGroupingExpr(expr: Grouping): T;
   visitNumberLiteralExpr(expr: NumberLiteral): T;
@@ -45,6 +47,24 @@ export class Call extends Expr {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitCallExpr(this);
+  }
+}
+
+export class Get extends Expr {
+  constructor(public readonly object: Expr, public readonly name: string) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitGetExpr(this);
+  }
+}
+
+export class OptionalGet extends Expr {
+  constructor(public readonly object: Expr, public readonly name: string) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitOptionalGetExpr(this);
   }
 }
 

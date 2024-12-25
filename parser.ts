@@ -52,6 +52,7 @@ const {
   NEW,
   NULL,
   NUMBER,
+  OPTIONAL_CHAIN,
   PIPE,
   PLUS_PLUS,
   PLUS,
@@ -455,7 +456,6 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(NEW)) return newExpression();
     if (match(MATCH)) return matchExpression();
     if (match(THROW)) return throwExpression();
-    if (match(LEFT_BRACKET)) return arrayLiteral();
     return assignment();
   }
 
@@ -591,16 +591,39 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function call(): Expr {
-    let result = primary();
-    if (!match(LEFT_PAREN)) return result;
-    if (match(RIGHT_PAREN)) return new expr.Call(result, []);
-    let args = [expression()];
+    let ex = primary();
+    while (true) {
+      if (match(LEFT_PAREN)) {
+        ex = new expr.Call(ex, callArgs());
+      } else if (match(DOT)) {
+        ex = getExpression(ex);
+      } else if (match(OPTIONAL_CHAIN)) {
+        ex = optionalGetExpression(ex);
+      } else break;
+    }
+    return ex;
+  }
+
+  function callArgs(): Expr[] {
+    let args: Expr[] = [];
+    if (match(RIGHT_PAREN)) return args;
+    args.push(expression());
     while (match(COMMA)) {
       if (check(RIGHT_PAREN)) break; // support trailing commas
       args.push(expression());
     }
     consume('Expect ")" after arguments', RIGHT_PAREN);
-    return new expr.Call(result, args);
+    return args;
+  }
+
+  function getExpression(receiver: Expr): expr.Get {
+    let name = consume('Expect property name after .', IDENTIFIER).lexeme;
+    return new expr.Get(receiver, name);
+  }
+
+  function optionalGetExpression(receiver: Expr): expr.Get {
+    let name = consume('Expect property name after ?.', IDENTIFIER).lexeme;
+    return new expr.OptionalGet(receiver, name);
   }
 
   function primary(): Expr {
@@ -610,7 +633,8 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(TRUE)) return new expr.BooleanLiteral(true);
     if (match(FALSE)) return new expr.BooleanLiteral(false);
     if (match(LEFT_PAREN)) return grouping();
-    if (match(IDENTIFIER)) return new expr.Variable(previous().lexeme);
+    if (match(LEFT_BRACKET)) return arrayLiteral();
+    if (match(IDENTIFIER)) return variable();
     throw error(peek(), 'Expect expression');
   }
 
@@ -645,6 +669,10 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function arrayElement(): expr.ArrayElement {
     return new expr.ArrayElement(arrayKey(), expression());
+  }
+
+  function variable(): expr.Variable {
+    return new expr.Variable(previous().lexeme);
   }
 
   function arrayKey(): expr.NumberLiteral | expr.StringLiteral | null {
