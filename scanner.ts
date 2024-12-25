@@ -1,4 +1,4 @@
-import { Token, TokenType } from './Token';
+import { Token, TokenType } from './token';
 
 const {
   ABSTRACT,
@@ -20,7 +20,6 @@ const {
   ELSE,
   ELVIS,
   EOF,
-  EOL,
   EQUAL_EQUAL_EQUAL,
   EQUAL_EQUAL,
   EQUAL,
@@ -49,6 +48,7 @@ const {
   NULL_COALESCE,
   NULL,
   NUMBER,
+  OPTIONAL_CHAIN,
   PIPE,
   PLUS_PLUS,
   PLUS,
@@ -118,7 +118,7 @@ export default function scan(source: string): Token[] {
   let line = 1;
   let hasError = false;
 
-  const chars = new Array(200).fill(null);
+  const chars = new Array(256).fill(null);
   const code = (char: string) => char.charCodeAt(0);
   chars[code('(')] = () => addToken(LEFT_PAREN);
   chars[code(')')] = () => addToken(RIGHT_PAREN);
@@ -161,9 +161,7 @@ export default function scan(source: string): Token[] {
 
   function scanToken() {
     let c = advance();
-    if (chars[code(c)]) {
-      return chars[code(c)]();
-    }
+    if (chars[code(c)]) return chars[code(c)]();
     if (isDigit(c)) return number();
     if (isAlpha(c)) return identifier();
     console.error('Unexpected character on line ' + line);
@@ -229,6 +227,8 @@ export default function scan(source: string): Token[] {
       addToken(NULL_COALESCE);
     } else if (match(':')) {
       addToken(ELVIS);
+    } else if (match('.')) {
+      addToken(OPTIONAL_CHAIN);
     } else {
       addToken(QUESTION);
     }
@@ -257,7 +257,6 @@ export default function scan(source: string): Token[] {
   }
 
   function eol() {
-    addToken(EOL);
     line++;
   }
 
@@ -265,18 +264,24 @@ export default function scan(source: string): Token[] {
     if (previous() === '0') {
       if ((peek() === 'x' || peek() === 'X') && isHexDigit(peekNext())) {
         advance(); // consume the x
+        advance(); // consume the first digit
         return hexNumber();
       }
       if ((peek() === 'o' || peek() === 'O') && isOctalDigit(peekNext())) {
         advance(); // consume the o
+        advance(); // consume the first digit
         return octalNumber();
       }
       if ((peek() === 'b' || peek() === 'B') && isBinaryDigit(peekNext())) {
         advance(); // consume the b
+        advance(); // consume the first digit
         return binaryNumber();
       }
     }
+    return decimalNumber();
+  }
 
+  function decimalNumber() {
     while (isDigitOr_(peek())) advance();
     if (peek() === '.' && isDigit(peekNext())) {
       advance(); // consume the .
@@ -287,19 +292,16 @@ export default function scan(source: string): Token[] {
   }
 
   function hexNumber() {
-    advance(); // consume the first digit
     while (isHexDigitOr_(peek())) advance();
     addToken(NUMBER, source.substring(start, current).replaceAll('_', ''));
   }
 
   function octalNumber() {
-    advance(); // consume the first digit
     while (isOctalDigitOr_(peek())) advance();
     addToken(NUMBER, source.substring(start, current).replaceAll('_', ''));
   }
 
   function binaryNumber() {
-    advance(); // consume the first digit
     while (isBinaryDigitOr_(peek())) advance();
     addToken(NUMBER, source.substring(start, current).replaceAll('_', ''));
   }

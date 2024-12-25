@@ -51,6 +51,7 @@ export enum TokenType {
   SPACESHIP,
   NULL_COALESCE,
   ELVIS, // a ?: b
+  OPTIONAL_CHAIN, // a?.b
 
   // Literals
   IDENTIFIER,
@@ -91,6 +92,5 @@ export enum TokenType {
   VAR,
   WHILE,
 
-  EOL,
   EOF,
 }

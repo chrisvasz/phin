@@ -1,4 +1,4 @@
-import { Token, TokenType } from './Token';
+import { Token, TokenType } from './token';
 import * as stmt from './stmt';
 import { Stmt } from './stmt';
 import * as expr from './expr';
@@ -24,7 +24,6 @@ const {
   ECHO,
   ELSE,
   EOF,
-  EOL,
   EQUAL_EQUAL_EQUAL,
   EQUAL_EQUAL,
   EQUAL,
@@ -78,7 +77,7 @@ const {
   VAR,
   WHILE,
 } = TokenType;
-const terminators = [SEMICOLON, EOL, EOF];
+const terminators = [SEMICOLON, EOF]; // TODO drop this
 
 class ParseError extends Error {}
 

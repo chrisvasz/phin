@@ -349,13 +349,4 @@ describe('terminators', () => {
     ];
     expect(ast(source)).toEqual(expected);
   });
-
-  test(`1\n2`, () => {
-    let source = `1\n2`;
-    let expected = [
-      new stmt.Expression(new expr.NumberLiteral('1')),
-      new stmt.Expression(new expr.NumberLiteral('2')),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
 });
