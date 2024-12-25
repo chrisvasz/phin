@@ -29,6 +29,7 @@ const {
   EQUAL,
   EXTENDS,
   FALSE,
+  FINAL,
   FINALLY,
   FOREACH,
   FOR,
@@ -58,6 +59,7 @@ const {
   PROTECTED,
   PUBLIC,
   QUESTION,
+  READONLY,
   RETURN,
   RIGHT_BRACE,
   RIGHT_BRACKET,
@@ -176,14 +178,48 @@ export default function parse(tokens: Token[]): Stmt[] {
     return new stmt.Class(name, params, superclass, interfaces, members);
   }
 
-  function classParams(): stmt.Var[] {
-    let result = functionParams(); // happens to be the same
+  function classParams(): stmt.ClassParam[] {
+    let params: stmt.ClassParam[] = [];
+    if (!check(RIGHT_PAREN)) {
+      params.push(classParam());
+      while (match(COMMA)) {
+        if (check(RIGHT_PAREN)) break; // support trailing commas
+        params.push(classParam());
+      }
+    }
     consume('Expect ")" after class params', RIGHT_PAREN);
-    return result;
+    return params;
   }
 
-  function classSuperclass(): string {
-    return consume('Expect superclass name', IDENTIFIER).lexeme;
+  function classParam(): stmt.ClassParam {
+    let isFinal = match(FINAL);
+    let visibility = classVisibility();
+    let isReadonly = match(READONLY);
+    let name = consume('Expect class param name', IDENTIFIER).lexeme;
+    let type = match(COLON) ? typeAnnotation() : null;
+    let initializer = match(EQUAL) ? expression() : null;
+    return new stmt.ClassParam(
+      name,
+      type,
+      initializer,
+      visibility,
+      isFinal,
+      isReadonly,
+    );
+  }
+
+  function classSuperclass(): stmt.ClassSuperclass {
+    let name = consume('Expect superclass name', IDENTIFIER).lexeme;
+    let args: Expr[] = [];
+    if (match(LEFT_PAREN)) {
+      args.push(expression());
+      while (match(COMMA)) {
+        if (check(RIGHT_PAREN)) break; // support trailing commas
+        args.push(expression());
+      }
+      consume('Expect ")" after superclass arguments', RIGHT_PAREN);
+    }
+    return new stmt.ClassSuperclass(name, args);
   }
 
   function classInterfaces(): string[] {
@@ -209,10 +245,8 @@ export default function parse(tokens: Token[]): Stmt[] {
     | stmt.ClassProperty
     | stmt.ClassConst
     | stmt.ClassInitializer {
-    let isFinal = matchIdentifier('final');
-    let visibility = classVisibilityFrom(
-      match(PUBLIC, PROTECTED, PRIVATE) ? previous() : null,
-    );
+    let isFinal = match(FINAL);
+    let visibility = classVisibility();
     let isStatic = match(STATIC);
     if (match(FUN))
       return new stmt.ClassMethod(
@@ -233,10 +267,12 @@ export default function parse(tokens: Token[]): Stmt[] {
     throw error(peek(), 'Expect class member');
   }
 
-  function classVisibilityFrom(visibility: Token | null): stmt.Visibility {
-    if (visibility?.type === PUBLIC) return 'public';
-    if (visibility?.type === PROTECTED) return 'protected';
-    if (visibility?.type === PRIVATE) return 'private';
+  function classVisibility(): stmt.Visibility {
+    let token = match(PUBLIC, PROTECTED, PRIVATE) ? previous() : null;
+    if (token === null) return null;
+    if (token.type === PUBLIC) return 'public';
+    if (token.type === PROTECTED) return 'protected';
+    if (token.type === PRIVATE) return 'private';
     return null;
   }
 
@@ -268,7 +304,6 @@ export default function parse(tokens: Token[]): Stmt[] {
     let name = consume('Expect function name', IDENTIFIER).lexeme;
     consume('Expect "(" after function name', LEFT_PAREN);
     let params = functionParams();
-    consume('Expect ")" after function params', RIGHT_PAREN);
     let returnType = match(COLON) ? typeAnnotation() : null;
     return new stmt.Function(name, params, returnType, functionBody());
   }
@@ -276,7 +311,6 @@ export default function parse(tokens: Token[]): Stmt[] {
   function functionExpression(): expr.Function {
     consume('Expect "(" after function name', LEFT_PAREN);
     let params = functionParams();
-    consume('Expect ")" after function params', RIGHT_PAREN);
     let returnType = match(COLON) ? typeAnnotation() : null;
     return new expr.Function(params, returnType, functionBody());
   }
@@ -290,6 +324,7 @@ export default function parse(tokens: Token[]): Stmt[] {
         params.push(functionParam());
       }
     }
+    consume('Expect ")" after function params', RIGHT_PAREN);
     return params;
   }
 

@@ -38,23 +38,40 @@ describe('class declarations', () => {
   test('class A(b) {}', () => {
     let source = 'class A(b) {}';
     let expected = [
-      new stmt.Class('A', [new stmt.Var('b', null, null)], null, [], []),
+      new stmt.Class(
+        'A',
+        [new stmt.ClassParam('b', null, null, null, false, false)],
+        null,
+        [],
+        [],
+      ),
     ];
     expect(ast(source)).toEqual(expected);
   });
 
-  test('class A(b: number|string = 5, c: bool,) {}', () => {
-    let source = 'class A(b: number|string = 5, c: bool,) {}';
+  test('class A(b: number|string = 5, final public readonly c: bool,) {}', () => {
+    let source =
+      'class A(b: number|string = 5, final public readonly c: bool,) {}';
     let expected = [
       new stmt.Class(
         'A',
         [
-          new stmt.Var(
+          new stmt.ClassParam(
             'b',
             new types.Union([new types.Number(), new types.String()]),
             new expr.NumberLiteral('5'),
+            null,
+            false,
+            false,
           ),
-          new stmt.Var('c', new types.Boolean(), null),
+          new stmt.ClassParam(
+            'c',
+            new types.Boolean(),
+            null,
+            'public',
+            true,
+            true,
+          ),
         ],
         null,
         [],
@@ -66,11 +83,27 @@ describe('class declarations', () => {
 
   test('class A extends B {}', () => {
     let source = 'class A extends B {}';
-    let expected = [new stmt.Class('A', [], 'B', [], [])];
+    let expected = [
+      new stmt.Class('A', [], new stmt.ClassSuperclass('B', []), [], []),
+    ];
     expect(ast(source)).toEqual(expected);
   });
 
-  test.todo('class A(a) extends B(a) {}');
+  test('class A(a) extends B(a()) {}', () => {
+    let source = 'class A(a) extends B(a()) {}';
+    let expected = [
+      new stmt.Class(
+        'A',
+        [new stmt.ClassParam('a', null, null, null, false, false)],
+        new stmt.ClassSuperclass('B', [
+          new expr.Call(new expr.Variable('a'), []),
+        ]),
+        [],
+        [],
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
 
   test('class A implements B {}', () => {
     let source = 'class A implements B {}';
@@ -86,7 +119,15 @@ describe('class declarations', () => {
 
   test('class A extends B implements C, D {}', () => {
     let source = 'class A extends B implements C, D {}';
-    let expected = [new stmt.Class('A', [], 'B', ['C', 'D'], [])];
+    let expected = [
+      new stmt.Class(
+        'A',
+        [],
+        new stmt.ClassSuperclass('B', []),
+        ['C', 'D'],
+        [],
+      ),
+    ];
     expect(ast(source)).toEqual(expected);
   });
 
@@ -524,12 +565,15 @@ describe('kitchen sink', () => {
     let source = `
       class A (
         a,
-        b: string,
-        c: array<number> = [3],
-      ) extends B implements C, D {
+        private b: string,
+        readonly c: array<number> = [3],
+        final public d,
+      ) extends B(
+        c,
+        d(),
+      ) implements C, D {
         private const b: int = 3;
         protected var c: string = "hello";
-        // comment
         public static fun d(e: bool): number => 3;
         fun f() {
           echo "hello";
@@ -543,17 +587,31 @@ describe('kitchen sink', () => {
       new stmt.Class(
         'A',
         [
-          new stmt.Var('a', null, null),
-          new stmt.Var('b', new types.String(), null),
-          new stmt.Var(
+          new stmt.ClassParam('a', null, null, null, false, false),
+          new stmt.ClassParam(
+            'b',
+            new types.String(),
+            null,
+            'private',
+            false,
+            false,
+          ),
+          new stmt.ClassParam(
             'c',
             new types.Identifier('array', [new types.Number()]),
             new expr.ArrayLiteral([
               new expr.ArrayElement(null, new expr.NumberLiteral('3')),
             ]),
+            null,
+            false,
+            true,
           ),
+          new stmt.ClassParam('d', null, null, 'public', true, false),
         ],
-        'B',
+        new stmt.ClassSuperclass('B', [
+          new expr.Variable('c'),
+          new expr.Call(new expr.Variable('d'), []),
+        ]),
         ['C', 'D'],
         [
           new stmt.ClassConst(

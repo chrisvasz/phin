@@ -27,6 +27,8 @@ export interface Visitor<T> {
   visitCatchStmt(stmt: Catch): T;
   visitThrowStmt(stmt: Throw): T;
   visitClassStmt(stmt: Class): T;
+  visitClassParamStmt(stmt: ClassParam): T;
+  visitClassSuperclassStmt(stmt: ClassSuperclass): T;
   visitClassPropertyStmt(stmt: ClassProperty): T;
   visitClassConstStmt(stmt: ClassConst): T;
   visitClassInitializerStmt(stmt: ClassInitializer): T;
@@ -192,8 +194,8 @@ export class Throw extends Stmt {
 export class Class extends Stmt {
   constructor(
     public readonly name: string,
-    public readonly params: Var[],
-    public readonly superclass: string | null,
+    public readonly params: ClassParam[],
+    public readonly superclass: ClassSuperclass | null,
     public readonly interfaces: string[],
     public readonly members: Array<
       ClassMethod | ClassProperty | ClassConst | ClassInitializer
@@ -203,6 +205,31 @@ export class Class extends Stmt {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitClassStmt(this);
+  }
+}
+
+export class ClassParam extends Stmt {
+  constructor(
+    public readonly name: string,
+    public readonly type: Type | null,
+    public readonly initializer: Expr | null,
+    public readonly visibility: Visibility,
+    public readonly isFinal: boolean,
+    public readonly isReadonly: boolean,
+  ) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitClassParamStmt(this);
+  }
+}
+
+export class ClassSuperclass extends Stmt {
+  constructor(public readonly name: string, public readonly args: Expr[]) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitClassSuperclassStmt(this);
   }
 }
 
