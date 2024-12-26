@@ -2,9 +2,7 @@
 import { expect, test, describe } from 'bun:test';
 import scan from '../scanner';
 import parse from '../parser';
-import * as stmt from '../stmt';
-import * as expr from '../expr';
-import * as types from '../type';
+import * as nodes from '../nodes';
 
 function ast(source: string) {
   return parse(scan(source));
@@ -14,21 +12,21 @@ describe('try/catch', () => {
   test('try {} catch (e: Exception) {}', () => {
     let source = 'try {} catch (e: Exception) {}';
     let expected = [
-      new stmt.Try([], [new stmt.Catch('e', ['Exception'], [])], null),
+      new nodes.Try([], [new nodes.Catch('e', ['Exception'], [])], null),
     ];
     expect(ast(source)).toEqual(expected);
   });
 
   test('try {} finally {}', () => {
     let source = 'try {} finally {}';
-    let expected = [new stmt.Try([], [], [])];
+    let expected = [new nodes.Try([], [], [])];
     expect(ast(source)).toEqual(expected);
   });
 
   test('try {} catch (e: Exception) {} finally {}', () => {
     let source = 'try {} catch (e: Exception) {} finally {}';
     let expected = [
-      new stmt.Try([], [new stmt.Catch('e', ['Exception'], [])], []),
+      new nodes.Try([], [new nodes.Catch('e', ['Exception'], [])], []),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -36,7 +34,7 @@ describe('try/catch', () => {
   test('try {} catch (e: A|B|C) {}', () => {
     let source = 'try {} catch (e: A|B|C) {}';
     let expected = [
-      new stmt.Try([], [new stmt.Catch('e', ['A', 'B', 'C'], [])], null),
+      new nodes.Try([], [new nodes.Catch('e', ['A', 'B', 'C'], [])], null),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -44,9 +42,9 @@ describe('try/catch', () => {
   test('try {} catch (e:A) {} catch (e:B) {}', () => {
     let source = 'try {} catch (e:A) {} catch (e:B) {}';
     let expected = [
-      new stmt.Try(
+      new nodes.Try(
         [],
-        [new stmt.Catch('e', ['A'], []), new stmt.Catch('e', ['B'], [])],
+        [new nodes.Catch('e', ['A'], []), new nodes.Catch('e', ['B'], [])],
         null,
       ),
     ];
@@ -57,15 +55,15 @@ describe('try/catch', () => {
 describe('throw', () => {
   test('throw e', () => {
     let source = 'throw e';
-    let expected = [new stmt.Throw(new expr.Identifier('e'))];
+    let expected = [new nodes.ThrowStatement(new nodes.Identifier('e'))];
     expect(ast(source)).toEqual(expected);
   });
 
   test('throw new Exception()', () => {
     let source = 'throw new Exception()';
     let expected = [
-      new stmt.Throw(
-        new expr.New(new expr.Call(new expr.Identifier('Exception'), [])),
+      new nodes.ThrowStatement(
+        new nodes.New(new nodes.Call(new nodes.Identifier('Exception'), [])),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -74,7 +72,11 @@ describe('throw', () => {
   test('var a = throw e', () => {
     let source = 'var a = throw e';
     let expected = [
-      new stmt.Var('a', null, new expr.Throw(new expr.Identifier('e'))),
+      new nodes.VarDeclaration(
+        'a',
+        null,
+        new nodes.ThrowExpression(new nodes.Identifier('e')),
+      ),
     ];
     expect(ast(source)).toEqual(expected);
   });

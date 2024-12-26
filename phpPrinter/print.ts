@@ -1,17 +1,14 @@
-import * as stmt from '../stmt';
-import { Stmt } from '../stmt';
-import * as expr from '../expr';
-import { Expr } from '../expr';
-import * as types from '../type';
+import * as nodes from '../nodes';
+import * as types from '../types';
 
 const tab = '  ';
 
 export class PhpPrinter
-  implements expr.Visitor<string>, stmt.Visitor<string>, types.Visitor<string>
+  implements nodes.Visitor<string>, types.Visitor<string>
 {
   currentIndent = 0;
 
-  print(statements: stmt.Stmt[]): string {
+  print(statements: nodes.Node[]): string {
     let result = '';
     for (let s of statements) {
       result += s.accept(this);
@@ -76,170 +73,170 @@ export class PhpPrinter
   // STATEMENTS
   /////////////////////////////
 
-  visitAbstractClassMethodStmt(stmt: stmt.AbstractClassMethod): string {
+  visitClassAbstractMethod(node: nodes.ClassAbstractMethod): string {
     throw new Error('Method not implemented.');
   }
-  visitArrayElementExpr(expr: expr.ArrayElement): string {
+  visitArrayElement(node: nodes.ArrayElement): string {
     throw new Error('Method not implemented.');
   }
-  visitArrayLiteralExpr(expr: expr.ArrayLiteral): string {
+  visitArrayLiteral(node: nodes.ArrayLiteral): string {
     throw new Error('Method not implemented.');
   }
-  visitAssignExpr(expr: expr.Assign): string {
+  visitAssign(node: nodes.Assign): string {
     throw new Error('Method not implemented.');
   }
-  visitBinaryExpr(expr: expr.Binary): string {
-    let left = expr.left.accept(this);
-    let right = expr.right.accept(this);
-    return `${left} ${expr.operator} ${right}`;
+  visitBinary(node: nodes.Binary): string {
+    let left = node.left.accept(this);
+    let right = node.right.accept(this);
+    return `${left} ${node.operator} ${right}`;
   }
-  visitBlockStmt(stmt: stmt.Block): string {
+  visitBlock(node: nodes.Block): string {
     throw new Error('Method not implemented.');
   }
-  visitBooleanLiteralExpr(expr: expr.BooleanLiteral): string {
+  visitBooleanLiteral(node: nodes.BooleanLiteral): string {
     throw new Error('Method not implemented.');
   }
-  visitCallExpr(expr: expr.Call): string {
+  visitCall(node: nodes.Call): string {
     throw new Error('Method not implemented.');
   }
-  visitCatchStmt(stmt: stmt.Catch): string {
+  visitCatch(node: nodes.Catch): string {
     throw new Error('Method not implemented.');
   }
-  visitClassConstStmt(stmt: stmt.ClassConst): string {
+  visitClassConst(node: nodes.ClassConst): string {
     throw new Error('Method not implemented.');
   }
-  visitClassInitializerStmt(stmt: stmt.ClassInitializer): string {
+  visitClassInitializer(node: nodes.ClassInitializer): string {
     throw new Error('Method not implemented.');
   }
-  visitClassMethodStmt(stmt: stmt.ClassMethod): string {
+  visitClassMethod(node: nodes.ClassMethod): string {
     throw new Error('Method not implemented.');
   }
-  visitClassParamStmt(stmt: stmt.ClassParam): string {
+  visitClassParam(node: nodes.ClassParam): string {
     throw new Error('Method not implemented.');
   }
-  visitClassPropertyStmt(stmt: stmt.ClassProperty): string {
+  visitClassProperty(node: nodes.ClassProperty): string {
     throw new Error('Method not implemented.');
   }
-  visitClassStmt(stmt: stmt.Class): string {
+  visitClassDeclaration(node: nodes.ClassDeclaration): string {
     throw new Error('Method not implemented.');
   }
-  visitClassSuperclassStmt(stmt: stmt.ClassSuperclass): string {
+  visitClassSuperclass(node: nodes.ClassSuperclass): string {
     throw new Error('Method not implemented.');
   }
-  visitCloneExpr(expr: expr.Clone): string {
+  visitClone(node: nodes.Clone): string {
     throw new Error('Method not implemented.');
   }
-  visitEchoStmt(stmt: stmt.Echo): string {
-    return `echo ${stmt.expression.accept(this)};`;
+  visitEcho(node: nodes.Echo): string {
+    return `echo ${node.expression.accept(this)};`;
   }
-  visitExpressionStmt(stmt: stmt.Expression): string {
+  visitExpressionStatement(node: nodes.ExpressionStatement): string {
     throw new Error('Method not implemented.');
   }
-  visitForeachStmt(stmt: stmt.Foreach): string {
+  visitForeach(node: nodes.Foreach): string {
     throw new Error('Method not implemented.');
   }
-  visitForStmt(stmt: stmt.For): string {
+  visitFor(node: nodes.For): string {
     throw new Error('Method not implemented.');
   }
-  visitFunctionExpr(expr: expr.Function): string {
+  visitFunctionExpression(node: nodes.FunctionExpression): string {
     throw new Error('Method not implemented.');
   }
 
-  visitFunctionParamStmt(stmt: stmt.FunctionParam): string {
-    let type = stmt.type ? `${stmt.type.accept(this)} ` : '';
-    let init = stmt.initializer ? ` = ${stmt.initializer.accept(this)}` : '';
-    return `${type}$${stmt.name}${init}`;
+  visitParam(node: nodes.Param): string {
+    let type = node.type ? `${node.type.accept(this)} ` : '';
+    let init = node.initializer ? ` = ${node.initializer.accept(this)}` : '';
+    return `${type}$${node.name}${init}`;
   }
 
-  visitFunctionStmt(stmt: stmt.Function): string {
-    let params = stmt.params.map(p => p.accept(this));
-    let type = stmt.returnType ? `: ${stmt.returnType.accept(this)}` : '';
-    let result = `function ${stmt.name}(${params})${type} {`;
-    if (Array.isArray(stmt.body)) {
-      if (stmt.body.length === 0) return result + '}';
+  visitFunctionDeclaration(node: nodes.FunctionDeclaration): string {
+    let params = node.params.map(p => p.accept(this));
+    let type = node.returnType ? `: ${node.returnType.accept(this)}` : '';
+    let result = `function ${node.name}(${params})${type} {`;
+    if (Array.isArray(node.body)) {
+      if (node.body.length === 0) return result + '}';
       this.currentIndent++;
-      for (let statement of stmt.body) {
+      for (let statement of node.body) {
         result += '\n' + statement.accept(this);
       }
       result += '\n}';
     } else {
-      result += '\nreturn ' + stmt.body.accept(this) + ';\n}';
+      result += '\nreturn ' + node.body.accept(this) + ';\n}';
     }
     return result;
   }
 
-  visitGetExpr(expr: expr.Get): string {
+  visitGetExpr(node: nodes.Get): string {
     throw new Error('Method not implemented.');
   }
-  visitGroupingExpr(expr: expr.Grouping): string {
+  visitGrouping(node: nodes.Grouping): string {
     throw new Error('Method not implemented.');
   }
-  visitIdentifierExpr(expr: expr.Identifier): string {
+  visitIdentifier(node: nodes.Identifier): string {
     throw new Error('Method not implemented.');
   }
-  visitIfStmt(stmt: stmt.If): string {
+  visitIf(node: nodes.If): string {
     throw new Error('Method not implemented.');
   }
-  visitMatchArmExpr(expr: expr.MatchArm): string {
+  visitMatchArm(node: nodes.MatchArm): string {
     throw new Error('Method not implemented.');
   }
-  visitMatchExpr(expr: expr.Match): string {
+  visitMatch(node: nodes.Match): string {
     throw new Error('Method not implemented.');
   }
-  visitNewExpr(expr: expr.New): string {
+  visitNew(node: nodes.New): string {
     throw new Error('Method not implemented.');
   }
-  visitNullLiteralExpr(expr: expr.NullLiteral): string {
+  visitNullLiteral(node: nodes.NullLiteral): string {
     throw new Error('Method not implemented.');
   }
-  visitNumberLiteralExpr(expr: expr.NumberLiteral): string {
-    return expr.value;
+  visitNumberLiteral(node: nodes.NumberLiteral): string {
+    return node.value;
   }
-  visitOptionalGetExpr(expr: expr.OptionalGet): string {
+  visitOptionalGet(node: nodes.OptionalGet): string {
     throw new Error('Method not implemented.');
   }
-  visitPostfixExpr(expr: expr.Postfix): string {
+  visitPostfix(node: nodes.Postfix): string {
     throw new Error('Method not implemented.');
   }
-  visitPrefixExpr(expr: expr.Prefix): string {
+  visitPrefix(node: nodes.Prefix): string {
     throw new Error('Method not implemented.');
   }
-  visitReturnStmt(stmt: stmt.Return): string {
-    let value = stmt.value ? ' ' + stmt.value.accept(this) : '';
+  visitReturn(node: nodes.Return): string {
+    let value = node.value ? ' ' + node.value.accept(this) : '';
     return `return${value};`;
   }
-  visitStringLiteralExpr(expr: expr.StringLiteral): string {
-    return `"${expr.value}"`;
+  visitStringLiteral(node: nodes.StringLiteral): string {
+    return `"${node.value}"`;
   }
-  visitSuperExpr(): string {
+  visitSuper(): string {
     throw new Error('Method not implemented.');
   }
-  visitTernaryExpr(expr: expr.Ternary): string {
+  visitTernary(node: nodes.Ternary): string {
     throw new Error('Method not implemented.');
   }
-  visitThisExpr(): string {
+  visitThis(): string {
     throw new Error('Method not implemented.');
   }
-  visitThrowExpr(expr: expr.Throw): string {
+  visitThrowExpression(node: nodes.ThrowExpression): string {
     throw new Error('Method not implemented.');
   }
-  visitThrowStmt(stmt: stmt.Throw): string {
+  visitThrowStatement(node: nodes.ThrowStatement): string {
     throw new Error('Method not implemented.');
   }
-  visitTryStmt(stmt: stmt.Try): string {
+  visitTry(node: nodes.Try): string {
     throw new Error('Method not implemented.');
   }
-  visitUnaryExpr(expr: expr.Unary): string {
+  visitUnary(node: nodes.Unary): string {
     throw new Error('Method not implemented.');
   }
-  visitVarStmt(stmt: stmt.Var): string {
-    let type = stmt.type
-      ? `/** @var ${stmt.type.accept(this)} $${stmt.name} */\n`
+  visitVarDeclaration(node: nodes.VarDeclaration): string {
+    let type = node.type
+      ? `/** @var ${node.type.accept(this)} $${node.name} */\n`
       : '';
-    let init = stmt.initializer ? ` = ${stmt.initializer.accept(this)}` : '';
-    return `${type}$${stmt.name}${init};`;
+    let init = node.initializer ? ` = ${node.initializer.accept(this)}` : '';
+    return `${type}$${node.name}${init};`;
   }
-  visitWhileStmt(stmt: stmt.While): string {
+  visitWhile(node: nodes.While): string {
     throw new Error('Method not implemented.');
   }
 }

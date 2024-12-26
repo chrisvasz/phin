@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "downlevelIteration": true,
+    "lib": ["es2021", "dom"],
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "noImplicitAny": true,
+    "noImplicitOverride": true,
+    "strict": true,
+    "target": "es2020",
+    "module": "esnext",
+    "moduleResolution": "Bundler"
+  }
+}

@@ -2,9 +2,8 @@
 import { expect, test, describe } from 'bun:test';
 import scan from '../scanner';
 import parse from '../parser';
-import * as stmt from '../stmt';
-import * as expr from '../expr';
-import * as types from '../type';
+import * as nodes from '../nodes';
+import * as types from '../types';
 
 function ast(source: string) {
   return parse(scan(source));
@@ -13,16 +12,16 @@ function ast(source: string) {
 describe('class declarations', () => {
   test('class A {}', () => {
     let source = 'class A {}';
-    let expected = [new stmt.Class('A', [], null, [], [])];
+    let expected = [new nodes.ClassDeclaration('A', [], null, [], [])];
     expect(ast(source)).toEqual(expected);
   });
 
   test('class A(b) {}', () => {
     let source = 'class A(b) {}';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
-        [new stmt.ClassParam(false, null, false, 'b', null, null)],
+        [new nodes.ClassParam(false, null, false, 'b', null, null)],
         null,
         [],
         [],
@@ -35,18 +34,18 @@ describe('class declarations', () => {
     let source =
       'class A(b: number|string = 5, final public readonly c: bool,) {}';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [
-          new stmt.ClassParam(
+          new nodes.ClassParam(
             false,
             null,
             false,
             'b',
             new types.Union([new types.Number(), new types.String()]),
-            new expr.NumberLiteral('5'),
+            new nodes.NumberLiteral('5'),
           ),
-          new stmt.ClassParam(
+          new nodes.ClassParam(
             true,
             'public',
             true,
@@ -66,7 +65,13 @@ describe('class declarations', () => {
   test('class A extends B {}', () => {
     let source = 'class A extends B {}';
     let expected = [
-      new stmt.Class('A', [], new stmt.ClassSuperclass('B', []), [], []),
+      new nodes.ClassDeclaration(
+        'A',
+        [],
+        new nodes.ClassSuperclass('B', []),
+        [],
+        [],
+      ),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -74,11 +79,11 @@ describe('class declarations', () => {
   test('class A(a) extends B(a()) {}', () => {
     let source = 'class A(a) extends B(a()) {}';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
-        [new stmt.ClassParam(false, null, false, 'a', null, null)],
-        new stmt.ClassSuperclass('B', [
-          new expr.Call(new expr.Identifier('a'), []),
+        [new nodes.ClassParam(false, null, false, 'a', null, null)],
+        new nodes.ClassSuperclass('B', [
+          new nodes.Call(new nodes.Identifier('a'), []),
         ]),
         [],
         [],
@@ -89,23 +94,25 @@ describe('class declarations', () => {
 
   test('class A implements B {}', () => {
     let source = 'class A implements B {}';
-    let expected = [new stmt.Class('A', [], null, ['B'], [])];
+    let expected = [new nodes.ClassDeclaration('A', [], null, ['B'], [])];
     expect(ast(source)).toEqual(expected);
   });
 
   test('class A implements B, C, D, {}', () => {
     let source = 'class A implements B, C, D {}';
-    let expected = [new stmt.Class('A', [], null, ['B', 'C', 'D'], [])];
+    let expected = [
+      new nodes.ClassDeclaration('A', [], null, ['B', 'C', 'D'], []),
+    ];
     expect(ast(source)).toEqual(expected);
   });
 
   test('class A extends B implements C, D {}', () => {
     let source = 'class A extends B implements C, D {}';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
-        new stmt.ClassSuperclass('B', []),
+        new nodes.ClassSuperclass('B', []),
         ['C', 'D'],
         [],
       ),
@@ -116,14 +123,14 @@ describe('class declarations', () => {
   test('class A { init { echo "hello"; } }', () => {
     let source = 'class A { init { echo "hello"; } }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
         [
-          new stmt.ClassInitializer([
-            new stmt.Echo(new expr.StringLiteral('hello')),
+          new nodes.ClassInitializer([
+            new nodes.Echo(new nodes.StringLiteral('hello')),
           ]),
         ],
       ),
@@ -134,17 +141,17 @@ describe('class declarations', () => {
   test('class A { init { 1; } init { 2; } }', () => {
     let source = 'class A { init { 1; } init { 2; } }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
         [
-          new stmt.ClassInitializer([
-            new stmt.Expression(new expr.NumberLiteral('1')),
+          new nodes.ClassInitializer([
+            new nodes.ExpressionStatement(new nodes.NumberLiteral('1')),
           ]),
-          new stmt.ClassInitializer([
-            new stmt.Expression(new expr.NumberLiteral('2')),
+          new nodes.ClassInitializer([
+            new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
           ]),
         ],
       ),
@@ -160,12 +167,12 @@ describe('class methods', () => {
   test('class A { fun b() {} }', () => {
     let source = 'class A { fun b() {} }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
-        [new stmt.ClassMethod(false, null, false, 'b', [], null, [])],
+        [new nodes.ClassMethod(false, null, false, 'b', [], null, [])],
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -174,26 +181,26 @@ describe('class methods', () => {
   test('class A { fun b(c: number|string = 3,): true => true }', () => {
     let source = 'class A { fun b(c: number|string = 3,): true => true }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
         [
-          new stmt.ClassMethod(
+          new nodes.ClassMethod(
             false,
             null,
             false,
             'b',
             [
-              new stmt.Var(
+              new nodes.Param(
                 'c',
                 new types.Union([new types.Number(), new types.String()]),
-                new expr.NumberLiteral('3'),
+                new nodes.NumberLiteral('3'),
               ),
             ],
             new types.True(),
-            new expr.BooleanLiteral(true),
+            new nodes.BooleanLiteral(true),
           ),
         ],
       ),
@@ -204,14 +211,14 @@ describe('class methods', () => {
   test('class A { fun b() { return 3; } }', () => {
     let source = 'class A { fun b() { return 3; } }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
         [
-          new stmt.ClassMethod(false, null, false, 'b', [], null, [
-            new stmt.Return(new expr.NumberLiteral('3')),
+          new nodes.ClassMethod(false, null, false, 'b', [], null, [
+            new nodes.Return(new nodes.NumberLiteral('3')),
           ]),
         ],
       ),
@@ -222,12 +229,12 @@ describe('class methods', () => {
   test('class A { public fun b() {} }', () => {
     let source = 'class A { public fun b() {} }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
-        [new stmt.ClassMethod(false, 'public', false, 'b', [], null, [])],
+        [new nodes.ClassMethod(false, 'public', false, 'b', [], null, [])],
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -236,12 +243,12 @@ describe('class methods', () => {
   test('class A { static fun b() {} }', () => {
     let source = 'class A { static fun b() {} }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
-        [new stmt.ClassMethod(false, null, true, 'b', [], null, [])],
+        [new nodes.ClassMethod(false, null, true, 'b', [], null, [])],
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -250,12 +257,12 @@ describe('class methods', () => {
   test('class A { final fun b() {} }', () => {
     let source = 'class A { final fun b() {} }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
-        [new stmt.ClassMethod(true, null, false, 'b', [], null, [])],
+        [new nodes.ClassMethod(true, null, false, 'b', [], null, [])],
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -264,12 +271,12 @@ describe('class methods', () => {
   test('class A { final private static fun b() {} }', () => {
     let source = 'class A { final private static fun b() {} }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
-        [new stmt.ClassMethod(true, 'private', true, 'b', [], null, [])],
+        [new nodes.ClassMethod(true, 'private', true, 'b', [], null, [])],
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -280,19 +287,19 @@ describe('class constants', () => {
   test('class A { const b = 3; }', () => {
     let source = 'class A { const b = 3; }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
         [
-          new stmt.ClassConst(
+          new nodes.ClassConst(
             false,
             null,
             false,
             'b',
             null,
-            new expr.NumberLiteral('3'),
+            new nodes.NumberLiteral('3'),
           ),
         ],
       ),
@@ -303,19 +310,19 @@ describe('class constants', () => {
   test('class A { protected const b: int|string = 4; }', () => {
     let source = 'class A { protected const b: int|string = 4; }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
         [
-          new stmt.ClassConst(
+          new nodes.ClassConst(
             false,
             'protected',
             false,
             'b',
             new types.Union([new types.Int(), new types.String()]),
-            new expr.NumberLiteral('4'),
+            new nodes.NumberLiteral('4'),
           ),
         ],
       ),
@@ -326,19 +333,19 @@ describe('class constants', () => {
   test('class A { static const b = 4; }', () => {
     let source = 'class A { static const b = 4; }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
         [
-          new stmt.ClassConst(
+          new nodes.ClassConst(
             false,
             null,
             true,
             'b',
             null,
-            new expr.NumberLiteral('4'),
+            new nodes.NumberLiteral('4'),
           ),
         ],
       ),
@@ -349,19 +356,19 @@ describe('class constants', () => {
   test('class A { final const b = 4; }', () => {
     let source = 'class A { final const b = 4; }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
         [
-          new stmt.ClassConst(
+          new nodes.ClassConst(
             true,
             null,
             false,
             'b',
             null,
-            new expr.NumberLiteral('4'),
+            new nodes.NumberLiteral('4'),
           ),
         ],
       ),
@@ -372,19 +379,19 @@ describe('class constants', () => {
   test('class A { final private static const b = 4; }', () => {
     let source = 'class A { final private static const b = 4; }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
         [
-          new stmt.ClassConst(
+          new nodes.ClassConst(
             true,
             'private',
             true,
             'b',
             null,
-            new expr.NumberLiteral('4'),
+            new nodes.NumberLiteral('4'),
           ),
         ],
       ),
@@ -397,17 +404,21 @@ describe('class properties', () => {
   test('class A { var b: number = 3; }', () => {
     let source = 'class A { var b: number = 3; }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
         [
-          new stmt.ClassProperty(
+          new nodes.ClassProperty(
             false,
             null,
             false,
-            new stmt.Var('b', new types.Number(), new expr.NumberLiteral('3')),
+            new nodes.VarDeclaration(
+              'b',
+              new types.Number(),
+              new nodes.NumberLiteral('3'),
+            ),
           ),
         ],
       ),
@@ -418,17 +429,17 @@ describe('class properties', () => {
   test('class A { private var b; }', () => {
     let source = 'class A { private var b; }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
         [
-          new stmt.ClassProperty(
+          new nodes.ClassProperty(
             false,
             'private',
             false,
-            new stmt.Var('b', null, null),
+            new nodes.VarDeclaration('b', null, null),
           ),
         ],
       ),
@@ -439,17 +450,17 @@ describe('class properties', () => {
   test('class A { static var b; }', () => {
     let source = 'class A { static var b; }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
         [
-          new stmt.ClassProperty(
+          new nodes.ClassProperty(
             false,
             null,
             true,
-            new stmt.Var('b', null, null),
+            new nodes.VarDeclaration('b', null, null),
           ),
         ],
       ),
@@ -460,17 +471,17 @@ describe('class properties', () => {
   test('class A { final var b; }', () => {
     let source = 'class A { final var b; }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
         [
-          new stmt.ClassProperty(
+          new nodes.ClassProperty(
             true,
             null,
             false,
-            new stmt.Var('b', null, null),
+            new nodes.VarDeclaration('b', null, null),
           ),
         ],
       ),
@@ -481,17 +492,17 @@ describe('class properties', () => {
   test('class A { final private static var b; }', () => {
     let source = 'class A { final private static var b; }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
         [
-          new stmt.ClassProperty(
+          new nodes.ClassProperty(
             true,
             'private',
             true,
-            new stmt.Var('b', null, null),
+            new nodes.VarDeclaration('b', null, null),
           ),
         ],
       ),
@@ -505,20 +516,20 @@ describe('class properties', () => {
 describe('abstract', () => {
   test('abstract class A {}', () => {
     let source = 'abstract class A {}';
-    let expected = [new stmt.Class('A', [], null, [], [], true)];
+    let expected = [new nodes.ClassDeclaration('A', [], null, [], [], true)];
     expect(ast(source)).toEqual(expected);
   });
 
   test('abstract class A { abstract fun b(): number; }', () => {
     let source = 'abstract class A { abstract fun b(): number; }';
     let expected = [
-      new stmt.Class(
+      new nodes.ClassDeclaration(
         'A',
         [],
         null,
         [],
         [
-          new stmt.AbstractClassMethod(
+          new nodes.ClassAbstractMethod(
             null,
             false,
             'b',
@@ -537,7 +548,9 @@ describe('get expressions', () => {
   test('a.b', () => {
     let source = 'a.b';
     let expected = [
-      new stmt.Expression(new expr.Get(new expr.Identifier('a'), 'b')),
+      new nodes.ExpressionStatement(
+        new nodes.Get(new nodes.Identifier('a'), 'b'),
+      ),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -545,7 +558,9 @@ describe('get expressions', () => {
   test('a?.b', () => {
     let source = 'a?.b';
     let expected = [
-      new stmt.Expression(new expr.OptionalGet(new expr.Identifier('a'), 'b')),
+      new nodes.ExpressionStatement(
+        new nodes.OptionalGet(new nodes.Identifier('a'), 'b'),
+      ),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -553,8 +568,8 @@ describe('get expressions', () => {
   test('a.b.c', () => {
     let source = 'a.b.c';
     let expected = [
-      new stmt.Expression(
-        new expr.Get(new expr.Get(new expr.Identifier('a'), 'b'), 'c'),
+      new nodes.ExpressionStatement(
+        new nodes.Get(new nodes.Get(new nodes.Identifier('a'), 'b'), 'c'),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -563,10 +578,10 @@ describe('get expressions', () => {
   test('a.b?.c.d', () => {
     let source = 'a.b?.c.d';
     let expected = [
-      new stmt.Expression(
-        new expr.Get(
-          new expr.OptionalGet(
-            new expr.Get(new expr.Identifier('a'), 'b'),
+      new nodes.ExpressionStatement(
+        new nodes.Get(
+          new nodes.OptionalGet(
+            new nodes.Get(new nodes.Identifier('a'), 'b'),
             'c',
           ),
           'd',
@@ -579,14 +594,14 @@ describe('get expressions', () => {
   test('a()?.b(1,2).c', () => {
     let source = 'a()?.b(1,2).c';
     let expected = [
-      new stmt.Expression(
-        new expr.Get(
-          new expr.Call(
-            new expr.OptionalGet(
-              new expr.Call(new expr.Identifier('a'), []),
+      new nodes.ExpressionStatement(
+        new nodes.Get(
+          new nodes.Call(
+            new nodes.OptionalGet(
+              new nodes.Call(new nodes.Identifier('a'), []),
               'b',
             ),
-            [new expr.NumberLiteral('1'), new expr.NumberLiteral('2')],
+            [new nodes.NumberLiteral('1'), new nodes.NumberLiteral('2')],
           ),
           'c',
         ),
@@ -598,7 +613,7 @@ describe('get expressions', () => {
   test('this.hello', () => {
     let source = 'this.hello';
     let expected = [
-      new stmt.Expression(new expr.Get(new expr.This(), 'hello')),
+      new nodes.ExpressionStatement(new nodes.Get(new nodes.This(), 'hello')),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -606,7 +621,7 @@ describe('get expressions', () => {
   test('super.hello', () => {
     let source = 'super.hello';
     let expected = [
-      new stmt.Expression(new expr.Get(new expr.Super(), 'hello')),
+      new nodes.ExpressionStatement(new nodes.Get(new nodes.Super(), 'hello')),
     ];
     expect(ast(source)).toEqual(expected);
   });

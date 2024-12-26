@@ -2,9 +2,7 @@
 import { expect, test, describe } from 'bun:test';
 import scan from '../scanner';
 import parse from '../parser';
-import * as stmt from '../stmt';
-import * as expr from '../expr';
-import * as type from '../type';
+import * as nodes from '../nodes';
 
 function ast(source: string) {
   return parse(scan(source));
@@ -13,18 +11,18 @@ function ast(source: string) {
 describe('array literals', () => {
   test('[]', () => {
     let source = '[]';
-    let expected = [new stmt.Expression(new expr.ArrayLiteral([]))];
+    let expected = [new nodes.ExpressionStatement(new nodes.ArrayLiteral([]))];
     expect(ast(source)).toEqual(expected);
   });
 
   test('[1,2,3]', () => {
     let source = '[1,2,3]';
     let expected = [
-      new stmt.Expression(
-        new expr.ArrayLiteral([
-          new expr.ArrayElement(null, new expr.NumberLiteral('1')),
-          new expr.ArrayElement(null, new expr.NumberLiteral('2')),
-          new expr.ArrayElement(null, new expr.NumberLiteral('3')),
+      new nodes.ExpressionStatement(
+        new nodes.ArrayLiteral([
+          new nodes.ArrayElement(null, new nodes.NumberLiteral('1')),
+          new nodes.ArrayElement(null, new nodes.NumberLiteral('2')),
+          new nodes.ArrayElement(null, new nodes.NumberLiteral('3')),
         ]),
       ),
     ];
@@ -34,11 +32,11 @@ describe('array literals', () => {
   test('[1,2,3,]', () => {
     let source = '[1,2,3,]';
     let expected = [
-      new stmt.Expression(
-        new expr.ArrayLiteral([
-          new expr.ArrayElement(null, new expr.NumberLiteral('1')),
-          new expr.ArrayElement(null, new expr.NumberLiteral('2')),
-          new expr.ArrayElement(null, new expr.NumberLiteral('3')),
+      new nodes.ExpressionStatement(
+        new nodes.ArrayLiteral([
+          new nodes.ArrayElement(null, new nodes.NumberLiteral('1')),
+          new nodes.ArrayElement(null, new nodes.NumberLiteral('2')),
+          new nodes.ArrayElement(null, new nodes.NumberLiteral('3')),
         ]),
       ),
     ];
@@ -48,19 +46,19 @@ describe('array literals', () => {
   test('["a",b(),c<d]', () => {
     let source = '["a",b(),c<d]';
     let expected = [
-      new stmt.Expression(
-        new expr.ArrayLiteral([
-          new expr.ArrayElement(null, new expr.StringLiteral('a')),
-          new expr.ArrayElement(
+      new nodes.ExpressionStatement(
+        new nodes.ArrayLiteral([
+          new nodes.ArrayElement(null, new nodes.StringLiteral('a')),
+          new nodes.ArrayElement(
             null,
-            new expr.Call(new expr.Identifier('b'), []),
+            new nodes.Call(new nodes.Identifier('b'), []),
           ),
-          new expr.ArrayElement(
+          new nodes.ArrayElement(
             null,
-            new expr.Binary(
-              new expr.Identifier('c'),
+            new nodes.Binary(
+              new nodes.Identifier('c'),
               '<',
-              new expr.Identifier('d'),
+              new nodes.Identifier('d'),
             ),
           ),
         ]),
@@ -72,20 +70,20 @@ describe('array literals', () => {
   test('[[1,2],[3,4]]', () => {
     let source = '[[1,2],[3,4]]';
     let expected = [
-      new stmt.Expression(
-        new expr.ArrayLiteral([
-          new expr.ArrayElement(
+      new nodes.ExpressionStatement(
+        new nodes.ArrayLiteral([
+          new nodes.ArrayElement(
             null,
-            new expr.ArrayLiteral([
-              new expr.ArrayElement(null, new expr.NumberLiteral('1')),
-              new expr.ArrayElement(null, new expr.NumberLiteral('2')),
+            new nodes.ArrayLiteral([
+              new nodes.ArrayElement(null, new nodes.NumberLiteral('1')),
+              new nodes.ArrayElement(null, new nodes.NumberLiteral('2')),
             ]),
           ),
-          new expr.ArrayElement(
+          new nodes.ArrayElement(
             null,
-            new expr.ArrayLiteral([
-              new expr.ArrayElement(null, new expr.NumberLiteral('3')),
-              new expr.ArrayElement(null, new expr.NumberLiteral('4')),
+            new nodes.ArrayLiteral([
+              new nodes.ArrayElement(null, new nodes.NumberLiteral('3')),
+              new nodes.ArrayElement(null, new nodes.NumberLiteral('4')),
             ]),
           ),
         ]),
@@ -97,11 +95,11 @@ describe('array literals', () => {
   test('[1=>2]', () => {
     let source = '[1=>2]';
     let expected = [
-      new stmt.Expression(
-        new expr.ArrayLiteral([
-          new expr.ArrayElement(
-            new expr.NumberLiteral('1'),
-            new expr.NumberLiteral('2'),
+      new nodes.ExpressionStatement(
+        new nodes.ArrayLiteral([
+          new nodes.ArrayElement(
+            new nodes.NumberLiteral('1'),
+            new nodes.NumberLiteral('2'),
           ),
         ]),
       ),
@@ -112,23 +110,23 @@ describe('array literals', () => {
   test('[1=>2,"3"=>4+5,a()]', () => {
     let source = '[1=>2,"3"=>4+5,a()]';
     let expected = [
-      new stmt.Expression(
-        new expr.ArrayLiteral([
-          new expr.ArrayElement(
-            new expr.NumberLiteral('1'),
-            new expr.NumberLiteral('2'),
+      new nodes.ExpressionStatement(
+        new nodes.ArrayLiteral([
+          new nodes.ArrayElement(
+            new nodes.NumberLiteral('1'),
+            new nodes.NumberLiteral('2'),
           ),
-          new expr.ArrayElement(
-            new expr.StringLiteral('3'),
-            new expr.Binary(
-              new expr.NumberLiteral('4'),
+          new nodes.ArrayElement(
+            new nodes.StringLiteral('3'),
+            new nodes.Binary(
+              new nodes.NumberLiteral('4'),
               '+',
-              new expr.NumberLiteral('5'),
+              new nodes.NumberLiteral('5'),
             ),
           ),
-          new expr.ArrayElement(
+          new nodes.ArrayElement(
             null,
-            new expr.Call(new expr.Identifier('a'), []),
+            new nodes.Call(new nodes.Identifier('a'), []),
           ),
         ]),
       ),

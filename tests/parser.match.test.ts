@@ -2,9 +2,7 @@
 import { expect, test, describe } from 'bun:test';
 import scan from '../scanner';
 import parse from '../parser';
-import * as stmt from '../stmt';
-import * as expr from '../expr';
-import * as types from '../type';
+import * as nodes from '../nodes';
 
 function ast(source: string) {
   return parse(scan(source));
@@ -14,8 +12,8 @@ describe('match expressions', () => {
   test('match (1) {}', () => {
     let source = 'match (1) {}';
     let expected = [
-      new stmt.Expression(
-        new expr.Match(new expr.NumberLiteral('1'), [], null),
+      new nodes.ExpressionStatement(
+        new nodes.Match(new nodes.NumberLiteral('1'), [], null),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -24,13 +22,13 @@ describe('match expressions', () => {
   test('match (1) { 1 => 2 }', () => {
     let source = 'match (1) { 1 => 2 }';
     let expected = [
-      new stmt.Expression(
-        new expr.Match(
-          new expr.NumberLiteral('1'),
+      new nodes.ExpressionStatement(
+        new nodes.Match(
+          new nodes.NumberLiteral('1'),
           [
-            new expr.MatchArm(
-              [new expr.NumberLiteral('1')],
-              new expr.NumberLiteral('2'),
+            new nodes.MatchArm(
+              [new nodes.NumberLiteral('1')],
+              new nodes.NumberLiteral('2'),
             ),
           ],
           null,
@@ -43,13 +41,13 @@ describe('match expressions', () => {
   test('match (1) { 1, 2 => 3 }', () => {
     let source = 'match (1) { 1, 2 => 3 }';
     let expected = [
-      new stmt.Expression(
-        new expr.Match(
-          new expr.NumberLiteral('1'),
+      new nodes.ExpressionStatement(
+        new nodes.Match(
+          new nodes.NumberLiteral('1'),
           [
-            new expr.MatchArm(
-              [new expr.NumberLiteral('1'), new expr.NumberLiteral('2')],
-              new expr.NumberLiteral('3'),
+            new nodes.MatchArm(
+              [new nodes.NumberLiteral('1'), new nodes.NumberLiteral('2')],
+              new nodes.NumberLiteral('3'),
             ),
           ],
           null,
@@ -62,17 +60,17 @@ describe('match expressions', () => {
   test('match (1) { 1, 2 => 3, 4, 5 => 6 }', () => {
     let source = 'match (1) { 1, 2 => 3, 4, 5 => 6 }';
     let expected = [
-      new stmt.Expression(
-        new expr.Match(
-          new expr.NumberLiteral('1'),
+      new nodes.ExpressionStatement(
+        new nodes.Match(
+          new nodes.NumberLiteral('1'),
           [
-            new expr.MatchArm(
-              [new expr.NumberLiteral('1'), new expr.NumberLiteral('2')],
-              new expr.NumberLiteral('3'),
+            new nodes.MatchArm(
+              [new nodes.NumberLiteral('1'), new nodes.NumberLiteral('2')],
+              new nodes.NumberLiteral('3'),
             ),
-            new expr.MatchArm(
-              [new expr.NumberLiteral('4'), new expr.NumberLiteral('5')],
-              new expr.NumberLiteral('6'),
+            new nodes.MatchArm(
+              [new nodes.NumberLiteral('4'), new nodes.NumberLiteral('5')],
+              new nodes.NumberLiteral('6'),
             ),
           ],
           null,
@@ -85,17 +83,17 @@ describe('match expressions', () => {
   test('match (1) { 1, => 2, 3, => 4, }', () => {
     let source = 'match (1) { 1, => 2, 3, => 4, }';
     let expected = [
-      new stmt.Expression(
-        new expr.Match(
-          new expr.NumberLiteral('1'),
+      new nodes.ExpressionStatement(
+        new nodes.Match(
+          new nodes.NumberLiteral('1'),
           [
-            new expr.MatchArm(
-              [new expr.NumberLiteral('1')],
-              new expr.NumberLiteral('2'),
+            new nodes.MatchArm(
+              [new nodes.NumberLiteral('1')],
+              new nodes.NumberLiteral('2'),
             ),
-            new expr.MatchArm(
-              [new expr.NumberLiteral('3')],
-              new expr.NumberLiteral('4'),
+            new nodes.MatchArm(
+              [new nodes.NumberLiteral('3')],
+              new nodes.NumberLiteral('4'),
             ),
           ],
           null,
@@ -108,11 +106,11 @@ describe('match expressions', () => {
   test('match (1) { default => 2 }', () => {
     let source = 'match (1) { default => 2 }';
     let expected = [
-      new stmt.Expression(
-        new expr.Match(
-          new expr.NumberLiteral('1'),
+      new nodes.ExpressionStatement(
+        new nodes.Match(
+          new nodes.NumberLiteral('1'),
           [],
-          new expr.NumberLiteral('2'),
+          new nodes.NumberLiteral('2'),
         ),
       ),
     ];
@@ -122,16 +120,16 @@ describe('match expressions', () => {
   test('match (1) { 1 => 2, default => 3, }', () => {
     let source = 'match (1) { 1 => 2, default => 3, }';
     let expected = [
-      new stmt.Expression(
-        new expr.Match(
-          new expr.NumberLiteral('1'),
+      new nodes.ExpressionStatement(
+        new nodes.Match(
+          new nodes.NumberLiteral('1'),
           [
-            new expr.MatchArm(
-              [new expr.NumberLiteral('1')],
-              new expr.NumberLiteral('2'),
+            new nodes.MatchArm(
+              [new nodes.NumberLiteral('1')],
+              new nodes.NumberLiteral('2'),
             ),
           ],
-          new expr.NumberLiteral('3'),
+          new nodes.NumberLiteral('3'),
         ),
       ),
     ];
@@ -141,19 +139,19 @@ describe('match expressions', () => {
   test('match(true) { 1 >= 2 => "worked" }', () => {
     let source = 'match(true) { 1 >= 2 => "worked" }';
     let expected = [
-      new stmt.Expression(
-        new expr.Match(
-          new expr.BooleanLiteral(true),
+      new nodes.ExpressionStatement(
+        new nodes.Match(
+          new nodes.BooleanLiteral(true),
           [
-            new expr.MatchArm(
+            new nodes.MatchArm(
               [
-                new expr.Binary(
-                  new expr.NumberLiteral('1'),
+                new nodes.Binary(
+                  new nodes.NumberLiteral('1'),
                   '>=',
-                  new expr.NumberLiteral('2'),
+                  new nodes.NumberLiteral('2'),
                 ),
               ],
-              new expr.StringLiteral('worked'),
+              new nodes.StringLiteral('worked'),
             ),
           ],
           null,
@@ -166,11 +164,11 @@ describe('match expressions', () => {
   test('match(true) { default => throw a }', () => {
     let source = 'match(true) { default => throw a }';
     let expected = [
-      new stmt.Expression(
-        new expr.Match(
-          new expr.BooleanLiteral(true),
+      new nodes.ExpressionStatement(
+        new nodes.Match(
+          new nodes.BooleanLiteral(true),
           [],
-          new expr.Throw(new expr.Identifier('a')),
+          new nodes.ThrowExpression(new nodes.Identifier('a')),
         ),
       ),
     ];

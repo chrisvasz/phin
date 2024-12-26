@@ -1,10 +1,8 @@
 import { Token, TokenType } from './token';
-import * as stmt from './stmt';
-import { Stmt } from './stmt';
-import * as expr from './expr';
-import { Expr } from './expr';
-import * as types from './type';
-import { Type } from './type';
+import { Node, Expr, Stmt } from './nodes';
+import * as nodes from './nodes';
+import * as types from './types';
+import { Type } from './types';
 
 const {
   ABSTRACT,
@@ -149,13 +147,13 @@ export default function parse(tokens: Token[]): Stmt[] {
     }
   }
 
-  function tryDeclaration(): Stmt | null {
+  function tryDeclaration(): nodes.Try | null {
     consume('Expect "{" before try body', LEFT_BRACE);
-    return new stmt.Try(block(), tryCatches(), tryFinally());
+    return new nodes.Try(block(), tryCatches(), tryFinally());
   }
 
-  function tryCatches(): stmt.Catch[] {
-    let catches: stmt.Catch[] = [];
+  function tryCatches(): nodes.Catch[] {
+    let catches: nodes.Catch[] = [];
     while (match(CATCH)) {
       consume('Expect "(" after catch', LEFT_PAREN);
       let name = consume('Expect variable name', IDENTIFIER).lexeme;
@@ -164,7 +162,7 @@ export default function parse(tokens: Token[]): Stmt[] {
       consume('Expect ")" after catch', RIGHT_PAREN);
       consume('Expect "{" before catch body', LEFT_BRACE);
       let body = block();
-      catches.push(new stmt.Catch(name, types, body));
+      catches.push(new nodes.Catch(name, types, body));
     }
     return catches;
   }
@@ -177,17 +175,19 @@ export default function parse(tokens: Token[]): Stmt[] {
     return types;
   }
 
-  function tryFinally(): Stmt[] | null {
+  function tryFinally(): Node[] | null {
     if (!match(FINALLY)) return null;
     consume('Expect "{" before finally body', LEFT_BRACE);
     return block();
   }
 
-  function throwDeclaration(): stmt.Throw {
-    return new stmt.Throw(expression());
+  function throwDeclaration(): nodes.ThrowStatement {
+    return new nodes.ThrowStatement(expression());
   }
 
-  function classDeclaration(isAbstract: boolean = false): stmt.Class {
+  function classDeclaration(
+    isAbstract: boolean = false,
+  ): nodes.ClassDeclaration {
     let name = consume('Expect class name', IDENTIFIER).lexeme;
     let params = match(LEFT_PAREN) ? classParams() : [];
     let superclass = match(EXTENDS) ? classSuperclass() : null;
@@ -195,7 +195,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     consume('Expect "{" before class body', LEFT_BRACE);
     let members = classMembers();
     consume('Expect "}" after class body', RIGHT_BRACE);
-    return new stmt.Class(
+    return new nodes.ClassDeclaration(
       name,
       params,
       superclass,
@@ -205,27 +205,25 @@ export default function parse(tokens: Token[]): Stmt[] {
     );
   }
 
-  function classParams(): stmt.ClassParam[] {
-    let params: stmt.ClassParam[] = [];
-    if (!check(RIGHT_PAREN)) {
+  function classParams(): nodes.ClassParam[] {
+    if (match(RIGHT_PAREN)) return [];
+    let params = [classParam()];
+    while (match(COMMA)) {
+      if (check(RIGHT_PAREN)) break; // support trailing commas
       params.push(classParam());
-      while (match(COMMA)) {
-        if (check(RIGHT_PAREN)) break; // support trailing commas
-        params.push(classParam());
-      }
     }
     consume('Expect ")" after class params', RIGHT_PAREN);
     return params;
   }
 
-  function classParam(): stmt.ClassParam {
+  function classParam(): nodes.ClassParam {
     let isFinal = match(FINAL);
     let visibility = classVisibility();
     let isReadonly = match(READONLY);
     let name = consume('Expect class param name', IDENTIFIER).lexeme;
     let type = match(COLON) ? typeAnnotation() : null;
     let initializer = match(EQUAL) ? expression() : null;
-    return new stmt.ClassParam(
+    return new nodes.ClassParam(
       isFinal,
       visibility,
       isReadonly,
@@ -235,18 +233,21 @@ export default function parse(tokens: Token[]): Stmt[] {
     );
   }
 
-  function classSuperclass(): stmt.ClassSuperclass {
+  function classSuperclass(): nodes.ClassSuperclass {
     let name = consume('Expect superclass name', IDENTIFIER).lexeme;
-    let args: Expr[] = [];
-    if (match(LEFT_PAREN)) {
+    let args = match(LEFT_PAREN) ? classSuperclassArgs() : [];
+    return new nodes.ClassSuperclass(name, args);
+  }
+
+  function classSuperclassArgs(): Expr[] {
+    if (match(RIGHT_PAREN)) return [];
+    let args = [expression()];
+    while (match(COMMA)) {
+      if (check(RIGHT_PAREN)) break; // support trailing commas
       args.push(expression());
-      while (match(COMMA)) {
-        if (check(RIGHT_PAREN)) break; // support trailing commas
-        args.push(expression());
-      }
-      consume('Expect ")" after superclass arguments', RIGHT_PAREN);
     }
-    return new stmt.ClassSuperclass(name, args);
+    consume('Expect ")" after superclass arguments', RIGHT_PAREN);
+    return args;
   }
 
   function classInterfaces(): string[] {
@@ -258,8 +259,8 @@ export default function parse(tokens: Token[]): Stmt[] {
     return interfaces;
   }
 
-  function classMembers(): Array<ReturnType<typeof classMember>> {
-    let members: Array<ReturnType<typeof classMember>> = [];
+  function classMembers(): nodes.ClassMember[] {
+    let members: nodes.ClassMember[] = [];
     while (!check(RIGHT_BRACE) && !isAtEnd()) {
       members.push(classMember());
       match(SEMICOLON); // support trailing semicolon
@@ -267,7 +268,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     return members;
   }
 
-  function classMember(): stmt.ClassMember {
+  function classMember(): nodes.ClassMember {
     if (match(ABSTRACT)) return abstractClassMember();
     let isFinal = match(FINAL);
     let visibility = classVisibility();
@@ -279,7 +280,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     throw error(peek(), 'Expect class member');
   }
 
-  function abstractClassMember(): stmt.AbstractClassMethod {
+  function abstractClassMember(): nodes.ClassAbstractMethod {
     let visibility = classVisibility();
     let isStatic = match(STATIC);
     consume('Expect class method declaration', FUN);
@@ -287,15 +288,15 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function abstractClassMethod(
-    visibility: stmt.Visibility,
+    visibility: nodes.Visibility,
     isStatic: boolean,
-  ): stmt.AbstractClassMethod {
+  ): nodes.ClassAbstractMethod {
     let name = consume('Expect method name', IDENTIFIER).lexeme;
     consume('Expect "(" after method name', LEFT_PAREN);
     let params = functionParams();
     let returnType = match(COLON) ? typeAnnotation() : null;
     terminator();
-    return new stmt.AbstractClassMethod(
+    return new nodes.ClassAbstractMethod(
       visibility,
       isStatic,
       name,
@@ -304,7 +305,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     );
   }
 
-  function classVisibility(): stmt.Visibility {
+  function classVisibility(): nodes.Visibility {
     let token = match(PUBLIC, PROTECTED, PRIVATE) ? previous() : null;
     if (token === null) return null;
     if (token.type === PUBLIC) return 'public';
@@ -315,11 +316,11 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function classMethod(
     isFinal: boolean,
-    visibility: stmt.Visibility,
+    visibility: nodes.Visibility,
     isStatic: boolean,
-  ): stmt.ClassMethod {
+  ): nodes.ClassMethod {
     let fn = functionDeclaration();
-    return new stmt.ClassMethod(
+    return new nodes.ClassMethod(
       isFinal,
       visibility,
       isStatic,
@@ -332,10 +333,10 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function classProperty(
     isFinal: boolean,
-    visibility: stmt.Visibility,
+    visibility: nodes.Visibility,
     isStatic: boolean,
-  ): stmt.ClassProperty {
-    return new stmt.ClassProperty(
+  ): nodes.ClassProperty {
+    return new nodes.ClassProperty(
       isFinal,
       visibility,
       isStatic,
@@ -345,14 +346,14 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function classConst(
     isFinal: boolean,
-    visibility: stmt.Visibility,
+    visibility: nodes.Visibility,
     isStatic: boolean,
-  ): stmt.ClassConst {
+  ): nodes.ClassConst {
     let name = consume('Expect class constant name', IDENTIFIER).lexeme;
     let type = match(COLON) ? typeAnnotation() : null;
     consume('Expect "=" after class constant name', EQUAL);
     let initializer = expression();
-    return new stmt.ClassConst(
+    return new nodes.ClassConst(
       isFinal,
       visibility,
       isStatic,
@@ -362,28 +363,33 @@ export default function parse(tokens: Token[]): Stmt[] {
     );
   }
 
-  function classInitializer(): stmt.ClassInitializer {
+  function classInitializer(): nodes.ClassInitializer {
     consume('Expect "{" before class initializer body', LEFT_BRACE);
-    return new stmt.ClassInitializer(block());
+    return new nodes.ClassInitializer(block());
   }
 
-  function functionDeclaration(): stmt.Function {
+  function functionDeclaration(): nodes.FunctionDeclaration {
     let name = consume('Expect function name', IDENTIFIER).lexeme;
     consume('Expect "(" after function name', LEFT_PAREN);
     let params = functionParams();
     let returnType = match(COLON) ? typeAnnotation() : null;
-    return new stmt.Function(name, params, returnType, functionBody());
+    return new nodes.FunctionDeclaration(
+      name,
+      params,
+      returnType,
+      functionBody(),
+    );
   }
 
-  function functionExpression(): expr.Function {
+  function functionExpression(): nodes.FunctionExpression {
     consume('Expect "(" after fun', LEFT_PAREN);
     let params = functionParams();
     let returnType = match(COLON) ? typeAnnotation() : null;
-    return new expr.Function(params, returnType, functionBody());
+    return new nodes.FunctionExpression(params, returnType, functionBody());
   }
 
-  function functionParams(): stmt.FunctionParam[] {
-    let params: stmt.FunctionParam[] = [];
+  function functionParams(): nodes.Param[] {
+    let params: nodes.Param[] = [];
     if (!check(RIGHT_PAREN)) {
       params.push(functionParam());
       while (match(COMMA)) {
@@ -395,30 +401,30 @@ export default function parse(tokens: Token[]): Stmt[] {
     return params;
   }
 
-  function functionParam(): stmt.FunctionParam {
+  function functionParam(): nodes.Param {
     let name = consume('Expect parameter name', IDENTIFIER).lexeme;
     let type = match(COLON) ? typeAnnotation() : null;
     let initializer = match(EQUAL) ? expression() : null;
-    return new stmt.FunctionParam(name, type, initializer);
+    return new nodes.Param(name, type, initializer);
   }
 
-  function functionBody(): Expr | Stmt[] {
+  function functionBody(): Expr | Node[] {
     if (match(ARROW)) return expression();
     if (match(LEFT_BRACE)) return block();
     throw error(peek(), 'Expect "=>" or "{" before function body');
   }
 
-  function varDeclaration(): stmt.Var {
+  function varDeclaration(): nodes.VarDeclaration {
     let result = varWithType();
     let initializer = match(EQUAL) ? expression() : null;
     terminator();
-    return new stmt.Var(result.name, result.type, initializer);
+    return new nodes.VarDeclaration(result.name, result.type, initializer);
   }
 
-  function varWithType(): stmt.Var {
+  function varWithType(): nodes.VarDeclaration {
     let name = consume('Expect variable name', IDENTIFIER).lexeme;
     let type = match(COLON) ? typeAnnotation() : null;
-    return new stmt.Var(name, type, null);
+    return new nodes.VarDeclaration(name, type, null);
   }
 
   function statement(): Stmt {
@@ -427,16 +433,16 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(IF)) return ifStatement();
     if (match(WHILE)) return whileStatement();
     if (match(ECHO)) return echoStatement();
-    if (match(RETURN)) return new stmt.Return(expression());
-    if (match(LEFT_BRACE)) return new stmt.Block(block());
+    if (match(RETURN)) return new nodes.Return(expression());
+    if (match(LEFT_BRACE)) return new nodes.Block(block());
     return expressionStatement();
   }
 
-  function foreachStatement(): Stmt {
+  function foreachStatement(): nodes.Foreach {
     consume('Expect "(" after "foreach"', LEFT_PAREN);
     let iterable = expression();
     consume('Expect "as" after foreach iterable expression', AS);
-    let key: stmt.Var | null = null;
+    let key: nodes.VarDeclaration | null = null;
     let value = varWithType();
     if (match(ARROW)) {
       key = value;
@@ -444,20 +450,20 @@ export default function parse(tokens: Token[]): Stmt[] {
     }
     consume('Expect ")" after foreach expression', RIGHT_PAREN);
     let body = statement();
-    return new stmt.Foreach(key, value, iterable, body);
+    return new nodes.Foreach(key, value, iterable, body);
   }
 
-  function forStatement(): Stmt {
+  function forStatement(): nodes.For {
     consume('Expect "(" after "for"', LEFT_PAREN);
     let initializer = forInitializer();
     let condition = forCondition();
     let increment = forIncrement();
     consume('Expect ")" after for clauses', RIGHT_PAREN);
     let body = statement();
-    return new stmt.For(initializer, condition, increment, body);
+    return new nodes.For(initializer, condition, increment, body);
   }
 
-  function forInitializer(): Stmt | null {
+  function forInitializer(): Node | null {
     if (match(SEMICOLON)) return null;
     if (match(VAR)) return varDeclaration();
     return expressionStatement();
@@ -475,34 +481,31 @@ export default function parse(tokens: Token[]): Stmt[] {
     return expression();
   }
 
-  function ifStatement(): Stmt {
+  function ifStatement(): nodes.If {
     consume('Expect "(" after "if"', LEFT_PAREN);
     let condition = expression();
     consume('Expect ")" after if condition', RIGHT_PAREN);
     let thenBranch = statement();
-    let elseBranch: Stmt | null = null;
-    if (match(ELSE)) {
-      elseBranch = statement();
-    }
-    return new stmt.If(condition, thenBranch, elseBranch);
+    let elseBranch = match(ELSE) ? statement() : null;
+    return new nodes.If(condition, thenBranch, elseBranch);
   }
 
-  function echoStatement(): Stmt {
+  function echoStatement(): nodes.Echo {
     let result = expression();
     terminator();
-    return new stmt.Echo(result);
+    return new nodes.Echo(result);
   }
 
-  function whileStatement(): Stmt {
+  function whileStatement(): nodes.While {
     consume('Expect "(" after "while"', LEFT_PAREN);
     let condition = expression();
     consume('Expect ")" after while condition', RIGHT_PAREN);
     let body = statement();
-    return new stmt.While(condition, body);
+    return new nodes.While(condition, body);
   }
 
-  function block(): Stmt[] {
-    const statements: Stmt[] = [];
+  function block(): Node[] {
+    const statements: Node[] = [];
     while (!check(RIGHT_BRACE) && !isAtEnd()) {
       const next = declaration();
       if (next) statements.push(next);
@@ -511,10 +514,10 @@ export default function parse(tokens: Token[]): Stmt[] {
     return statements;
   }
 
-  function expressionStatement(): Stmt {
+  function expressionStatement(): nodes.ExpressionStatement {
     let result = expression();
     terminator();
-    return new stmt.Expression(result);
+    return new nodes.ExpressionStatement(result);
   }
 
   function expression(): Expr {
@@ -525,7 +528,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     return assignment();
   }
 
-  function matchExpression(): expr.Match {
+  function matchExpression(): nodes.Match {
     consume('Expect "(" after "match"', LEFT_PAREN);
     let subject = expression();
     consume('Expect ")" after match subject', RIGHT_PAREN);
@@ -533,19 +536,19 @@ export default function parse(tokens: Token[]): Stmt[] {
     let arms = matchArms();
     let defaultArm = matchDefaultArm();
     consume('Expect "}" after match body', RIGHT_BRACE);
-    return new expr.Match(subject, arms, defaultArm);
+    return new nodes.Match(subject, arms, defaultArm);
   }
 
-  function matchArms(): expr.MatchArm[] {
-    let arms: expr.MatchArm[] = [];
+  function matchArms(): nodes.MatchArm[] {
+    let arms: nodes.MatchArm[] = [];
     while (!check(RIGHT_BRACE) && !check(DEFAULT) && !isAtEnd()) {
       arms.push(matchArm());
     }
     return arms;
   }
 
-  function matchArm(): expr.MatchArm {
-    let patterns: Expr[] = [expression()];
+  function matchArm(): nodes.MatchArm {
+    let patterns = [expression()];
     while (match(COMMA)) {
       if (check(ARROW)) break; // support trailing commas
       patterns.push(expression());
@@ -553,7 +556,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     consume('Expect "=>" after match patterns', ARROW);
     let body = expression();
     match(COMMA); // optional trailing comma
-    return new expr.MatchArm(patterns, body);
+    return new nodes.MatchArm(patterns, body);
   }
 
   function matchDefaultArm(): Expr | null {
@@ -565,7 +568,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function throwExpression(): Expr {
-    return new expr.Throw(expression());
+    return new nodes.ThrowExpression(expression());
   }
 
   function assignment(): Expr {
@@ -586,8 +589,8 @@ export default function parse(tokens: Token[]): Stmt[] {
     ) {
       let operator = previous();
       let value = assignment();
-      if (result instanceof expr.Identifier) {
-        return new expr.Assign(result.name, operator.lexeme, value);
+      if (result instanceof nodes.Identifier) {
+        return new nodes.Assign(result.name, operator.lexeme, value);
       }
       throw error(operator, 'Invalid assignment target');
     }
@@ -600,7 +603,7 @@ export default function parse(tokens: Token[]): Stmt[] {
       let left = nullCoalesce();
       consume('Expect ":" after ternary condition', COLON);
       let right = nullCoalesce();
-      result = new expr.Ternary(result, left, right);
+      result = new nodes.Ternary(result, left, right);
     }
     return result;
   }
@@ -609,7 +612,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     let result = logicalOr();
     while (match(NULL_COALESCE)) {
       let right = nullCoalesce();
-      result = new expr.Binary(result, '??', right);
+      result = new nodes.Binary(result, '??', right);
     }
     return result;
   }
@@ -619,7 +622,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     while (match(LOGICAL_OR)) {
       let operator = previous();
       let right = logicalAnd();
-      result = new expr.Binary(result, operator.lexeme, right);
+      result = new nodes.Binary(result, operator.lexeme, right);
     }
     return result;
   }
@@ -629,7 +632,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     while (match(LOGICAL_AND)) {
       let operator = previous();
       let right = equality();
-      result = new expr.Binary(result, operator.lexeme, right);
+      result = new nodes.Binary(result, operator.lexeme, right);
     }
     return result;
   }
@@ -647,7 +650,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     ) {
       let operator = previous();
       let right = comparison();
-      result = new expr.Binary(result, operator.lexeme, right);
+      result = new nodes.Binary(result, operator.lexeme, right);
     }
     return result;
   }
@@ -657,7 +660,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
       let operator = previous();
       let right = stringConcat();
-      result = new expr.Binary(result, operator.lexeme, right);
+      result = new nodes.Binary(result, operator.lexeme, right);
     }
     return result;
   }
@@ -667,7 +670,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     while (match(PLUS_DOT)) {
       let operator = previous();
       let right = term();
-      result = new expr.Binary(result, operator.lexeme, right);
+      result = new nodes.Binary(result, operator.lexeme, right);
     }
     return result;
   }
@@ -677,7 +680,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     while (match(MINUS, PLUS)) {
       let operator = previous();
       let right = factor();
-      result = new expr.Binary(result, operator.lexeme, right);
+      result = new nodes.Binary(result, operator.lexeme, right);
     }
     return result;
   }
@@ -687,7 +690,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     while (match(SLASH, STAR, PERCENT)) {
       let operator = previous();
       let right = instanceOf();
-      result = new expr.Binary(result, operator.lexeme, right);
+      result = new nodes.Binary(result, operator.lexeme, right);
     }
     return result;
   }
@@ -697,7 +700,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     while (match(INSTANCEOF)) {
       let operator = previous();
       let right = exponentiation();
-      result = new expr.Binary(result, operator.lexeme, right);
+      result = new nodes.Binary(result, operator.lexeme, right);
     }
     return result;
   }
@@ -707,7 +710,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     while (match(STAR_STAR)) {
       let operator = previous();
       let right = exponentiation();
-      result = new expr.Binary(result, operator.lexeme, right);
+      result = new nodes.Binary(result, operator.lexeme, right);
     }
     return result;
   }
@@ -716,7 +719,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(BANG, MINUS, PLUS, MINUS_MINUS, PLUS_PLUS)) {
       let operator = previous();
       let right = unary();
-      return new expr.Unary(operator.lexeme, right);
+      return new nodes.Unary(operator.lexeme, right);
     }
     return postfix();
   }
@@ -725,16 +728,16 @@ export default function parse(tokens: Token[]): Stmt[] {
     let result = newClone();
     if (match(PLUS_PLUS, MINUS_MINUS)) {
       let operator = previous();
-      if (!(result instanceof expr.Identifier))
+      if (!(result instanceof nodes.Identifier))
         throw error(previous(), 'Invalid postfix target');
-      result = new expr.Postfix(result, operator.lexeme);
+      result = new nodes.Postfix(result, operator.lexeme);
     }
     return result;
   }
 
   function newClone(): Expr {
-    if (match(NEW)) return new expr.New(call());
-    if (match(CLONE)) return new expr.Clone(call());
+    if (match(NEW)) return new nodes.New(call());
+    if (match(CLONE)) return new nodes.Clone(call());
     return call();
   }
 
@@ -742,7 +745,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     let ex = primary();
     while (true) {
       if (match(LEFT_PAREN)) {
-        ex = new expr.Call(ex, callArgs());
+        ex = new nodes.Call(ex, callArgs());
       } else if (match(DOT)) {
         ex = getExpression(ex);
       } else if (match(OPTIONAL_CHAIN)) {
@@ -764,52 +767,52 @@ export default function parse(tokens: Token[]): Stmt[] {
     return args;
   }
 
-  function getExpression(receiver: Expr): expr.Get {
+  function getExpression(receiver: Expr): nodes.Get {
     let name = consume('Expect property name after .', IDENTIFIER).lexeme;
-    return new expr.Get(receiver, name);
+    return new nodes.Get(receiver, name);
   }
 
-  function optionalGetExpression(receiver: Expr): expr.Get {
+  function optionalGetExpression(receiver: Expr): nodes.OptionalGet {
     let name = consume('Expect property name after ?.', IDENTIFIER).lexeme;
-    return new expr.OptionalGet(receiver, name);
+    return new nodes.OptionalGet(receiver, name);
   }
 
   function primary(): Expr {
-    if (match(NULL)) return new expr.NullLiteral();
+    if (match(NULL)) return new nodes.NullLiteral();
     if (match(NUMBER)) return numberLiteral();
     if (match(STRING)) return stringLiteral();
-    if (match(TRUE)) return new expr.BooleanLiteral(true);
-    if (match(FALSE)) return new expr.BooleanLiteral(false);
+    if (match(TRUE)) return new nodes.BooleanLiteral(true);
+    if (match(FALSE)) return new nodes.BooleanLiteral(false);
     if (match(LEFT_PAREN)) return grouping();
     if (match(LEFT_BRACKET)) return arrayLiteral();
-    if (match(THIS)) return new expr.This();
-    if (match(SUPER)) return new expr.Super();
+    if (match(THIS)) return new nodes.This();
+    if (match(SUPER)) return new nodes.Super();
     if (match(IDENTIFIER)) return identifier();
     throw error(peek(), 'Expect expression');
   }
 
   function numberLiteral() {
-    return new expr.NumberLiteral(previous().literal);
+    return new nodes.NumberLiteral(previous().literal);
   }
 
   function stringLiteral() {
-    return new expr.StringLiteral(previous().literal);
+    return new nodes.StringLiteral(previous().literal);
   }
 
   function grouping(): Expr {
     let result = expression();
     consume('Expect ")" after expression', RIGHT_PAREN);
-    return new expr.Grouping(result);
+    return new nodes.Grouping(result);
   }
 
-  function arrayLiteral(): expr.ArrayLiteral {
+  function arrayLiteral(): nodes.ArrayLiteral {
     let elements = arrayElements();
     consume('Expect "]" after array literal', RIGHT_BRACKET);
-    return new expr.ArrayLiteral(elements);
+    return new nodes.ArrayLiteral(elements);
   }
 
-  function arrayElements(): expr.ArrayElement[] {
-    let elements: expr.ArrayElement[] = [];
+  function arrayElements(): nodes.ArrayElement[] {
+    let elements: nodes.ArrayElement[] = [];
     while (!check(RIGHT_BRACKET) && !isAtEnd()) {
       elements.push(arrayElement());
       match(COMMA);
@@ -817,15 +820,15 @@ export default function parse(tokens: Token[]): Stmt[] {
     return elements;
   }
 
-  function arrayElement(): expr.ArrayElement {
-    return new expr.ArrayElement(arrayKey(), expression());
+  function arrayElement(): nodes.ArrayElement {
+    return new nodes.ArrayElement(arrayKey(), expression());
   }
 
-  function identifier(): expr.Identifier {
-    return new expr.Identifier(previous().lexeme);
+  function identifier(): nodes.Identifier {
+    return new nodes.Identifier(previous().lexeme);
   }
 
-  function arrayKey(): expr.NumberLiteral | expr.StringLiteral | null {
+  function arrayKey(): nodes.NumberLiteral | nodes.StringLiteral | null {
     if (check(NUMBER, STRING) && checkNext(ARROW)) {
       try {
         if (match(NUMBER)) return numberLiteral();

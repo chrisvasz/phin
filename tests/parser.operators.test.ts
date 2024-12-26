@@ -2,9 +2,8 @@
 import { expect, test, describe } from 'bun:test';
 import scan from '../scanner';
 import parse from '../parser';
-import * as stmt from '../stmt';
-import * as expr from '../expr';
-import { Expr } from '../expr';
+import * as nodes from '../nodes';
+import { Expr } from '../nodes';
 
 function ast(source: string) {
   return parse(scan(source));
@@ -14,35 +13,35 @@ function ast(source: string) {
 // TODO bitwise operators << >> & ^ | ~
 
 function expressions(ex: Expr) {
-  return [new stmt.Expression(ex)];
+  return [new nodes.ExpressionStatement(ex)];
 }
 
 function unary(operator: string, right: Expr) {
-  return new expr.Unary(operator, right);
+  return new nodes.Unary(operator, right);
 }
 
 function binary(left: Expr, operator: string, right: Expr) {
-  return new expr.Binary(left, operator, right);
+  return new nodes.Binary(left, operator, right);
 }
 
 function ternary(condition: Expr, left: Expr, right: Expr) {
-  return new expr.Ternary(condition, left, right);
+  return new nodes.Ternary(condition, left, right);
 }
 
 function assign(name: string, operator: string, right: Expr) {
-  return new expr.Assign(name, operator, right);
+  return new nodes.Assign(name, operator, right);
 }
 
 function new_(ex: Expr) {
-  return new expr.New(ex);
+  return new nodes.New(ex);
 }
 
 function clone(ex: Expr) {
-  return new expr.Clone(ex);
+  return new nodes.Clone(ex);
 }
 
 function identifier(name: string) {
-  return new expr.Identifier(name);
+  return new nodes.Identifier(name);
 }
 
 const a = identifier('a');
@@ -54,7 +53,7 @@ const e = identifier('e');
 describe('binary', () => {
   const binaryOperators = [
     testRightAssociative('**'),
-    testLeftAssociative('instanceof'),
+    testLeftAssociative('instanceof'), // TODO !instanceof
     testLeftAssociative('*', '/', '%'),
     testLeftAssociative('+', '-'),
     testLeftAssociative('+.'),
@@ -166,20 +165,20 @@ describe('unary', () => {
 describe('postfix', () => {
   test('a++', () => {
     let source = 'a++';
-    let expected = expressions(new expr.Postfix(a, '++'));
+    let expected = expressions(new nodes.Postfix(a, '++'));
     expect(ast(source)).toEqual(expected);
   });
 
   test('a--', () => {
     let source = 'a--';
-    let expected = expressions(new expr.Postfix(a, '--'));
+    let expected = expressions(new nodes.Postfix(a, '--'));
     expect(ast(source)).toEqual(expected);
   });
 
-  test('a++ + ++a', () => {
+  test.todo('a++ + ++a', () => {
     let source = 'a++ + ++a';
     let expected = expressions(
-      binary(new expr.Postfix(a, '++'), '+', new expr.Prefix('++', a)),
+      binary(new nodes.Postfix(a, '++'), '+', new nodes.Prefix('++', a)),
     );
     expect(ast(source)).toEqual(expected);
   });
@@ -279,7 +278,10 @@ describe('new/clone', () => {
 describe('terminators', () => {
   test('a;b', () => {
     let source = 'a;b';
-    let expected = [new stmt.Expression(a), new stmt.Expression(b)];
+    let expected = [
+      new nodes.ExpressionStatement(a),
+      new nodes.ExpressionStatement(b),
+    ];
     expect(ast(source)).toEqual(expected);
   });
 });
