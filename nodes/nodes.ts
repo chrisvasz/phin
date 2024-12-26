@@ -207,7 +207,7 @@ export class FunctionDeclaration extends Node {
     public readonly name: string,
     public readonly params: Param[],
     public readonly returnType: Type | null,
-    public readonly body: Node[] | Expr,
+    public readonly body: Block | Expr,
   ) {
     super();
   }
@@ -243,9 +243,9 @@ export class Return extends Node {
 export class Try extends Node {
   _type = 'Try' as const;
   constructor(
-    public readonly tryBlock: Node[],
+    public readonly tryBlock: Block,
     public readonly catches: Catch[],
-    public readonly finallyBlock: null | Node[],
+    public readonly finallyBlock: null | Block,
   ) {
     super();
     if (catches.length === 0 && finallyBlock === null) {
@@ -264,7 +264,7 @@ export class Catch extends Node {
   constructor(
     public readonly variable: string,
     public readonly types: string[],
-    public readonly body: Node[],
+    public readonly body: Block,
   ) {
     super();
     if (types.length === 0) {
@@ -354,7 +354,7 @@ export class ClassMethod extends Node {
     public readonly name: string,
     public readonly params: Param[],
     public readonly returnType: Type | null,
-    public readonly body: Node[] | Expr,
+    public readonly body: Block | Expr,
   ) {
     super();
   }
@@ -398,7 +398,7 @@ export class ClassConst extends Node {
 
 export class ClassInitializer extends Node {
   _type = 'ClassInitializer' as const;
-  constructor(public readonly body: Node[]) {
+  constructor(public readonly body: Block) {
     super();
   }
   accept<T>(visitor: Visitor<T>): T {
@@ -599,7 +599,7 @@ export class FunctionExpression extends Node {
   constructor(
     public readonly params: Param[],
     public readonly returnType: Type | null,
-    public readonly body: Expr | Node[],
+    public readonly body: Expr | Block,
   ) {
     super();
   }

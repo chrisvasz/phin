@@ -90,9 +90,13 @@ export class PhpPrinter
     let right = node.right.accept(this);
     return `${left} ${node.operator} ${right}`;
   }
+
   visitBlock(node: nodes.Block): string {
-    throw new Error('Method not implemented.');
+    if (node.statements.length === 0) return '{}';
+    let lines = node.statements.map(s => s.accept(this));
+    return `{\n${this.indent(lines)}\n}`;
   }
+
   visitBooleanLiteral(node: nodes.BooleanLiteral): string {
     throw new Error('Method not implemented.');
   }
@@ -151,17 +155,8 @@ export class PhpPrinter
   visitFunctionDeclaration(node: nodes.FunctionDeclaration): string {
     let params = node.params.map(p => p.accept(this));
     let type = node.returnType ? `: ${node.returnType.accept(this)}` : '';
-    let result = `function ${node.name}(${params})${type} {`;
-    if (Array.isArray(node.body)) {
-      if (node.body.length === 0) return result + '}';
-      this.currentIndent++;
-      for (let statement of node.body) {
-        result += '\n' + statement.accept(this);
-      }
-      result += '\n}';
-    } else {
-      result += '\nreturn ' + node.body.accept(this) + ';\n}';
-    }
+    let body = node.body.accept(this);
+    let result = `function ${node.name}(${params})${type} ${body}`;
     return result;
   }
 

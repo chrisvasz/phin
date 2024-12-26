@@ -9,6 +9,10 @@ function ast(source: string) {
   return parse(scan(source));
 }
 
+function block(...statements: nodes.Stmt[]) {
+  return new nodes.Block(statements);
+}
+
 describe('call expressions', () => {
   test('thing()', () => {
     let source = 'thing()';
@@ -94,7 +98,7 @@ describe('call expressions', () => {
 describe('function declarations', () => {
   test('fun foo() {}', () => {
     let source = 'fun foo() {}';
-    let expected = [new nodes.FunctionDeclaration('foo', [], null, [])];
+    let expected = [new nodes.FunctionDeclaration('foo', [], null, block())];
     expect(ast(source)).toEqual(expected);
   });
 
@@ -105,7 +109,7 @@ describe('function declarations', () => {
         'foo',
         [new nodes.Param('a', null, null)],
         null,
-        [],
+        block(),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -125,7 +129,7 @@ describe('function declarations', () => {
           new nodes.Param('b', new types.String(), null),
         ],
         null,
-        [],
+        block(),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -138,7 +142,7 @@ describe('function declarations', () => {
         'foo',
         [],
         new types.Identifier('array', [new types.Number()]),
-        [],
+        block(),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -147,10 +151,15 @@ describe('function declarations', () => {
   test('fun foo() {2;3;}', () => {
     let source = 'fun foo() {2;3;}';
     let expected = [
-      new nodes.FunctionDeclaration('foo', [], null, [
-        new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
-        new nodes.ExpressionStatement(new nodes.NumberLiteral('3')),
-      ]),
+      new nodes.FunctionDeclaration(
+        'foo',
+        [],
+        null,
+        block(
+          new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
+          new nodes.ExpressionStatement(new nodes.NumberLiteral('3')),
+        ),
+      ),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -168,7 +177,7 @@ describe('function declarations', () => {
           ),
         ],
         null,
-        [],
+        block(),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -177,9 +186,12 @@ describe('function declarations', () => {
   test('fun foo() { return 1; }', () => {
     let source = 'fun foo() { return 1; }';
     let expected = [
-      new nodes.FunctionDeclaration('foo', [], null, [
-        new nodes.Return(new nodes.NumberLiteral('1')),
-      ]),
+      new nodes.FunctionDeclaration(
+        'foo',
+        [],
+        null,
+        block(new nodes.Return(new nodes.NumberLiteral('1'))),
+      ),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -187,10 +199,15 @@ describe('function declarations', () => {
   test('fun foo() { 3; return 1; }', () => {
     let source = 'fun foo() { 3; return 1; }';
     let expected = [
-      new nodes.FunctionDeclaration('foo', [], null, [
-        new nodes.ExpressionStatement(new nodes.NumberLiteral('3')),
-        new nodes.Return(new nodes.NumberLiteral('1')),
-      ]),
+      new nodes.FunctionDeclaration(
+        'foo',
+        [],
+        null,
+        block(
+          new nodes.ExpressionStatement(new nodes.NumberLiteral('3')),
+          new nodes.Return(new nodes.NumberLiteral('1')),
+        ),
+      ),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -198,9 +215,12 @@ describe('function declarations', () => {
   test('fun foo() { fun bar() {} }', () => {
     let source = 'fun foo() { fun bar() {} }';
     let expected = [
-      new nodes.FunctionDeclaration('foo', [], null, [
-        new nodes.FunctionDeclaration('bar', [], null, []),
-      ]),
+      new nodes.FunctionDeclaration(
+        'foo',
+        [],
+        null,
+        block(new nodes.FunctionDeclaration('bar', [], null, block())),
+      ),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -226,7 +246,7 @@ describe('function expressions', () => {
       new nodes.VarDeclaration(
         'a',
         null,
-        new nodes.FunctionExpression([], null, []),
+        new nodes.FunctionExpression([], null, block()),
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -264,7 +284,7 @@ describe('function expressions', () => {
             new nodes.Param('c', null, new nodes.NumberLiteral('6')),
           ],
           null,
-          [new nodes.Return(new nodes.NumberLiteral('5'))],
+          block(new nodes.Return(new nodes.NumberLiteral('5'))),
         ),
       ),
     ];

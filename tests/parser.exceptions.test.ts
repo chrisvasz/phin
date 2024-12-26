@@ -8,25 +8,37 @@ function ast(source: string) {
   return parse(scan(source));
 }
 
+function block(...statements: nodes.Stmt[]) {
+  return new nodes.Block(statements);
+}
+
 describe('try/catch', () => {
   test('try {} catch (e: Exception) {}', () => {
     let source = 'try {} catch (e: Exception) {}';
     let expected = [
-      new nodes.Try([], [new nodes.Catch('e', ['Exception'], [])], null),
+      new nodes.Try(
+        block(),
+        [new nodes.Catch('e', ['Exception'], block())],
+        null,
+      ),
     ];
     expect(ast(source)).toEqual(expected);
   });
 
   test('try {} finally {}', () => {
     let source = 'try {} finally {}';
-    let expected = [new nodes.Try([], [], [])];
+    let expected = [new nodes.Try(block(), [], block())];
     expect(ast(source)).toEqual(expected);
   });
 
   test('try {} catch (e: Exception) {} finally {}', () => {
     let source = 'try {} catch (e: Exception) {} finally {}';
     let expected = [
-      new nodes.Try([], [new nodes.Catch('e', ['Exception'], [])], []),
+      new nodes.Try(
+        block(),
+        [new nodes.Catch('e', ['Exception'], block())],
+        block(),
+      ),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -34,7 +46,11 @@ describe('try/catch', () => {
   test('try {} catch (e: A|B|C) {}', () => {
     let source = 'try {} catch (e: A|B|C) {}';
     let expected = [
-      new nodes.Try([], [new nodes.Catch('e', ['A', 'B', 'C'], [])], null),
+      new nodes.Try(
+        block(),
+        [new nodes.Catch('e', ['A', 'B', 'C'], block())],
+        null,
+      ),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -43,9 +59,32 @@ describe('try/catch', () => {
     let source = 'try {} catch (e:A) {} catch (e:B) {}';
     let expected = [
       new nodes.Try(
-        [],
-        [new nodes.Catch('e', ['A'], []), new nodes.Catch('e', ['B'], [])],
+        block(),
+        [
+          new nodes.Catch('e', ['A'], block()),
+          new nodes.Catch('e', ['B'], block()),
+        ],
         null,
+      ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('try {a();} finally{b();}', () => {
+    let source = 'try {a();} finally{b();}';
+    let expected = [
+      new nodes.Try(
+        block(
+          new nodes.ExpressionStatement(
+            new nodes.Call(new nodes.Identifier('a'), []),
+          ),
+        ),
+        [],
+        block(
+          new nodes.ExpressionStatement(
+            new nodes.Call(new nodes.Identifier('b'), []),
+          ),
+        ),
       ),
     ];
     expect(ast(source)).toEqual(expected);

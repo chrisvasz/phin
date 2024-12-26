@@ -9,6 +9,10 @@ function ast(source: string) {
   return parse(scan(source));
 }
 
+function block(...body: nodes.Stmt[]) {
+  return new nodes.Block(body);
+}
+
 describe('class declarations', () => {
   test('class A {}', () => {
     let source = 'class A {}';
@@ -129,9 +133,9 @@ describe('class declarations', () => {
         null,
         [],
         [
-          new nodes.ClassInitializer([
-            new nodes.Echo(new nodes.StringLiteral('hello')),
-          ]),
+          new nodes.ClassInitializer(
+            block(new nodes.Echo(new nodes.StringLiteral('hello'))),
+          ),
         ],
       ),
     ];
@@ -147,12 +151,12 @@ describe('class declarations', () => {
         null,
         [],
         [
-          new nodes.ClassInitializer([
-            new nodes.ExpressionStatement(new nodes.NumberLiteral('1')),
-          ]),
-          new nodes.ClassInitializer([
-            new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
-          ]),
+          new nodes.ClassInitializer(
+            block(new nodes.ExpressionStatement(new nodes.NumberLiteral('1'))),
+          ),
+          new nodes.ClassInitializer(
+            block(new nodes.ExpressionStatement(new nodes.NumberLiteral('2'))),
+          ),
         ],
       ),
     ];
@@ -172,7 +176,7 @@ describe('class methods', () => {
         [],
         null,
         [],
-        [new nodes.ClassMethod(false, null, false, 'b', [], null, [])],
+        [new nodes.ClassMethod(false, null, false, 'b', [], null, block())],
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -217,9 +221,15 @@ describe('class methods', () => {
         null,
         [],
         [
-          new nodes.ClassMethod(false, null, false, 'b', [], null, [
-            new nodes.Return(new nodes.NumberLiteral('3')),
-          ]),
+          new nodes.ClassMethod(
+            false,
+            null,
+            false,
+            'b',
+            [],
+            null,
+            block(new nodes.Return(new nodes.NumberLiteral('3'))),
+          ),
         ],
       ),
     ];
@@ -234,7 +244,7 @@ describe('class methods', () => {
         [],
         null,
         [],
-        [new nodes.ClassMethod(false, 'public', false, 'b', [], null, [])],
+        [new nodes.ClassMethod(false, 'public', false, 'b', [], null, block())],
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -248,7 +258,7 @@ describe('class methods', () => {
         [],
         null,
         [],
-        [new nodes.ClassMethod(false, null, true, 'b', [], null, [])],
+        [new nodes.ClassMethod(false, null, true, 'b', [], null, block())],
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -262,7 +272,7 @@ describe('class methods', () => {
         [],
         null,
         [],
-        [new nodes.ClassMethod(true, null, false, 'b', [], null, [])],
+        [new nodes.ClassMethod(true, null, false, 'b', [], null, block())],
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -276,7 +286,7 @@ describe('class methods', () => {
         [],
         null,
         [],
-        [new nodes.ClassMethod(true, 'private', true, 'b', [], null, [])],
+        [new nodes.ClassMethod(true, 'private', true, 'b', [], null, block())],
       ),
     ];
     expect(ast(source)).toEqual(expected);

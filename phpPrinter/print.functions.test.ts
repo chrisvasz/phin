@@ -54,5 +54,6 @@ return 1;
     expect(print(source)).toEqual(expected);
   });
 
-  test.todo('complex type like array<int>');
+  test.todo('complex param type like array<int>');
+  test.todo('complex return type like array<int>');
 });

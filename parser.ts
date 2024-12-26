@@ -175,7 +175,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     return types;
   }
 
-  function tryFinally(): Node[] | null {
+  function tryFinally(): nodes.Block | null {
     if (!match(FINALLY)) return null;
     consume('Expect "{" before finally body', LEFT_BRACE);
     return block();
@@ -408,7 +408,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     return new nodes.Param(name, type, initializer);
   }
 
-  function functionBody(): Expr | Node[] {
+  function functionBody(): Expr | nodes.Block {
     if (match(ARROW)) return expression();
     if (match(LEFT_BRACE)) return block();
     throw error(peek(), 'Expect "=>" or "{" before function body');
@@ -434,7 +434,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(WHILE)) return whileStatement();
     if (match(ECHO)) return echoStatement();
     if (match(RETURN)) return new nodes.Return(expression());
-    if (match(LEFT_BRACE)) return new nodes.Block(block());
+    if (match(LEFT_BRACE)) return block();
     return expressionStatement();
   }
 
@@ -504,14 +504,14 @@ export default function parse(tokens: Token[]): Stmt[] {
     return new nodes.While(condition, body);
   }
 
-  function block(): Node[] {
+  function block(): nodes.Block {
     const statements: Node[] = [];
     while (!check(RIGHT_BRACE) && !isAtEnd()) {
       const next = declaration();
       if (next) statements.push(next);
     }
     consume('Expect "}" after block', RIGHT_BRACE);
-    return statements;
+    return new nodes.Block(statements);
   }
 
   function expressionStatement(): nodes.ExpressionStatement {
