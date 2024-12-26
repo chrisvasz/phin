@@ -11,6 +11,13 @@ export abstract class Stmt {
 }
 
 export type Visibility = 'public' | 'protected' | 'private' | null;
+export type FinalOrAbstract = 'final' | 'abstract' | null;
+export type ClassMember =
+  | ClassMethod
+  | AbstractClassMethod
+  | ClassProperty
+  | ClassConst
+  | ClassInitializer;
 
 export interface Visitor<T> {
   visitBlockStmt(stmt: Block): T;
@@ -33,6 +40,7 @@ export interface Visitor<T> {
   visitClassConstStmt(stmt: ClassConst): T;
   visitClassInitializerStmt(stmt: ClassInitializer): T;
   visitClassMethodStmt(stmt: ClassMethod): T;
+  visitAbstractClassMethodStmt(stmt: AbstractClassMethod): T;
 }
 
 export class If extends Stmt {
@@ -197,9 +205,8 @@ export class Class extends Stmt {
     public readonly params: ClassParam[],
     public readonly superclass: ClassSuperclass | null,
     public readonly interfaces: string[],
-    public readonly members: Array<
-      ClassMethod | ClassProperty | ClassConst | ClassInitializer
-    >,
+    public readonly members: ClassMember[],
+    public readonly isAbstract: boolean = false,
   ) {
     super();
   }
@@ -235,10 +242,10 @@ export class ClassSuperclass extends Stmt {
 
 export class ClassProperty extends Stmt {
   constructor(
-    public readonly variable: Var,
+    public readonly isFinal: boolean,
     public readonly visibility: Visibility,
     public readonly isStatic: boolean,
-    public readonly isFinal: boolean,
+    public readonly variable: Var,
   ) {
     super();
   }
@@ -249,10 +256,13 @@ export class ClassProperty extends Stmt {
 
 export class ClassMethod extends Stmt {
   constructor(
-    public readonly method: Function,
+    public readonly isFinal: boolean,
     public readonly visibility: Visibility,
     public readonly isStatic: boolean,
-    public readonly isFinal: boolean,
+    public readonly name: string,
+    public readonly params: Var[],
+    public readonly returnType: Type | null,
+    public readonly body: Stmt[] | Expr,
   ) {
     super();
   }
@@ -261,14 +271,29 @@ export class ClassMethod extends Stmt {
   }
 }
 
+export class AbstractClassMethod extends Stmt {
+  constructor(
+    public readonly visibility: Visibility,
+    public readonly isStatic: boolean,
+    public readonly name: string,
+    public readonly params: Var[],
+    public readonly returnType: Type | null,
+  ) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitAbstractClassMethodStmt(this);
+  }
+}
+
 export class ClassConst extends Stmt {
   constructor(
+    public readonly isFinal: boolean,
+    public readonly visibility: Visibility,
+    public readonly isStatic: boolean,
     public readonly name: string,
     public readonly type: Type | null,
     public readonly initializer: Expr, // TODO must be compile-time constant
-    public readonly visibility: Visibility,
-    public readonly isStatic: boolean,
-    public readonly isFinal: boolean,
   ) {
     super();
   }

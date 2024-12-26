@@ -10,26 +10,6 @@ function ast(source: string) {
   return parse(scan(source));
 }
 
-describe('new expressions', () => {
-  test('new a', () => {
-    let source = 'new a';
-    let expected = [
-      new stmt.Expression(new expr.New(new expr.Identifier('a'))),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-
-  test('new A()', () => {
-    let source = 'new A()';
-    let expected = [
-      new stmt.Expression(
-        new expr.New(new expr.Call(new expr.Identifier('A'), [])),
-      ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-});
-
 describe('class declarations', () => {
   test('class A {}', () => {
     let source = 'class A {}';
@@ -172,7 +152,6 @@ describe('class declarations', () => {
     expect(ast(source)).toEqual(expected);
   });
 
-  test.todo('abstract class A { fun abstractMethod(); }'); // borrowed from dart
   test.todo('final class A {}', () => {});
   test.todo('readonly class A {}', () => {});
 });
@@ -186,14 +165,7 @@ describe('class methods', () => {
         [],
         null,
         [],
-        [
-          new stmt.ClassMethod(
-            new stmt.Function('b', [], null, []),
-            null,
-            false,
-            false,
-          ),
-        ],
+        [new stmt.ClassMethod(false, null, false, 'b', [], null, [])],
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -209,21 +181,19 @@ describe('class methods', () => {
         [],
         [
           new stmt.ClassMethod(
-            new stmt.Function(
-              'b',
-              [
-                new stmt.Var(
-                  'c',
-                  new types.Union([new types.Number(), new types.String()]),
-                  new expr.NumberLiteral('3'),
-                ),
-              ],
-              new types.True(),
-              new expr.BooleanLiteral(true),
-            ),
+            false,
             null,
             false,
-            false,
+            'b',
+            [
+              new stmt.Var(
+                'c',
+                new types.Union([new types.Number(), new types.String()]),
+                new expr.NumberLiteral('3'),
+              ),
+            ],
+            new types.True(),
+            new expr.BooleanLiteral(true),
           ),
         ],
       ),
@@ -240,14 +210,9 @@ describe('class methods', () => {
         null,
         [],
         [
-          new stmt.ClassMethod(
-            new stmt.Function('b', [], null, [
-              new stmt.Return(new expr.NumberLiteral('3')),
-            ]),
-            null,
-            false,
-            false,
-          ),
+          new stmt.ClassMethod(false, null, false, 'b', [], null, [
+            new stmt.Return(new expr.NumberLiteral('3')),
+          ]),
         ],
       ),
     ];
@@ -262,14 +227,7 @@ describe('class methods', () => {
         [],
         null,
         [],
-        [
-          new stmt.ClassMethod(
-            new stmt.Function('b', [], null, []),
-            'public',
-            false,
-            false,
-          ),
-        ],
+        [new stmt.ClassMethod(false, 'public', false, 'b', [], null, [])],
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -283,14 +241,7 @@ describe('class methods', () => {
         [],
         null,
         [],
-        [
-          new stmt.ClassMethod(
-            new stmt.Function('b', [], null, []),
-            null,
-            true,
-            false,
-          ),
-        ],
+        [new stmt.ClassMethod(false, null, true, 'b', [], null, [])],
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -304,14 +255,7 @@ describe('class methods', () => {
         [],
         null,
         [],
-        [
-          new stmt.ClassMethod(
-            new stmt.Function('b', [], null, []),
-            null,
-            false,
-            true,
-          ),
-        ],
+        [new stmt.ClassMethod(true, null, false, 'b', [], null, [])],
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -325,14 +269,7 @@ describe('class methods', () => {
         [],
         null,
         [],
-        [
-          new stmt.ClassMethod(
-            new stmt.Function('b', [], null, []),
-            'private',
-            true,
-            true,
-          ),
-        ],
+        [new stmt.ClassMethod(true, 'private', true, 'b', [], null, [])],
       ),
     ];
     expect(ast(source)).toEqual(expected);
@@ -350,12 +287,12 @@ describe('class constants', () => {
         [],
         [
           new stmt.ClassConst(
+            false,
+            null,
+            false,
             'b',
             null,
             new expr.NumberLiteral('3'),
-            null,
-            false,
-            false,
           ),
         ],
       ),
@@ -373,12 +310,12 @@ describe('class constants', () => {
         [],
         [
           new stmt.ClassConst(
+            false,
+            'protected',
+            false,
             'b',
             new types.Union([new types.Int(), new types.String()]),
             new expr.NumberLiteral('4'),
-            'protected',
-            false,
-            false,
           ),
         ],
       ),
@@ -396,12 +333,12 @@ describe('class constants', () => {
         [],
         [
           new stmt.ClassConst(
+            false,
+            null,
+            true,
             'b',
             null,
             new expr.NumberLiteral('4'),
-            null,
-            true,
-            false,
           ),
         ],
       ),
@@ -419,12 +356,12 @@ describe('class constants', () => {
         [],
         [
           new stmt.ClassConst(
+            true,
+            null,
+            false,
             'b',
             null,
             new expr.NumberLiteral('4'),
-            null,
-            false,
-            true,
           ),
         ],
       ),
@@ -442,12 +379,12 @@ describe('class constants', () => {
         [],
         [
           new stmt.ClassConst(
+            true,
+            'private',
+            true,
             'b',
             null,
             new expr.NumberLiteral('4'),
-            'private',
-            true,
-            true,
           ),
         ],
       ),
@@ -467,10 +404,10 @@ describe('class properties', () => {
         [],
         [
           new stmt.ClassProperty(
-            new stmt.Var('b', new types.Number(), new expr.NumberLiteral('3')),
+            false,
             null,
             false,
-            false,
+            new stmt.Var('b', new types.Number(), new expr.NumberLiteral('3')),
           ),
         ],
       ),
@@ -488,10 +425,10 @@ describe('class properties', () => {
         [],
         [
           new stmt.ClassProperty(
-            new stmt.Var('b', null, null),
+            false,
             'private',
             false,
-            false,
+            new stmt.Var('b', null, null),
           ),
         ],
       ),
@@ -509,10 +446,10 @@ describe('class properties', () => {
         [],
         [
           new stmt.ClassProperty(
-            new stmt.Var('b', null, null),
+            false,
             null,
             true,
-            false,
+            new stmt.Var('b', null, null),
           ),
         ],
       ),
@@ -530,10 +467,10 @@ describe('class properties', () => {
         [],
         [
           new stmt.ClassProperty(
-            new stmt.Var('b', null, null),
+            true,
             null,
             false,
-            true,
+            new stmt.Var('b', null, null),
           ),
         ],
       ),
@@ -551,10 +488,10 @@ describe('class properties', () => {
         [],
         [
           new stmt.ClassProperty(
-            new stmt.Var('b', null, null),
+            true,
             'private',
             true,
-            true,
+            new stmt.Var('b', null, null),
           ),
         ],
       ),
@@ -565,101 +502,31 @@ describe('class properties', () => {
   test.todo('readonly properties somehow');
 });
 
-describe('kitchen sink', () => {
-  test('kitchen sink', () => {
-    let source = `
-      class A (
-        a,
-        private b: string,
-        readonly c: array<number> = [3],
-        final public d,
-      ) extends B(
-        c,
-        d(),
-      ) implements C, D {
-        private const b: int = 3;
-        protected var c: string = "hello";
-        public static fun d(e: bool): number => 3;
-        fun f() {
-          echo "hello";
-        }
-        init {
-          echo "world";
-        }
-      }
-    `.trim();
+describe('abstract', () => {
+  test('abstract class A {}', () => {
+    let source = 'abstract class A {}';
+    let expected = [new stmt.Class('A', [], null, [], [], true)];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('abstract class A { abstract fun b(): number; }', () => {
+    let source = 'abstract class A { abstract fun b(): number; }';
     let expected = [
       new stmt.Class(
         'A',
+        [],
+        null,
+        [],
         [
-          new stmt.ClassParam('a', null, null, null, false, false),
-          new stmt.ClassParam(
+          new stmt.AbstractClassMethod(
+            null,
+            false,
             'b',
-            new types.String(),
-            null,
-            'private',
-            false,
-            false,
+            [],
+            new types.Number(),
           ),
-          new stmt.ClassParam(
-            'c',
-            new types.Identifier('array', [new types.Number()]),
-            new expr.ArrayLiteral([
-              new expr.ArrayElement(null, new expr.NumberLiteral('3')),
-            ]),
-            null,
-            false,
-            true,
-          ),
-          new stmt.ClassParam('d', null, null, 'public', true, false),
         ],
-        new stmt.ClassSuperclass('B', [
-          new expr.Identifier('c'),
-          new expr.Call(new expr.Identifier('d'), []),
-        ]),
-        ['C', 'D'],
-        [
-          new stmt.ClassConst(
-            'b',
-            new types.Int(),
-            new expr.NumberLiteral('3'),
-            'private',
-            false,
-            false,
-          ),
-          new stmt.ClassProperty(
-            new stmt.Var(
-              'c',
-              new types.String(),
-              new expr.StringLiteral('hello'),
-            ),
-            'protected',
-            false,
-            false,
-          ),
-          new stmt.ClassMethod(
-            new stmt.Function(
-              'd',
-              [new stmt.Var('e', new types.Boolean(), null)],
-              new types.Number(),
-              new expr.NumberLiteral('3'),
-            ),
-            'public',
-            true,
-            false,
-          ),
-          new stmt.ClassMethod(
-            new stmt.Function('f', [], null, [
-              new stmt.Echo(new expr.StringLiteral('hello')),
-            ]),
-            null,
-            false,
-            false,
-          ),
-          new stmt.ClassInitializer([
-            new stmt.Echo(new expr.StringLiteral('world')),
-          ]),
-        ],
+        true,
       ),
     ];
     expect(ast(source)).toEqual(expected);

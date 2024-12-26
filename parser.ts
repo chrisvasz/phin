@@ -5,8 +5,10 @@ import * as expr from './expr';
 import { Expr } from './expr';
 import * as types from './type';
 import { Type } from './type';
+import { th } from 'date-fns/locale';
 
 const {
+  ABSTRACT,
   AMPERSAND,
   ARROW,
   AS,
@@ -95,7 +97,6 @@ const {
   VAR,
   WHILE,
 } = TokenType;
-const terminators = [SEMICOLON, EOF]; // TODO drop this
 
 class ParseError extends Error {}
 
@@ -137,6 +138,10 @@ export default function parse(tokens: Token[]): Stmt[] {
       if (match(CLASS)) return classDeclaration();
       if (match(FUN)) return functionDeclaration();
       if (match(VAR)) return varDeclaration();
+      if (match(ABSTRACT)) {
+        consume('Expect "class" after "abstract"', CLASS);
+        return classDeclaration(true);
+      }
       return statement();
     } catch (error) {
       if (!(error instanceof ParseError)) throw error;
@@ -183,7 +188,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     return new stmt.Throw(expression());
   }
 
-  function classDeclaration(): stmt.Class {
+  function classDeclaration(isAbstract: boolean = false): stmt.Class {
     let name = consume('Expect class name', IDENTIFIER).lexeme;
     let params = match(LEFT_PAREN) ? classParams() : [];
     let superclass = match(EXTENDS) ? classSuperclass() : null;
@@ -191,7 +196,14 @@ export default function parse(tokens: Token[]): Stmt[] {
     consume('Expect "{" before class body', LEFT_BRACE);
     let members = classMembers();
     consume('Expect "}" after class body', RIGHT_BRACE);
-    return new stmt.Class(name, params, superclass, interfaces, members);
+    return new stmt.Class(
+      name,
+      params,
+      superclass,
+      interfaces,
+      members,
+      isAbstract,
+    );
   }
 
   function classParams(): stmt.ClassParam[] {
@@ -214,6 +226,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     let name = consume('Expect class param name', IDENTIFIER).lexeme;
     let type = match(COLON) ? typeAnnotation() : null;
     let initializer = match(EQUAL) ? expression() : null;
+    // TODO reorder like method and property and const
     return new stmt.ClassParam(
       name,
       type,
@@ -256,19 +269,41 @@ export default function parse(tokens: Token[]): Stmt[] {
     return members;
   }
 
-  function classMember():
-    | stmt.ClassMethod
-    | stmt.ClassProperty
-    | stmt.ClassConst
-    | stmt.ClassInitializer {
+  function classMember(): stmt.ClassMember {
+    if (match(ABSTRACT)) return abstractClassMember();
     let isFinal = match(FINAL);
     let visibility = classVisibility();
     let isStatic = match(STATIC);
-    if (match(FUN)) return classMethod(visibility, isStatic, isFinal);
-    if (match(VAR)) return classProperty(visibility, isStatic, isFinal);
-    if (match(CONST)) return classConst(visibility, isStatic, isFinal);
+    if (match(FUN)) return classMethod(isFinal, visibility, isStatic);
+    if (match(VAR)) return classProperty(isFinal, visibility, isStatic);
     if (matchIdentifier('init')) return classInitializer();
+    if (match(CONST)) return classConst(isFinal, visibility, isStatic);
     throw error(peek(), 'Expect class member');
+  }
+
+  function abstractClassMember(): stmt.AbstractClassMethod {
+    let visibility = classVisibility();
+    let isStatic = match(STATIC);
+    consume('Expect class method declaration', FUN);
+    return abstractClassMethod(visibility, isStatic);
+  }
+
+  function abstractClassMethod(
+    visibility: stmt.Visibility,
+    isStatic: boolean,
+  ): stmt.AbstractClassMethod {
+    let name = consume('Expect method name', IDENTIFIER).lexeme;
+    consume('Expect "(" after method name', LEFT_PAREN);
+    let params = functionParams();
+    let returnType = match(COLON) ? typeAnnotation() : null;
+    terminator();
+    return new stmt.AbstractClassMethod(
+      visibility,
+      isStatic,
+      name,
+      params,
+      returnType,
+    );
   }
 
   function classVisibility(): stmt.Visibility {
@@ -281,47 +316,51 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function classMethod(
+    isFinal: boolean,
     visibility: stmt.Visibility,
     isStatic: boolean,
-    isFinal: boolean,
   ): stmt.ClassMethod {
+    let fn = functionDeclaration();
     return new stmt.ClassMethod(
-      functionDeclaration(),
+      isFinal,
       visibility,
       isStatic,
-      isFinal,
+      fn.name,
+      fn.params,
+      fn.returnType,
+      fn.body,
     );
   }
 
   function classProperty(
+    isFinal: boolean,
     visibility: stmt.Visibility,
     isStatic: boolean,
-    isFinal: boolean,
   ): stmt.ClassProperty {
     return new stmt.ClassProperty(
-      varDeclaration(),
+      isFinal,
       visibility,
       isStatic,
-      isFinal,
+      varDeclaration(),
     );
   }
 
   function classConst(
+    isFinal: boolean,
     visibility: stmt.Visibility,
     isStatic: boolean,
-    isFinal: boolean,
   ): stmt.ClassConst {
     let name = consume('Expect class constant name', IDENTIFIER).lexeme;
     let type = match(COLON) ? typeAnnotation() : null;
     consume('Expect "=" after class constant name', EQUAL);
     let initializer = expression();
     return new stmt.ClassConst(
+      isFinal,
+      visibility,
+      isStatic,
       name,
       type,
       initializer,
-      visibility,
-      isStatic,
-      isFinal,
     );
   }
 
@@ -374,7 +413,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   function varDeclaration(): stmt.Var {
     let result = varWithType();
     let initializer = match(EQUAL) ? expression() : null;
-    consume('Expect terminator after variable declaration', ...terminators);
+    terminator();
     return new stmt.Var(result.name, result.type, initializer);
   }
 
@@ -452,7 +491,7 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function echoStatement(): Stmt {
     let result = expression();
-    consume('Expect terminator after echo statement', ...terminators);
+    terminator();
     return new stmt.Echo(result);
   }
 
@@ -476,7 +515,7 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function expressionStatement(): Stmt {
     let result = expression();
-    consume('Expect terminator after expression statement', ...terminators);
+    terminator();
     return new stmt.Expression(result);
   }
 
@@ -891,6 +930,10 @@ export default function parse(tokens: Token[]): Stmt[] {
       }
     }
     throw error(peek(), message);
+  }
+
+  function terminator() {
+    consume('Expect terminator', SEMICOLON, EOF);
   }
 
   function error(token: Token, message: string): Error {

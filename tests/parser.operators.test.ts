@@ -277,16 +277,15 @@ describe('new/clone', () => {
 });
 
 describe('terminators', () => {
-  test('1;2', () => {
-    let source = '1;2';
-    let expected = [
-      new stmt.Expression(new expr.NumberLiteral('1')),
-      new stmt.Expression(new expr.NumberLiteral('2')),
-    ];
+  test('a;b', () => {
+    let source = 'a;b';
+    let expected = [new stmt.Expression(a), new stmt.Expression(b)];
     expect(ast(source)).toEqual(expected);
   });
 });
 
+// TODO pull these from parser.classes.test.ts
 test.todo('call operator');
 test.todo('dot operator');
+test.todo('?. operator');
 test.todo('array access operator');
