@@ -96,7 +96,7 @@ pros:
 cons:
   more verbose than OPTION 1
 
-OPTION 3 (no-go)
+OPTION Z (no-go)
 class A(a) {}                // private readonly
 class A(var a) {}            // public read/write
 class A(const a) {}          // public readonly

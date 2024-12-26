@@ -217,12 +217,12 @@ export class Class extends Stmt {
 
 export class ClassParam extends Stmt {
   constructor(
+    public readonly isFinal: boolean,
+    public readonly visibility: Visibility,
+    public readonly isReadonly: boolean,
     public readonly name: string,
     public readonly type: Type | null,
     public readonly initializer: Expr | null,
-    public readonly visibility: Visibility,
-    public readonly isFinal: boolean,
-    public readonly isReadonly: boolean,
   ) {
     super();
   }

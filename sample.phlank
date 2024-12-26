@@ -1,0 +1,11 @@
+class Rentals(rentals: array<Rental>) iterates rentals {
+  init {
+    if (count(rentals) > 5) {
+      throw new DomainException("Customers cannot rent more than 5 movies at a time")
+    }
+  }
+
+  fun totalPoints(): int => rentals.array_map(fun(r) => r.points()).array_sum()
+  fun totalAmount(): float => rentals.array_map(fun(r) => r.amount()).array_sum()
+}
+

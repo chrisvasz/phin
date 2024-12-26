@@ -226,14 +226,13 @@ export default function parse(tokens: Token[]): Stmt[] {
     let name = consume('Expect class param name', IDENTIFIER).lexeme;
     let type = match(COLON) ? typeAnnotation() : null;
     let initializer = match(EQUAL) ? expression() : null;
-    // TODO reorder like method and property and const
     return new stmt.ClassParam(
+      isFinal,
+      visibility,
+      isReadonly,
       name,
       type,
       initializer,
-      visibility,
-      isFinal,
-      isReadonly,
     );
   }
 
@@ -378,7 +377,7 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function functionExpression(): expr.Function {
-    consume('Expect "(" after function name', LEFT_PAREN);
+    consume('Expect "(" after fun', LEFT_PAREN);
     let params = functionParams();
     let returnType = match(COLON) ? typeAnnotation() : null;
     return new expr.Function(params, returnType, functionBody());

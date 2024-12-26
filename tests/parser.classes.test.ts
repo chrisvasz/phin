@@ -22,7 +22,7 @@ describe('class declarations', () => {
     let expected = [
       new stmt.Class(
         'A',
-        [new stmt.ClassParam('b', null, null, null, false, false)],
+        [new stmt.ClassParam(false, null, false, 'b', null, null)],
         null,
         [],
         [],
@@ -39,20 +39,20 @@ describe('class declarations', () => {
         'A',
         [
           new stmt.ClassParam(
+            false,
+            null,
+            false,
             'b',
             new types.Union([new types.Number(), new types.String()]),
             new expr.NumberLiteral('5'),
-            null,
-            false,
-            false,
           ),
           new stmt.ClassParam(
+            true,
+            'public',
+            true,
             'c',
             new types.Boolean(),
             null,
-            'public',
-            true,
-            true,
           ),
         ],
         null,
@@ -76,7 +76,7 @@ describe('class declarations', () => {
     let expected = [
       new stmt.Class(
         'A',
-        [new stmt.ClassParam('a', null, null, null, false, false)],
+        [new stmt.ClassParam(false, null, false, 'a', null, null)],
         new stmt.ClassSuperclass('B', [
           new expr.Call(new expr.Identifier('a'), []),
         ]),
