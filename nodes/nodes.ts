@@ -216,6 +216,16 @@ export class FunctionDeclaration extends Node {
   }
 }
 
+function paramIsExpressibleInPhp(this: Param) {
+  return this.type === null || this.type.isExpressibleInPhp();
+}
+
+function simplifyParam(this: Param) {
+  let type = this.type;
+  if (type === null || type.isExpressibleInPhp()) return this;
+  return new Param(this.name, type.simplify(), this.initializer);
+}
+
 export class Param extends Node {
   _type = 'Param' as const;
   constructor(
@@ -228,6 +238,8 @@ export class Param extends Node {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitParam(this);
   }
+  isExpressibleInPhp = paramIsExpressibleInPhp;
+  simplify = simplifyParam;
 }
 
 export class Return extends Node {

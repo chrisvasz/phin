@@ -15,8 +15,15 @@ export interface Visitor<T> {
   visitIntersectionType(intersection: Intersection): T;
 }
 
+const returnTrue = () => true;
+function returnThis(this: Type): Type {
+  return this;
+}
+
 export abstract class Type {
   abstract accept<T>(visitor: Visitor<T>): T;
+  isExpressibleInPhp: () => boolean = returnTrue;
+  simplify: () => Type = returnThis;
 }
 
 export class Number extends Type {
@@ -55,6 +62,14 @@ export class Null extends Type {
   }
 }
 
+function hasNoGenerics(this: Identifier) {
+  return this.generics.length === 0;
+}
+
+function simplifyIdentifier(this: Identifier) {
+  return this.generics.length === 0 ? this : new Identifier(this.name, []);
+}
+
 export class Identifier extends Type {
   constructor(public readonly name: string, public readonly generics: Type[]) {
     super();
@@ -62,6 +77,8 @@ export class Identifier extends Type {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitIdentifierType(this);
   }
+  override isExpressibleInPhp = hasNoGenerics;
+  override simplify = simplifyIdentifier;
 }
 
 export class NumberLiteral extends Type {

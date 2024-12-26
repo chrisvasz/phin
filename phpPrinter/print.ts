@@ -1,5 +1,6 @@
 import * as nodes from '../nodes';
 import * as types from '../types';
+import { Type } from '../types';
 
 const tab = '  ';
 
@@ -26,47 +27,41 @@ export class PhpPrinter
   // TYPES
   /////////////////////////////
 
-  visitBooleanType(boolean: types.Boolean): string {
-    throw new Error('Method not implemented.');
-  }
-  visitFalseType(false_: types.False): string {
-    throw new Error('Method not implemented.');
-  }
-  visitFloatType(float: types.Float): string {
-    throw new Error('Method not implemented.');
-  }
+  visitBooleanType = () => 'bool';
+  visitFalseType = () => 'false';
+  visitFloatType = () => 'float';
+  visitIntType = () => 'int';
+  visitNullType = () => 'null';
+  visitNumberType = () => 'number';
+  visitStringType = () => 'string';
+  visitTrueType = () => 'true';
+
   visitIdentifierType(identifier: types.Identifier): string {
-    throw new Error('Method not implemented.');
+    let result = identifier.name;
+    if (identifier.generics.length > 0) {
+      let generics = identifier.generics.map(g => g.accept(this)).join(', ');
+      result += `<${generics}>`;
+    }
+    return result;
   }
+
   visitIntersectionType(intersection: types.Intersection): string {
-    throw new Error('Method not implemented.');
+    return intersection.types.map(t => t.accept(this)).join('&');
   }
-  visitIntType(int: types.Int): string {
-    return 'int';
-  }
+
   visitNullableType(nullable: types.Nullable): string {
-    throw new Error('Method not implemented.');
+    return '?' + nullable.type.accept(this);
   }
-  visitNullType(null_: types.Null): string {
-    throw new Error('Method not implemented.');
-  }
+
   visitNumberLiteralType(numberLiteral: types.NumberLiteral): string {
     throw new Error('Method not implemented.');
-  }
-  visitNumberType(number: types.Number): string {
-    return 'number';
   }
   visitStringLiteralType(stringLiteral: types.StringLiteral): string {
     throw new Error('Method not implemented.');
   }
-  visitStringType(string: types.String): string {
-    throw new Error('Method not implemented.');
-  }
-  visitTrueType(true_: types.True): string {
-    throw new Error('Method not implemented.');
-  }
+
   visitUnionType(union: types.Union): string {
-    throw new Error('Method not implemented.');
+    return union.types.map(t => t.accept(this)).join('|');
   }
 
   /////////////////////////////
@@ -85,6 +80,7 @@ export class PhpPrinter
   visitAssign(node: nodes.Assign): string {
     throw new Error('Method not implemented.');
   }
+
   visitBinary(node: nodes.Binary): string {
     let left = node.left.accept(this);
     let right = node.right.accept(this);
@@ -147,17 +143,38 @@ export class PhpPrinter
   }
 
   visitParam(node: nodes.Param): string {
-    let type = node.type ? `${node.type.accept(this)} ` : '';
+    let type = node.type ? `${node.type.simplify().accept(this)} ` : '';
     let init = node.initializer ? ` = ${node.initializer.accept(this)}` : '';
     return `${type}$${node.name}${init}`;
   }
 
   visitFunctionDeclaration(node: nodes.FunctionDeclaration): string {
-    let params = node.params.map(p => p.accept(this));
-    let type = node.returnType ? `: ${node.returnType.accept(this)}` : '';
+    let params = node.params.map(p => p.accept(this)).join(', ');
+    let type = node.returnType
+      ? `: ${node.returnType.simplify().accept(this)}`
+      : '';
     let body = node.body.accept(this);
     let result = `function ${node.name}(${params})${type} ${body}`;
-    return result;
+    let docblock = this.functionDocblock(node.params, node.returnType);
+    return `${docblock}${result}`;
+  }
+
+  functionDocblock(params: nodes.Param[], returnType: Type | null): string {
+    if (returnType?.isExpressibleInPhp()) returnType = null;
+    let nonExpressibleParams = params.filter(p => !p.isExpressibleInPhp());
+    if (nonExpressibleParams.length === 0) return '';
+    return (
+      [
+        '/**',
+        ...nonExpressibleParams.map(
+          p => ` * @param ${p.type?.accept(this)} $${p.name}`,
+        ),
+        returnType && ` * @return ${returnType.accept(this)}`,
+        ' */',
+      ]
+        .filter(Boolean)
+        .join('\n') + '\n'
+    );
   }
 
   visitGetExpr(node: nodes.Get): string {
@@ -166,9 +183,11 @@ export class PhpPrinter
   visitGrouping(node: nodes.Grouping): string {
     throw new Error('Method not implemented.');
   }
+
   visitIdentifier(node: nodes.Identifier): string {
     throw new Error('Method not implemented.');
   }
+
   visitIf(node: nodes.If): string {
     throw new Error('Method not implemented.');
   }
@@ -224,6 +243,7 @@ export class PhpPrinter
   visitUnary(node: nodes.Unary): string {
     throw new Error('Method not implemented.');
   }
+
   visitVarDeclaration(node: nodes.VarDeclaration): string {
     let type = node.type
       ? `/** @var ${node.type.accept(this)} $${node.name} */\n`
@@ -231,6 +251,7 @@ export class PhpPrinter
     let init = node.initializer ? ` = ${node.initializer.accept(this)}` : '';
     return `${type}$${node.name}${init};`;
   }
+
   visitWhile(node: nodes.While): string {
     throw new Error('Method not implemented.');
   }

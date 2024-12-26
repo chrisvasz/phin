@@ -54,6 +54,26 @@ return 1;
     expect(print(source)).toEqual(expected);
   });
 
-  test.todo('complex param type like array<int>');
+  test('fun foo(a: int|string = 3): int&float {}', () => {
+    let source = 'fun foo(a: int|string = 3): int&float {}';
+    let expected = 'function foo(int|string $a = 3): int&float {}';
+    console.log(print(source));
+    expect(print(source)).toEqual(expected);
+  });
+
+  test('fun foo(a: array<number>, b: array<string>): Five<T> {}', () => {
+    let source = 'fun foo(a: array<number>, b: array<string>): Five<T> {}';
+    let expected = `
+/**
+ * @param array<number> $a
+ * @param array<string> $b
+ * @return Five<T>
+ */
+function foo(array $a, array $b): Five {}
+    `.trim();
+    expect(print(source)).toEqual(expected);
+  });
+
+  test.todo('does not overwrite existing docblock');
   test.todo('complex return type like array<int>');
 });
