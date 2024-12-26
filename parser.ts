@@ -5,7 +5,6 @@ import * as expr from './expr';
 import { Expr } from './expr';
 import * as types from './type';
 import { Type } from './type';
-import { th } from 'date-fns/locale';
 
 const {
   ABSTRACT,
