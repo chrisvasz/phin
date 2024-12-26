@@ -382,8 +382,8 @@ export default function parse(tokens: Token[]): Stmt[] {
     return new expr.Function(params, returnType, functionBody());
   }
 
-  function functionParams(): stmt.Var[] {
-    let params: stmt.Var[] = [];
+  function functionParams(): stmt.FunctionParam[] {
+    let params: stmt.FunctionParam[] = [];
     if (!check(RIGHT_PAREN)) {
       params.push(functionParam());
       while (match(COMMA)) {
@@ -395,11 +395,11 @@ export default function parse(tokens: Token[]): Stmt[] {
     return params;
   }
 
-  function functionParam(): stmt.Var {
+  function functionParam(): stmt.FunctionParam {
     let name = consume('Expect parameter name', IDENTIFIER).lexeme;
     let type = match(COLON) ? typeAnnotation() : null;
     let initializer = match(EQUAL) ? expression() : null;
-    return new stmt.Var(name, type, initializer);
+    return new stmt.FunctionParam(name, type, initializer);
   }
 
   function functionBody(): Expr | Stmt[] {

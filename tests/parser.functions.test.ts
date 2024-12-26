@@ -100,7 +100,12 @@ describe('function declarations', () => {
   test('fun foo(a) {}', () => {
     let source = 'fun foo(a) {}';
     let expected = [
-      new stmt.Function('foo', [new stmt.Var('a', null, null)], null, []),
+      new stmt.Function(
+        'foo',
+        [new stmt.FunctionParam('a', null, null)],
+        null,
+        [],
+      ),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -111,12 +116,12 @@ describe('function declarations', () => {
       new stmt.Function(
         'foo',
         [
-          new stmt.Var(
+          new stmt.FunctionParam(
             'a',
             new types.Identifier('array', [new types.Number()]),
             null,
           ),
-          new stmt.Var('b', new types.String(), null),
+          new stmt.FunctionParam('b', new types.String(), null),
         ],
         null,
         [],
@@ -154,10 +159,26 @@ describe('function declarations', () => {
     let expected = [
       new stmt.Function(
         'foo',
-        [new stmt.Var('a', new types.Number(), new expr.NumberLiteral('1'))],
+        [
+          new stmt.FunctionParam(
+            'a',
+            new types.Number(),
+            new expr.NumberLiteral('1'),
+          ),
+        ],
         null,
         [],
       ),
+    ];
+    expect(ast(source)).toEqual(expected);
+  });
+
+  test('fun foo() { return 1; }', () => {
+    let source = 'fun foo() { return 1; }';
+    let expected = [
+      new stmt.Function('foo', [], null, [
+        new stmt.Return(new expr.NumberLiteral('1')),
+      ]),
     ];
     expect(ast(source)).toEqual(expected);
   });
@@ -224,12 +245,12 @@ describe('function expressions', () => {
         null,
         new expr.Function(
           [
-            new stmt.Var(
+            new stmt.FunctionParam(
               'b',
               new types.Union([new types.Number(), new types.String()]),
               new expr.NumberLiteral('4'),
             ),
-            new stmt.Var('c', null, new expr.NumberLiteral('6')),
+            new stmt.FunctionParam('c', null, new expr.NumberLiteral('6')),
           ],
           null,
           [new stmt.Return(new expr.NumberLiteral('5'))],
@@ -246,10 +267,10 @@ describe('function expressions', () => {
         'a',
         null,
         new expr.Function(
-          [new stmt.Var('b', null, null)],
+          [new stmt.FunctionParam('b', null, null)],
           null,
           new expr.Function(
-            [new stmt.Var('c', null, null)],
+            [new stmt.FunctionParam('c', null, null)],
             null,
             new expr.Binary(
               new expr.Identifier('b'),

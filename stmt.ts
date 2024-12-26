@@ -29,6 +29,7 @@ export interface Visitor<T> {
   visitForStmt(stmt: For): T;
   visitForeachStmt(stmt: Foreach): T;
   visitFunctionStmt(stmt: Function): T;
+  visitFunctionParamStmt(stmt: FunctionParam): T;
   visitReturnStmt(stmt: Return): T;
   visitTryStmt(stmt: Try): T;
   visitCatchStmt(stmt: Catch): T;
@@ -136,7 +137,7 @@ export class Foreach extends Stmt {
 export class Function extends Stmt {
   constructor(
     public readonly name: string,
-    public readonly params: Var[],
+    public readonly params: FunctionParam[],
     public readonly returnType: Type | null,
     public readonly body: Stmt[] | Expr,
   ) {
@@ -144,6 +145,19 @@ export class Function extends Stmt {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitFunctionStmt(this);
+  }
+}
+
+export class FunctionParam extends Stmt {
+  constructor(
+    public readonly name: string,
+    public readonly type: Type | null,
+    public readonly initializer: Expr | null,
+  ) {
+    super();
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitFunctionParamStmt(this);
   }
 }
 

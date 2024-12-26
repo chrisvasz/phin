@@ -4,11 +4,25 @@ import * as expr from '../expr';
 import { Expr } from '../expr';
 import * as types from '../type';
 
+const tab = '  ';
+
 export class PhpPrinter
   implements expr.Visitor<string>, stmt.Visitor<string>, types.Visitor<string>
 {
+  currentIndent = 0;
+
   print(statements: stmt.Stmt[]): string {
-    return statements.map(s => s.accept(this)).join('\n');
+    let result = '';
+    for (let s of statements) {
+      result += s.accept(this);
+    }
+    return result;
+  }
+
+  indent(content: string | string[]): string {
+    if (typeof content === 'string')
+      return tab.repeat(this.currentIndent) + content;
+    return content.map(c => tab.repeat(this.currentIndent) + c).join('\n');
   }
 
   /////////////////////////////
@@ -116,7 +130,7 @@ export class PhpPrinter
     throw new Error('Method not implemented.');
   }
   visitEchoStmt(stmt: stmt.Echo): string {
-    throw new Error('Method not implemented.');
+    return `echo ${stmt.expression.accept(this)};`;
   }
   visitExpressionStmt(stmt: stmt.Expression): string {
     throw new Error('Method not implemented.');
@@ -130,9 +144,30 @@ export class PhpPrinter
   visitFunctionExpr(expr: expr.Function): string {
     throw new Error('Method not implemented.');
   }
-  visitFunctionStmt(stmt: stmt.Function): string {
-    throw new Error('Method not implemented.');
+
+  visitFunctionParamStmt(stmt: stmt.FunctionParam): string {
+    let type = stmt.type ? `${stmt.type.accept(this)} ` : '';
+    let init = stmt.initializer ? ` = ${stmt.initializer.accept(this)}` : '';
+    return `${type}$${stmt.name}${init}`;
   }
+
+  visitFunctionStmt(stmt: stmt.Function): string {
+    let params = stmt.params.map(p => p.accept(this));
+    let type = stmt.returnType ? `: ${stmt.returnType.accept(this)}` : '';
+    let result = `function ${stmt.name}(${params})${type} {`;
+    if (Array.isArray(stmt.body)) {
+      if (stmt.body.length === 0) return result + '}';
+      this.currentIndent++;
+      for (let statement of stmt.body) {
+        result += '\n' + statement.accept(this);
+      }
+      result += '\n}';
+    } else {
+      result += '\nreturn ' + stmt.body.accept(this) + ';\n}';
+    }
+    return result;
+  }
+
   visitGetExpr(expr: expr.Get): string {
     throw new Error('Method not implemented.');
   }
@@ -170,10 +205,11 @@ export class PhpPrinter
     throw new Error('Method not implemented.');
   }
   visitReturnStmt(stmt: stmt.Return): string {
-    throw new Error('Method not implemented.');
+    let value = stmt.value ? ' ' + stmt.value.accept(this) : '';
+    return `return${value};`;
   }
   visitStringLiteralExpr(expr: expr.StringLiteral): string {
-    throw new Error('Method not implemented.');
+    return `"${expr.value}"`;
   }
   visitSuperExpr(): string {
     throw new Error('Method not implemented.');
