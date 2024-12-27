@@ -1,0 +1,57 @@
+// @ts-ignore
+import { expect, test, describe } from 'bun:test'
+import scan from '../scanner'
+import parse from '../parser'
+import { PhpPrinter, PrintError } from './print'
+
+function print(src: string) {
+  let result = new PhpPrinter().print(parse(scan(src)))
+  return result.trim()
+}
+
+describe('print scoping', () => {
+  test('a', () => {
+    let source = 'a'
+    expect(() => print(source)).toThrow(new PrintError('Unknown identifier a'))
+  })
+
+  test('var a; a', () => {
+    let source = 'var a; a;'
+    let expected = '$a;\n$a;'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('a; fun a() {}', () => {
+    let source = 'a; fun a() {}'
+    let expected = 'a;\nfunction a() {}'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('b; fun a() {}', () => {
+    let source = 'b; fun a() {}'
+    expect(() => print(source)).toThrow(new PrintError('Unknown identifier b'))
+  })
+
+  test('fun a() {} a;', () => {
+    let source = 'fun a() {} a;'
+    let expected = 'function a() {}\na;'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('fun a() {} var a; a', () => {
+    let source = 'fun a() {} var a; a;'
+    let expected = 'function a() {}\n$a;\n$a;'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('var a; fun a() {} a;', () => {
+    let source = 'var a; fun a() {} a;'
+    let expected = '$a;\nfunction a() {}\na;'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('fun a() { var b; } b;', () => {
+    let source = 'fun a() { var b; } b;'
+    expect(() => print(source)).toThrow(new PrintError('Unknown identifier b'))
+  })
+})

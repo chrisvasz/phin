@@ -1,26 +1,40 @@
 import * as nodes from '../nodes'
 import * as types from '../types'
 import { Type } from '../types'
+import { Environment, Kind } from './environment'
 
 const tab = '  '
+
+export class PrintError extends Error {}
 
 export class PhpPrinter
   implements nodes.Visitor<string>, types.Visitor<string>
 {
-  currentIndent = 0
+  private currentIndent = 0
+  private environment = new Environment(null)
 
   print(statements: nodes.Node[]): string {
-    let result = ''
-    for (let s of statements) {
-      result += s.accept(this) + '\n'
-    }
-    return result
+    return this.encloseWith(statements, () => {
+      let result = ''
+      for (let s of statements) {
+        result += s.accept(this) + '\n'
+      }
+      return result
+    })
   }
 
   indent(content: string | string[]): string {
     if (typeof content === 'string')
       return tab.repeat(this.currentIndent) + content
     return content.map((c) => tab.repeat(this.currentIndent) + c).join('\n')
+  }
+
+  private encloseWith<T>(nodes: nodes.Node[], fn: () => T): T {
+    let current = this.environment
+    this.environment = new Environment(current, nodes)
+    let result = fn()
+    this.environment = current
+    return result
   }
 
   /////////////////////////////
@@ -89,8 +103,10 @@ export class PhpPrinter
 
   visitBlock(node: nodes.Block): string {
     if (node.statements.length === 0) return '{}'
-    let lines = node.statements.map((s) => s.accept(this))
-    return `{\n${this.indent(lines)}\n}`
+    return this.encloseWith(node.statements, () => {
+      let lines = node.statements.map((s) => s.accept(this))
+      return `{\n${this.indent(lines)}\n}`
+    })
   }
 
   visitBooleanLiteral(node: nodes.BooleanLiteral): string {
@@ -193,6 +209,7 @@ export class PhpPrinter
   }
 
   visitFunctionDeclaration(node: nodes.FunctionDeclaration): string {
+    this.environment.add(node.name, Kind.Function)
     let params = node.params.map((p) => p.accept(this)).join(', ')
     let type = node.returnType
       ? `: ${node.returnType.simplify().accept(this)}`
@@ -232,7 +249,8 @@ export class PhpPrinter
   }
 
   visitIdentifier(node: nodes.Identifier): string {
-    // TODO need to add $ in some cases and not in others, meaning we need to know if it's a variable or a function. scope resolution, etc
+    let kind = this.environment.get(node.name)
+    if (kind === Kind.Var) return `$${node.name}`
     return `${node.name}`
   }
 
@@ -304,6 +322,7 @@ export class PhpPrinter
   }
 
   visitVarDeclaration(node: nodes.VarDeclaration): string {
+    this.environment.add(node.name, Kind.Var)
     let type = node.type
       ? `/** @var ${node.type.accept(this)} $${node.name} */\n`
       : ''
