@@ -216,9 +216,11 @@ export class PhpPrinter
   visitNullLiteral(node: nodes.NullLiteral): string {
     throw new Error('Method not implemented.')
   }
+
   visitNumberLiteral(node: nodes.NumberLiteral): string {
     return node.value
   }
+
   visitOptionalGet(node: nodes.OptionalGet): string {
     throw new Error('Method not implemented.')
   }

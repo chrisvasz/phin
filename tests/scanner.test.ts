@@ -97,7 +97,7 @@ const {
 
 const eof = (line = 1) => new Token(EOF, '', null, line)
 
-describe('tokens', () => {
+describe('scan tokens', () => {
   test('(', () => {
     let expected = [new Token(LEFT_PAREN, '(', undefined, 1), eof()]
     let source = '('
@@ -491,7 +491,7 @@ describe('tokens', () => {
   })
 })
 
-describe('number literals', () => {
+describe('scan number literals', () => {
   test('1', () => {
     let expected = [new Token(NUMBER, '1', '1', 1), eof()]
     let source = '1'
