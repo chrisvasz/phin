@@ -443,7 +443,7 @@ export class ClassInitializer extends Node {
 export class Assign extends Node {
   _type = 'Assign' as const
   constructor(
-    public readonly name: string,
+    public readonly name: Identifier,
     public readonly operator: string,
     public readonly value: Expr,
   ) {

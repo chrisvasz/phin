@@ -602,7 +602,7 @@ export default function parse(tokens: Token[]): Stmt[] {
       let operator = previous()
       let value = assignment()
       if (result instanceof nodes.Identifier) {
-        return new nodes.Assign(result.name, operator.lexeme, value)
+        return new nodes.Assign(result, operator.lexeme, value)
       }
       throw error(operator, 'Invalid assignment target')
     }

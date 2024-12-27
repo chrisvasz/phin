@@ -101,8 +101,9 @@ export class PhpPrinter
   visitArrayLiteral(node: nodes.ArrayLiteral): string {
     return '[]'
   }
+
   visitAssign(node: nodes.Assign): string {
-    throw new Error('Method not implemented.')
+    return `${node.name.accept(this)} = ${node.value.accept(this)}`
   }
 
   visitBinary(node: nodes.Binary): string {

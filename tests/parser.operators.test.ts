@@ -28,7 +28,7 @@ function ternary(condition: Expr, left: Expr, right: Expr) {
   return new nodes.Ternary(condition, left, right)
 }
 
-function assign(name: string, operator: string, right: Expr) {
+function assign(name: nodes.Identifier, operator: string, right: Expr) {
   return new nodes.Assign(name, operator, right)
 }
 
@@ -234,7 +234,7 @@ describe('assign', () => {
   function testBasicAssign(op: string) {
     test(`${op}`, () => {
       let source = `a ${op} b`
-      let expected = expressions(assign('a', op, b))
+      let expected = expressions(assign(a, op, b))
       expect(ast(source)).toEqual(expected)
     })
   }
@@ -243,7 +243,7 @@ describe('assign', () => {
     for (let op of ops) {
       test(`${op} is right associative`, () => {
         let source = `a ${op} b ${op} c`
-        let expected = expressions(assign('a', op, assign('b', op, c)))
+        let expected = expressions(assign(a, op, assign(b, op, c)))
         expect(ast(source)).toEqual(expected)
       })
     }
@@ -253,7 +253,7 @@ describe('assign', () => {
   function testAssignLowerPrecedenceThanTernary(op: string) {
     test(`${op} lower precedence than ternary`, () => {
       let source = `a ${op} a ? b : c`
-      let expected = expressions(assign('a', op, ternary(a, b, c)))
+      let expected = expressions(assign(a, op, ternary(a, b, c)))
       expect(ast(source)).toEqual(expected)
     })
   }
