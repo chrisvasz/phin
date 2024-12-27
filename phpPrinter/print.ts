@@ -301,8 +301,9 @@ export class PhpPrinter
   visitGetExpr(node: nodes.Get): string {
     return `${node.object.accept(this)}->${node.name}`
   }
+
   visitGrouping(node: nodes.Grouping): string {
-    throw new Error('Method not implemented.')
+    return `(${node.expression.accept(this)})`
   }
 
   visitIdentifier(node: nodes.Identifier): string {

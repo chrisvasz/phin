@@ -4,6 +4,7 @@ import scan from '../scanner'
 import parse from '../parser'
 import * as nodes from '../nodes'
 import { Expr } from '../nodes'
+import { TokenType } from '../token'
 
 function ast(source: string) {
   return parse(scan(source))
@@ -284,6 +285,12 @@ describe('terminators', () => {
     ]
     expect(ast(source)).toEqual(expected)
   })
+})
+
+test('grouping', () => {
+  let source = '(a)'
+  let expected = expressions(new nodes.Grouping(a))
+  expect(ast(source)).toEqual(expected)
 })
 
 // TODO pull these from parser.classes.test.ts

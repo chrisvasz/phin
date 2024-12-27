@@ -39,15 +39,23 @@ describe('print .', () => {
 })
 
 describe('print assign', () => {
-  test('a = b', () => {
-    let source = 'a = b'
-    let expected = '$a = $b;'
+  test('a = b()', () => {
+    let source = 'a = b()'
+    let expected = '$a = $b();'
     expect(print(source)).toEqual(expected)
   })
 
   test('a = b = c', () => {
     let source = 'a = b = c'
     let expected = '$a = $b = $c;'
+    expect(print(source)).toEqual(expected)
+  })
+})
+
+describe('print grouping', () => {
+  test('(1)', () => {
+    let source = '(1)'
+    let expected = '(1);'
     expect(print(source)).toEqual(expected)
   })
 })
