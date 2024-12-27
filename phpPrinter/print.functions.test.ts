@@ -21,7 +21,7 @@ describe('function declarations', () => {
     let source = 'fun foo() { return 1; }'
     let expected = `
 function foo() {
-return 1;
+  return 1;
 }
     `.trim()
     expect(print(source)).toEqual(expected)
@@ -31,8 +31,8 @@ return 1;
     let source = 'fun foo() { echo "hello"; return 1; }'
     let expected = `
 function foo() {
-echo "hello";
-return 1;
+  echo "hello";
+  return 1;
 }
     `.trim()
     expect(print(source)).toEqual(expected)
@@ -80,7 +80,7 @@ function foo(array $a, array $b): Five {}
     let source = 'fun foo() => 1'
     let expected = `
 function foo() {
-return 1;
+  return 1;
 }
     `.trim()
     expect(print(source)).toEqual(expected)
@@ -100,7 +100,7 @@ describe('function expressions', () => {
     let source = 'var a = fun(a) => 5'
     let expected = `
 $a = function ($a) {
-return 5;
+  return 5;
 };
     `.trim()
     expect(print(source)).toEqual(expected)

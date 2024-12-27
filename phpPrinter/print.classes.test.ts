@@ -16,11 +16,11 @@ describe('print class declaration', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test.only('class A(a) {}', () => {
+  test('class A(a) {}', () => {
     let source = 'class A(a) {}'
     let expected = `
 class A {
-public function __construct(private readonly $a) {}
+  public function __construct(private readonly $a) {}
 }
     `.trim()
     expect(print(source)).toEqual(expected)
@@ -34,7 +34,7 @@ describe('print class properties', () => {
     let source = 'class A { var a; }'
     let expected = `
 class A {
-$a;
+  $a;
 }
       `.trim()
     expect(print(source)).toEqual(expected)
@@ -47,7 +47,7 @@ describe('print class methods', () => {
     let expected = `
 
 class A {
-function a() {}
+  function a() {}
 }
       `.trim()
     expect(print(source)).toEqual(expected)

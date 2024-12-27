@@ -3,8 +3,6 @@ import * as types from '../types'
 import { Type } from '../types'
 import { Environment, Kind } from './environment'
 
-const tab = '  '
-
 export class PrintError extends Error {}
 
 function defaultResolveUnknownIdentifier(name: string): Kind {
@@ -15,9 +13,10 @@ export class PhpPrinter
   implements nodes.Visitor<string>, types.Visitor<string>
 {
   constructor(
-    private resolveUnknownIdentifier: (
+    private readonly resolveUnknownIdentifier: (
       name: string,
     ) => Kind = defaultResolveUnknownIdentifier,
+    private readonly leadingWhitespace: string = '  ',
   ) {}
 
   private currentIndent = 0
@@ -25,18 +24,19 @@ export class PhpPrinter
 
   print(statements: nodes.Node[]): string {
     return this.encloseWith(statements, () => {
-      let result = ''
-      for (let s of statements) {
-        result += s.accept(this) + '\n'
-      }
-      return result
+      return statements.map((s) => s.accept(this)).join('\n')
     })
   }
 
-  indent(content: string | string[]): string {
-    if (typeof content === 'string')
-      return tab.repeat(this.currentIndent) + content
-    return content.map((c) => tab.repeat(this.currentIndent) + c).join('\n')
+  private indentBlock(fn: () => string[]): string {
+    this.currentIndent++
+    let result = fn().map((s) => this.indent(s))
+    this.currentIndent--
+    return result.join('\n')
+  }
+
+  private indent(content: string): string {
+    return this.leadingWhitespace.repeat(this.currentIndent) + content
   }
 
   private encloseWith<T>(nodes: nodes.Node[], fn: () => T): T {
@@ -114,8 +114,10 @@ export class PhpPrinter
   visitBlock(node: nodes.Block): string {
     if (node.statements.length === 0) return '{}'
     return this.encloseWith(node.statements, () => {
-      let lines = node.statements.map((s) => s.accept(this))
-      return `{\n${this.indent(lines)}\n}`
+      let body = this.indentBlock(() =>
+        node.statements.map((s) => s.accept(this)),
+      )
+      return ['{', body, this.indent('}')].join('\n')
     })
   }
 
@@ -147,13 +149,20 @@ export class PhpPrinter
     let type = node.returnType
       ? `: ${node.returnType.simplify().accept(this)}`
       : ''
-    let body = node.body.accept(this)
-    if (!(node.body instanceof nodes.Block)) {
-      body = '{\n' + `return ${body};` + '\n}'
-    }
+    let body = this.classMethodBody(node.body)
     let result = `function ${node.name}(${params})${type} ${body}`
     let docblock = this.functionDocblock(node.params, node.returnType)
     return `${docblock}${result}`
+  }
+
+  classMethodBody(body: nodes.ClassMethod['body']) {
+    let result = body.accept(this)
+    if (body instanceof nodes.Block) return result
+    return [
+      '{',
+      this.indentBlock(() => [`return ${result};`]),
+      this.indent('}'),
+    ].join('\n')
   }
 
   visitClassParam(node: nodes.ClassParam): string {
@@ -170,12 +179,16 @@ export class PhpPrinter
 
   visitClassDeclaration(node: nodes.ClassDeclaration): string {
     return this.encloseWith(node.members, () => {
-      let result = `class ${node.name} {`
-      let constructor = this.classConstructor(node)
-      if (node.members.length === 0 && !constructor) return result + '}'
-      let members = node.members.map((m) => m.accept(this))
-      if (constructor) members.unshift(constructor)
-      return `${result}\n${members.join('\n')}\n}`
+      let declaration = `class ${node.name} {`
+      let body = this.indentBlock(() => {
+        let constructor = this.classConstructor(node)
+        if (node.members.length === 0 && !constructor) return []
+        let members = node.members.map((m) => m.accept(this))
+        if (constructor) members.unshift(constructor)
+        return members
+      })
+      if (body === '') return declaration + '}'
+      return [this.indent(declaration), body, this.indent('}')].join('\n')
     })
   }
 
@@ -216,10 +229,7 @@ export class PhpPrinter
     let type = node.returnType
       ? `: ${node.returnType.simplify().accept(this)}`
       : ''
-    let body = node.body.accept(this)
-    if (!(node.body instanceof nodes.Block)) {
-      body = '{\n' + `return ${body};` + '\n}'
-    }
+    let body = this.functionBody(node.body)
     let result = `function (${params})${type} ${body}`
     return `${result}`
   }
@@ -230,13 +240,20 @@ export class PhpPrinter
     let type = node.returnType
       ? `: ${node.returnType.simplify().accept(this)}`
       : ''
-    let body = node.body.accept(this)
-    if (!(node.body instanceof nodes.Block)) {
-      body = '{\n' + `return ${body};` + '\n}'
-    }
+    let body = this.functionBody(node.body)
     let result = `function ${node.name}(${params})${type} ${body}`
     let docblock = this.functionDocblock(node.params, node.returnType)
     return `${docblock}${result}`
+  }
+
+  functionBody(body: nodes.FunctionDeclaration['body']) {
+    let result = body.accept(this)
+    if (body instanceof nodes.Block) return result
+    return [
+      '{',
+      this.indentBlock(() => [`return ${result};`]),
+      this.indent('}'),
+    ].join('\n')
   }
 
   functionDocblock(params: nodes.Param[], returnType: Type | null): string {
@@ -253,6 +270,7 @@ export class PhpPrinter
         ' */',
       ]
         .filter(Boolean)
+        .map((line) => this.indent(line ?? ''))
         .join('\n') + '\n'
     )
   }

@@ -73,10 +73,10 @@ describe('print scoping with classes', () => {
     let source = 'class A { var b; fun c() => b }'
     let expected = `
 class A {
-$b;
-function c() {
-return $this->b;
-}
+  $b;
+  function c() {
+    return $this->b;
+  }
 }
     `.trim()
     expect(print(source)).toEqual(expected)

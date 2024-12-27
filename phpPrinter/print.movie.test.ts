@@ -29,13 +29,13 @@ $REGULAR = 0;
 $NEW_RELEASE = 1;
 $CHILDRENS = 2;
 class Movie {
-public function __construct(private readonly $title, private readonly $priceCode) {}
-function getPriceCode(): int {
-return $this->priceCode;
-}
-function getTitle(): string {
-return $this->title;
-}
+  public function __construct(private readonly $title, private readonly $priceCode) {}
+  function getPriceCode(): int {
+    return $this->priceCode;
+  }
+  function getTitle(): string {
+    return $this->title;
+  }
 }
 $prognosisNegative = new Movie("Prognosis Negative", $NEW_RELEASE);
 $sackLunch = new Movie("Sack Lunch", $CHILDRENS);
