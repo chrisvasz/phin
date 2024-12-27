@@ -98,8 +98,9 @@ export class PhpPrinter
   visitArrayElement(node: nodes.ArrayElement): string {
     throw new Error('Method not implemented.')
   }
+
   visitArrayLiteral(node: nodes.ArrayLiteral): string {
-    return '[]'
+    return '[]' // TODO
   }
 
   visitAssign(node: nodes.Assign): string {
@@ -229,7 +230,7 @@ export class PhpPrinter
     let body = this.encloseWith([node.key ?? node.value, node.value], () =>
       node.body.accept(this),
     )
-    return this.indent(result) + body
+    return result + body
   }
 
   visitForeachVariable(node: nodes.ForeachVariable): string {
@@ -324,7 +325,7 @@ export class PhpPrinter
     let elseBranch = node.elseBranch
       ? ` else ${node.elseBranch.accept(this)}`
       : ''
-    return this.indent(result) + thenBranch + elseBranch
+    return result + thenBranch + elseBranch
   }
 
   visitMatchArm(node: nodes.MatchArm): string {

@@ -9,7 +9,7 @@ function print(src: string) {
   return result.trim()
 }
 
-test.todo('print Movie solution', () => {
+test('print Movie solution', () => {
   let source = `
 var REGULAR = 0;
 var NEW_RELEASE = 1;
@@ -135,9 +135,7 @@ class Customer {
         }
       }
       $frequentRenterPoints++;
-      if (($rental->getMovie()->getPriceCode() == $NEW_RELEASE) && $rental->getDaysRented() > 1) {
-        $frequentRenterPoints++;
-      }
+      if (($rental->getMovie()->getPriceCode() == $NEW_RELEASE) && $rental->getDaysRented() > 1) $frequentRenterPoints++;
       $result .= $rental->getMovie()->getTitle() . " " . $thisAmount . " ";
       $totalAmount += $thisAmount;
     }
@@ -155,6 +153,5 @@ $customer->addRental(new Rental($painAndYearning, 1));
 $customer->addRental(new Rental($sackLunch, 1));
 echo $customer->statement();
   `.trim()
-  console.log(print(source))
   expect(print(source)).toEqual(expected)
 })
