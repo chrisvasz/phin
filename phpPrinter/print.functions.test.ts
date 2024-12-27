@@ -75,5 +75,4 @@ function foo(array $a, array $b): Five {}
   })
 
   test.todo('does not overwrite existing docblock')
-  test.todo('complex return type like array<int>')
 })
