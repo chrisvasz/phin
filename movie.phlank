@@ -1,5 +1,3 @@
-<?php
-
 var REGULAR = 0;
 var NEW_RELEASE = 1;
 var CHILDRENS = 2;

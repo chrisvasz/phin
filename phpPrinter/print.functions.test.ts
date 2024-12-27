@@ -5,7 +5,8 @@ import parse from '../parser'
 import { PhpPrinter } from './print'
 
 function print(src: string) {
-  return new PhpPrinter().print(parse(scan(src)))
+  let result = new PhpPrinter().print(parse(scan(src)))
+  return result.trim()
 }
 
 describe('function declarations', () => {

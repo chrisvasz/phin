@@ -12,7 +12,7 @@ export class PhpPrinter
   print(statements: nodes.Node[]): string {
     let result = ''
     for (let s of statements) {
-      result += s.accept(this)
+      result += s.accept(this) + '\n'
     }
     return result
   }
@@ -104,30 +104,65 @@ export class PhpPrinter
   visitCatch(node: nodes.Catch): string {
     throw new Error('Method not implemented.')
   }
+
+  /////////////////////////////
+  // CLASSES
+  /////////////////////////////
+
   visitClassConst(node: nodes.ClassConst): string {
     throw new Error('Method not implemented.')
   }
   visitClassInitializer(node: nodes.ClassInitializer): string {
     throw new Error('Method not implemented.')
   }
+
   visitClassMethod(node: nodes.ClassMethod): string {
-    throw new Error('Method not implemented.')
+    let params = node.params.map((p) => p.accept(this)).join(', ')
+    let type = node.returnType
+      ? `: ${node.returnType.simplify().accept(this)}`
+      : ''
+    let body = node.body.accept(this)
+    if (!(node.body instanceof nodes.Block)) {
+      body = '{\n' + `return ${body};` + '\n}'
+    }
+    let result = `function ${node.name}(${params})${type} ${body}`
+    let docblock = this.functionDocblock(node.params, node.returnType)
+    return `${docblock}${result}`
   }
+
   visitClassParam(node: nodes.ClassParam): string {
-    throw new Error('Method not implemented.')
+    return `private readonly $${node.name}`
   }
+
   visitClassProperty(node: nodes.ClassProperty): string {
-    throw new Error('Method not implemented.')
+    return node.variable.accept(this).trim()
   }
+
   visitClassDeclaration(node: nodes.ClassDeclaration): string {
-    throw new Error('Method not implemented.')
+    let result = `class ${node.name} {`
+    let constructor = this.classConstructor(node)
+    if (node.members.length === 0 && !constructor) return result + '}'
+    let members = node.members.map((m) => m.accept(this))
+    if (constructor) members.unshift(constructor)
+    return `class ${node.name} {\n${members.join('\n')}\n}`
   }
+
+  classConstructor(node: nodes.ClassDeclaration): string {
+    if (node.params.length === 0) return ''
+    let params = node.params.map((p) => p.accept(this)).join(', ')
+    return `public function __construct(${params}) {}`
+  }
+
   visitClassSuperclass(node: nodes.ClassSuperclass): string {
     throw new Error('Method not implemented.')
   }
   visitClone(node: nodes.Clone): string {
     throw new Error('Method not implemented.')
   }
+
+  /////////////////////////////
+  // END CLASSES
+  /////////////////////////////
 
   visitEcho(node: nodes.Echo): string {
     return `echo ${node.expression.accept(this)};`
@@ -190,7 +225,7 @@ export class PhpPrinter
   }
 
   visitGetExpr(node: nodes.Get): string {
-    throw new Error('Method not implemented.')
+    return `${node.object.accept(this)}->${node.name}`
   }
   visitGrouping(node: nodes.Grouping): string {
     throw new Error('Method not implemented.')
@@ -210,9 +245,11 @@ export class PhpPrinter
   visitMatch(node: nodes.Match): string {
     throw new Error('Method not implemented.')
   }
+
   visitNew(node: nodes.New): string {
-    throw new Error('Method not implemented.')
+    return `new ${node.expression.accept(this)}`
   }
+
   visitNullLiteral(node: nodes.NullLiteral): string {
     throw new Error('Method not implemented.')
   }
@@ -245,13 +282,13 @@ export class PhpPrinter
     return `"${node.value}"`
   }
   visitSuper(): string {
-    throw new Error('Method not implemented.')
+    return 'super'
   }
   visitTernary(node: nodes.Ternary): string {
     throw new Error('Method not implemented.')
   }
   visitThis(): string {
-    throw new Error('Method not implemented.')
+    return '$this'
   }
   visitThrowExpression(node: nodes.ThrowExpression): string {
     throw new Error('Method not implemented.')

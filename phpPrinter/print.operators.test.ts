@@ -9,28 +9,30 @@ function print(src: string) {
   return result.trim()
 }
 
-describe('print variables', () => {
-  test('var a;', () => {
-    let source = 'var a;'
-    let expected = '$a;'
+describe('print new', () => {
+  test('new a', () => {
+    let source = 'new a'
+    let expected = 'new a;'
     expect(print(source)).toEqual(expected)
   })
 
-  test('var a = 1;', () => {
-    let source = 'var a = 1;'
-    let expected = '$a = 1;'
+  test('new a()', () => {
+    let source = 'new a()'
+    let expected = 'new a();'
+    expect(print(source)).toEqual(expected)
+  })
+})
+
+describe('print .', () => {
+  test('a.b', () => {
+    let source = 'a.b'
+    let expected = 'a->b;'
     expect(print(source)).toEqual(expected)
   })
 
-  test('var a: int = 1;', () => {
-    let source = 'var a: int = 1;'
-    let expected = '/** @var int $a */\n$a = 1;'
-    expect(print(source)).toEqual(expected)
-  })
-
-  test('var a: int = 1 + 2;', () => {
-    let source = 'var a: int = 1 + 2;'
-    let expected = '/** @var int $a */\n$a = 1 + 2;'
+  test('a().b', () => {
+    let source = 'a().b'
+    let expected = 'a()->b;'
     expect(print(source)).toEqual(expected)
   })
 })
