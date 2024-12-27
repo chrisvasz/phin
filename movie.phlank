@@ -8,15 +8,15 @@ class Movie(title: string, priceCode: int) {
 }
 
 class Rental(movie: Movie, daysRented: int) {
-  fun getDaysRented(): int => this.daysRented;
-  fun getMovie(): Movie => this.movie;
+  fun getDaysRented(): int => daysRented;
+  fun getMovie(): Movie => movie;
 }
 
 class Customer(name: string) {
   private var rentals: array = [];
 
-  fun addRental(rental: Rental) => array_push(this.rentals, rental);
-  fun getName(): string => this.name;
+  fun addRental(rental: Rental) => array_push(rentals, rental);
+  fun getName(): string => name;
   fun statement(): string => "hello world\n";
 
   // public function statement(): string {
@@ -75,6 +75,4 @@ customer.addRental(new Rental(prognosisNegative, 3));
 customer.addRental(new Rental(painAndYearning, 1));
 customer.addRental(new Rental(sackLunch, 1));
 
-var statement = customer.statement();
-
-echo statement;
+echo customer.statement();

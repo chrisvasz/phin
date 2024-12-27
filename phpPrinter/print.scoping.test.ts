@@ -54,6 +54,23 @@ describe('print scoping', () => {
     let source = 'fun a() { var b; } b;'
     expect(() => print(source)).toThrow(new PrintError('Unknown identifier b'))
   })
+
+  test('fun a(b) => b', () => {
+    let source = 'fun a(b) => b'
+    let expected = 'function a($b) {\n  return $b;\n}'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('fun a(b, c = b) {}', () => {
+    let source = 'fun a(b, c = b) {}'
+    let expected = 'function a($b, $c = $b) {}'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('fun a(c = b) {}', () => {
+    let source = 'fun a(c = b) {}'
+    expect(() => print(source)).toThrow(new PrintError('Unknown identifier b'))
+  })
 })
 
 describe('print scoping with classes', () => {

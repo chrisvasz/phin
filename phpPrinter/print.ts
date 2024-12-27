@@ -1,7 +1,7 @@
 import * as nodes from '../nodes'
 import * as types from '../types'
 import { Type } from '../types'
-import { Environment, Kind } from './environment'
+import { Environment, globalEnvironment, Kind } from './environment'
 
 export class PrintError extends Error {}
 
@@ -20,7 +20,7 @@ export class PhpPrinter
   ) {}
 
   private currentIndent = 0
-  private environment = new Environment(null)
+  private environment = new Environment(globalEnvironment)
 
   print(statements: nodes.Node[]): string {
     return this.encloseWith(statements, () => {
@@ -99,7 +99,7 @@ export class PhpPrinter
     throw new Error('Method not implemented.')
   }
   visitArrayLiteral(node: nodes.ArrayLiteral): string {
-    throw new Error('Method not implemented.')
+    return '[]'
   }
   visitAssign(node: nodes.Assign): string {
     throw new Error('Method not implemented.')
@@ -145,14 +145,15 @@ export class PhpPrinter
   }
 
   visitClassMethod(node: nodes.ClassMethod): string {
-    let params = node.params.map((p) => p.accept(this)).join(', ')
-    let type = node.returnType
-      ? `: ${node.returnType.simplify().accept(this)}`
-      : ''
-    let body = this.classMethodBody(node.body)
-    let result = `function ${node.name}(${params})${type} ${body}`
-    let docblock = this.functionDocblock(node.params, node.returnType)
-    return `${docblock}${result}`
+    return this.encloseWith([], () => {
+      // TODO visibility, final, abstract, static
+      let params = this.functionParams(node.params)
+      let type = this.typeAnnotation(node.returnType)
+      let body = this.functionBody(node.body)
+      let result = `function ${node.name}(${params})${type} ${body}`
+      let docblock = this.functionDocblock(node.params, node.returnType)
+      return `${docblock}${result}`
+    })
   }
 
   classMethodBody(body: nodes.ClassMethod['body']) {
@@ -170,11 +171,11 @@ export class PhpPrinter
   }
 
   visitClassProperty(node: nodes.ClassProperty): string {
-    let type = node.type
-      ? `/** @var ${node.type.accept(this)} $${node.name} */\n`
-      : ''
+    // TODO final, abstract, static, docblock
+    let visibility = node.visibility ? `${node.visibility} ` : ''
+    let type = node.type ? `${node.type.accept(this)} ` : ''
     let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''
-    return `${type}$${node.name}${init};`
+    return `${visibility}${type}$${node.name}${init};`
   }
 
   visitClassDeclaration(node: nodes.ClassDeclaration): string {
@@ -226,9 +227,7 @@ export class PhpPrinter
 
   visitFunctionExpression(node: nodes.FunctionExpression): string {
     let params = node.params.map((p) => p.accept(this)).join(', ')
-    let type = node.returnType
-      ? `: ${node.returnType.simplify().accept(this)}`
-      : ''
+    let type = this.typeAnnotation(node.returnType)
     let body = this.functionBody(node.body)
     let result = `function (${params})${type} ${body}`
     return `${result}`
@@ -236,14 +235,24 @@ export class PhpPrinter
 
   visitFunctionDeclaration(node: nodes.FunctionDeclaration): string {
     this.environment.add(node.name, Kind.Function)
-    let params = node.params.map((p) => p.accept(this)).join(', ')
-    let type = node.returnType
-      ? `: ${node.returnType.simplify().accept(this)}`
-      : ''
-    let body = this.functionBody(node.body)
-    let result = `function ${node.name}(${params})${type} ${body}`
-    let docblock = this.functionDocblock(node.params, node.returnType)
-    return `${docblock}${result}`
+    return this.encloseWith([], () => {
+      let params = this.functionParams(node.params)
+      let type = this.typeAnnotation(node.returnType)
+      let body = this.functionBody(node.body)
+      let result = `function ${node.name}(${params})${type} ${body}`
+      let docblock = this.functionDocblock(node.params, node.returnType)
+      return `${docblock}${result}`
+    })
+  }
+
+  functionParams(params: nodes.Param[]): string {
+    return params.map((p) => this.functionParam(p)).join(', ')
+  }
+
+  functionParam(param: nodes.Param): string {
+    let result = param.accept(this)
+    this.environment.add(param.name, Kind.Var)
+    return result
   }
 
   functionBody(body: nodes.FunctionDeclaration['body']) {
@@ -370,5 +379,10 @@ export class PhpPrinter
 
   visitWhile(node: nodes.While): string {
     throw new Error('Method not implemented.')
+  }
+
+  typeAnnotation(type: Type | null): string {
+    if (!type) return ''
+    return `: ${type.simplify().accept(this)}`
   }
 }

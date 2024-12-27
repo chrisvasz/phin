@@ -43,3 +43,6 @@ export class Environment {
     }
   }
 }
+
+export const globalEnvironment = new Environment(null)
+globalEnvironment.add('array_push', Kind.Function)
