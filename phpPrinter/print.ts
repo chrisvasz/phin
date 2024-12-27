@@ -103,13 +103,15 @@ export class PhpPrinter
   }
 
   visitAssign(node: nodes.Assign): string {
-    return `${node.name.accept(this)} = ${node.value.accept(this)}`
+    let operator = node.operator === '+.=' ? '.=' : node.operator
+    return `${node.name.accept(this)} ${operator} ${node.value.accept(this)}`
   }
 
   visitBinary(node: nodes.Binary): string {
     let left = node.left.accept(this)
     let right = node.right.accept(this)
-    return `${left} ${node.operator} ${right}`
+    let operator = node.operator === '+.' ? '.' : node.operator
+    return `${left} ${operator} ${right}`
   }
 
   visitBlock(node: nodes.Block): string {
