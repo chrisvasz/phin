@@ -178,7 +178,7 @@ export class PhpPrinter
   }
 
   visitClassDeclaration(node: nodes.ClassDeclaration): string {
-    return this.encloseWith(node.members, () => {
+    return this.encloseWith([...node.params, ...node.members], () => {
       let declaration = `class ${node.name} {`
       let body = this.indentBlock(() => {
         let constructor = this.classConstructor(node)

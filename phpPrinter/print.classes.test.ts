@@ -29,6 +29,31 @@ class A {
   test.todo('private constructor')
 })
 
+describe('print class params', () => {
+  test('class A(a) {}', () => {
+    let source = 'class A(a) {}'
+    let expected = `
+class A {
+  public function __construct(private readonly $a) {}
+}
+    `.trim()
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('class A(a) { fun b() => a }', () => {
+    let source = 'class A(a) { fun b() => a }'
+    let expected = `
+class A {
+  public function __construct(private readonly $a) {}
+  function b() {
+    return $this->a;
+  }
+}
+    `.trim()
+    expect(print(source)).toEqual(expected)
+  })
+})
+
 describe('print class properties', () => {
   test('class A { var a; }', () => {
     let source = 'class A { var a; }'

@@ -16,8 +16,8 @@ var NEW_RELEASE = 1;
 var CHILDRENS = 2;
 
 class Movie(title: string, priceCode: int) {
-  fun getPriceCode(): int => this.priceCode;
-  fun getTitle(): string => this.title;
+  fun getPriceCode(): int => priceCode;
+  fun getTitle(): string => title;
 }
 
 var prognosisNegative = new Movie("Prognosis Negative", NEW_RELEASE);
