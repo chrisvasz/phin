@@ -1,43 +1,43 @@
 // @ts-ignore
-import { expect, test, describe } from 'bun:test';
-import scan from '../scanner';
-import parse from '../parser';
-import * as nodes from '../nodes';
-import * as types from '../types';
+import { expect, test, describe } from 'bun:test'
+import scan from '../scanner'
+import parse from '../parser'
+import * as nodes from '../nodes'
+import * as types from '../types'
 
 function ast(source: string) {
-  return parse(scan(source));
+  return parse(scan(source))
 }
 
 function block(...statements: nodes.Stmt[]) {
-  return new nodes.Block(statements);
+  return new nodes.Block(statements)
 }
 
 describe('call expressions', () => {
   test('thing()', () => {
-    let source = 'thing()';
+    let source = 'thing()'
     let expected = [
       new nodes.ExpressionStatement(
         new nodes.Call(new nodes.Identifier('thing'), []),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('thing(1)', () => {
-    let source = 'thing(1)';
+    let source = 'thing(1)'
     let expected = [
       new nodes.ExpressionStatement(
         new nodes.Call(new nodes.Identifier('thing'), [
           new nodes.NumberLiteral('1'),
         ]),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('thing(1, 2)', () => {
-    let source = 'thing(1, 2)';
+    let source = 'thing(1, 2)'
     let expected = [
       new nodes.ExpressionStatement(
         new nodes.Call(new nodes.Identifier('thing'), [
@@ -45,12 +45,12 @@ describe('call expressions', () => {
           new nodes.NumberLiteral('2'),
         ]),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('thing(1 + 2, 3 - 4)', () => {
-    let source = 'thing(1 + 2, 3 - 4)';
+    let source = 'thing(1 + 2, 3 - 4)'
     let expected = [
       new nodes.ExpressionStatement(
         new nodes.Call(new nodes.Identifier('thing'), [
@@ -66,44 +66,44 @@ describe('call expressions', () => {
           ),
         ]),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('thing(thing2())', () => {
-    let source = 'thing(thing2())';
+    let source = 'thing(thing2())'
     let expected = [
       new nodes.ExpressionStatement(
         new nodes.Call(new nodes.Identifier('thing'), [
           new nodes.Call(new nodes.Identifier('thing2'), []),
         ]),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('thing(1,)', () => {
-    let source = 'thing(1,)';
+    let source = 'thing(1,)'
     let expected = [
       new nodes.ExpressionStatement(
         new nodes.Call(new nodes.Identifier('thing'), [
           new nodes.NumberLiteral('1'),
         ]),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-});
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+})
 
 describe('function declarations', () => {
   test('fun foo() {}', () => {
-    let source = 'fun foo() {}';
-    let expected = [new nodes.FunctionDeclaration('foo', [], null, block())];
-    expect(ast(source)).toEqual(expected);
-  });
+    let source = 'fun foo() {}'
+    let expected = [new nodes.FunctionDeclaration('foo', [], null, block())]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('fun foo(a) {}', () => {
-    let source = 'fun foo(a) {}';
+    let source = 'fun foo(a) {}'
     let expected = [
       new nodes.FunctionDeclaration(
         'foo',
@@ -111,12 +111,12 @@ describe('function declarations', () => {
         null,
         block(),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('fun foo(a: array<number>, b: string,) {}', () => {
-    let source = 'fun foo(a: array<number>, b: string,) {}';
+    let source = 'fun foo(a: array<number>, b: string,) {}'
     let expected = [
       new nodes.FunctionDeclaration(
         'foo',
@@ -131,12 +131,12 @@ describe('function declarations', () => {
         null,
         block(),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('fun foo(): array<number> {}', () => {
-    let source = 'fun foo(): array<number> {}';
+    let source = 'fun foo(): array<number> {}'
     let expected = [
       new nodes.FunctionDeclaration(
         'foo',
@@ -144,12 +144,12 @@ describe('function declarations', () => {
         new types.Identifier('array', [new types.Number()]),
         block(),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('fun foo() {2;3;}', () => {
-    let source = 'fun foo() {2;3;}';
+    let source = 'fun foo() {2;3;}'
     let expected = [
       new nodes.FunctionDeclaration(
         'foo',
@@ -160,12 +160,12 @@ describe('function declarations', () => {
           new nodes.ExpressionStatement(new nodes.NumberLiteral('3')),
         ),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('fun foo(a: number = 1) {}', () => {
-    let source = 'fun foo(a: number = 1) {}';
+    let source = 'fun foo(a: number = 1) {}'
     let expected = [
       new nodes.FunctionDeclaration(
         'foo',
@@ -179,12 +179,12 @@ describe('function declarations', () => {
         null,
         block(),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('fun foo() { return 1; }', () => {
-    let source = 'fun foo() { return 1; }';
+    let source = 'fun foo() { return 1; }'
     let expected = [
       new nodes.FunctionDeclaration(
         'foo',
@@ -192,12 +192,12 @@ describe('function declarations', () => {
         null,
         block(new nodes.Return(new nodes.NumberLiteral('1'))),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('fun foo() { 3; return 1; }', () => {
-    let source = 'fun foo() { 3; return 1; }';
+    let source = 'fun foo() { 3; return 1; }'
     let expected = [
       new nodes.FunctionDeclaration(
         'foo',
@@ -208,12 +208,12 @@ describe('function declarations', () => {
           new nodes.Return(new nodes.NumberLiteral('1')),
         ),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('fun foo() { fun bar() {} }', () => {
-    let source = 'fun foo() { fun bar() {} }';
+    let source = 'fun foo() { fun bar() {} }'
     let expected = [
       new nodes.FunctionDeclaration(
         'foo',
@@ -221,12 +221,12 @@ describe('function declarations', () => {
         null,
         block(new nodes.FunctionDeclaration('bar', [], null, block())),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('fun foo() => thing();', () => {
-    let source = 'fun foo() => thing();';
+    let source = 'fun foo() => thing();'
     let expected = [
       new nodes.FunctionDeclaration(
         'foo',
@@ -234,26 +234,26 @@ describe('function declarations', () => {
         null,
         new nodes.Call(new nodes.Identifier('thing'), []),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-});
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+})
 
 describe('function expressions', () => {
   test('var a = fun() {};', () => {
-    let source = 'var a = fun() {};';
+    let source = 'var a = fun() {};'
     let expected = [
       new nodes.VarDeclaration(
         'a',
         null,
         new nodes.FunctionExpression([], null, block()),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('var a = fun(): number => 1;', () => {
-    let source = 'var a = fun(): number => 1;';
+    let source = 'var a = fun(): number => 1;'
     let expected = [
       new nodes.VarDeclaration(
         'a',
@@ -264,12 +264,12 @@ describe('function expressions', () => {
           new nodes.NumberLiteral('1'),
         ),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('var a = fun(b: number|string = 4, c = 6,) { return 5; }', () => {
-    let source = 'var a = fun(b: number|string = 4, c = 6) { return 5; }';
+    let source = 'var a = fun(b: number|string = 4, c = 6) { return 5; }'
     let expected = [
       new nodes.VarDeclaration(
         'a',
@@ -287,12 +287,12 @@ describe('function expressions', () => {
           block(new nodes.Return(new nodes.NumberLiteral('5'))),
         ),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('var a = fun(b) => fun(c) => b + c;', () => {
-    let source = 'var a = fun(b) => fun(c) => b + c;';
+    let source = 'var a = fun(b) => fun(c) => b + c;'
     let expected = [
       new nodes.VarDeclaration(
         'a',
@@ -311,7 +311,7 @@ describe('function expressions', () => {
           ),
         ),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-});
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+})

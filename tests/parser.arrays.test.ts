@@ -1,22 +1,22 @@
 // @ts-ignore
-import { expect, test, describe } from 'bun:test';
-import scan from '../scanner';
-import parse from '../parser';
-import * as nodes from '../nodes';
+import { expect, test, describe } from 'bun:test'
+import scan from '../scanner'
+import parse from '../parser'
+import * as nodes from '../nodes'
 
 function ast(source: string) {
-  return parse(scan(source));
+  return parse(scan(source))
 }
 
 describe('array literals', () => {
   test('[]', () => {
-    let source = '[]';
-    let expected = [new nodes.ExpressionStatement(new nodes.ArrayLiteral([]))];
-    expect(ast(source)).toEqual(expected);
-  });
+    let source = '[]'
+    let expected = [new nodes.ExpressionStatement(new nodes.ArrayLiteral([]))]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('[1,2,3]', () => {
-    let source = '[1,2,3]';
+    let source = '[1,2,3]'
     let expected = [
       new nodes.ExpressionStatement(
         new nodes.ArrayLiteral([
@@ -25,12 +25,12 @@ describe('array literals', () => {
           new nodes.ArrayElement(null, new nodes.NumberLiteral('3')),
         ]),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('[1,2,3,]', () => {
-    let source = '[1,2,3,]';
+    let source = '[1,2,3,]'
     let expected = [
       new nodes.ExpressionStatement(
         new nodes.ArrayLiteral([
@@ -39,12 +39,12 @@ describe('array literals', () => {
           new nodes.ArrayElement(null, new nodes.NumberLiteral('3')),
         ]),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('["a",b(),c<d]', () => {
-    let source = '["a",b(),c<d]';
+    let source = '["a",b(),c<d]'
     let expected = [
       new nodes.ExpressionStatement(
         new nodes.ArrayLiteral([
@@ -63,12 +63,12 @@ describe('array literals', () => {
           ),
         ]),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('[[1,2],[3,4]]', () => {
-    let source = '[[1,2],[3,4]]';
+    let source = '[[1,2],[3,4]]'
     let expected = [
       new nodes.ExpressionStatement(
         new nodes.ArrayLiteral([
@@ -88,12 +88,12 @@ describe('array literals', () => {
           ),
         ]),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('[1=>2]', () => {
-    let source = '[1=>2]';
+    let source = '[1=>2]'
     let expected = [
       new nodes.ExpressionStatement(
         new nodes.ArrayLiteral([
@@ -103,12 +103,12 @@ describe('array literals', () => {
           ),
         ]),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('[1=>2,"3"=>4+5,a()]', () => {
-    let source = '[1=>2,"3"=>4+5,a()]';
+    let source = '[1=>2,"3"=>4+5,a()]'
     let expected = [
       new nodes.ExpressionStatement(
         new nodes.ArrayLiteral([
@@ -130,7 +130,7 @@ describe('array literals', () => {
           ),
         ]),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-});
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+})

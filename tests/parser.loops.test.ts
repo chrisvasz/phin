@@ -1,28 +1,28 @@
 // @ts-ignore
-import { expect, test, describe } from 'bun:test';
-import scan from '../scanner';
-import parse from '../parser';
-import * as nodes from '../nodes';
-import * as types from '../types';
+import { expect, test, describe } from 'bun:test'
+import scan from '../scanner'
+import parse from '../parser'
+import * as nodes from '../nodes'
+import * as types from '../types'
 
 function ast(source: string) {
-  return parse(scan(source));
+  return parse(scan(source))
 }
 
 describe('while', () => {
   test('while (true) 2', () => {
-    let source = 'while (true) 2';
+    let source = 'while (true) 2'
     let expected = [
       new nodes.While(
         new nodes.BooleanLiteral(true),
         new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('while (1 < 2) 2', () => {
-    let source = 'while (1 < 2) 2';
+    let source = 'while (1 < 2) 2'
     let expected = [
       new nodes.While(
         new nodes.Binary(
@@ -32,12 +32,12 @@ describe('while', () => {
         ),
         new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('while (null) {2;}', () => {
-    let source = 'while (null) {2;}';
+    let source = 'while (null) {2;}'
     let expected = [
       new nodes.While(
         new nodes.NullLiteral(),
@@ -45,14 +45,14 @@ describe('while', () => {
           new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
         ]),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-});
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+})
 
 describe('for', () => {
   test('for (;;) 2', () => {
-    let source = 'for (;;) 2';
+    let source = 'for (;;) 2'
     let expected = [
       new nodes.For(
         null,
@@ -60,12 +60,12 @@ describe('for', () => {
         null,
         new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('for (var i = 0; ;) 2', () => {
-    let source = 'for (var i = 0; ;) 2';
+    let source = 'for (var i = 0; ;) 2'
     let expected = [
       new nodes.For(
         new nodes.VarDeclaration('i', null, new nodes.NumberLiteral('0')),
@@ -73,12 +73,12 @@ describe('for', () => {
         null,
         new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('for (var i = 0; i < 10;) 2', () => {
-    let source = 'for (var i = 0; i < 10;) 2';
+    let source = 'for (var i = 0; i < 10;) 2'
     let expected = [
       new nodes.For(
         new nodes.VarDeclaration('i', null, new nodes.NumberLiteral('0')),
@@ -90,12 +90,12 @@ describe('for', () => {
         null,
         new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('for (var i: number = 0; i < 10; ++i) {2;}', () => {
-    let source = 'for (var i: number = 0; i < 10; ++i) {2;}';
+    let source = 'for (var i: number = 0; i < 10; ++i) {2;}'
     let expected = [
       new nodes.For(
         new nodes.VarDeclaration(
@@ -113,14 +113,14 @@ describe('for', () => {
           new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
         ]),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-});
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+})
 
 describe('foreach', () => {
   test('foreach (list as i) 2', () => {
-    let source = 'foreach (list as i) 2';
+    let source = 'foreach (list as i) 2'
     let expected = [
       new nodes.Foreach(
         null,
@@ -128,12 +128,12 @@ describe('foreach', () => {
         new nodes.Identifier('list'),
         new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('foreach (list as i) {2;}', () => {
-    let source = 'foreach (list as i) {2;}';
+    let source = 'foreach (list as i) {2;}'
     let expected = [
       new nodes.Foreach(
         null,
@@ -143,12 +143,12 @@ describe('foreach', () => {
           new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
         ]),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('foreach (list as i: number) 2', () => {
-    let source = 'foreach (list as i: number) 2';
+    let source = 'foreach (list as i: number) 2'
     let expected = [
       new nodes.Foreach(
         null,
@@ -156,12 +156,12 @@ describe('foreach', () => {
         new nodes.Identifier('list'),
         new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('foreach (list as i => l) 2', () => {
-    let source = 'foreach (list as i => l) 2';
+    let source = 'foreach (list as i => l) 2'
     let expected = [
       new nodes.Foreach(
         new nodes.VarDeclaration('i', null, null),
@@ -169,12 +169,12 @@ describe('foreach', () => {
         new nodes.Identifier('list'),
         new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 
   test('foreach (list as i: number => l: Rental) 2', () => {
-    let source = 'foreach (list as i: number => l: Rental) 2';
+    let source = 'foreach (list as i: number => l: Rental) 2'
     let expected = [
       new nodes.Foreach(
         new nodes.VarDeclaration('i', new types.Number(), null),
@@ -182,7 +182,7 @@ describe('foreach', () => {
         new nodes.Identifier('list'),
         new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
       ),
-    ];
-    expect(ast(source)).toEqual(expected);
-  });
-});
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+})
