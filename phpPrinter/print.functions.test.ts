@@ -74,5 +74,51 @@ function foo(array $a, array $b): Five {}
     expect(print(source)).toEqual(expected)
   })
 
+  test('fun foo() => 1', () => {
+    let source = 'fun foo() => 1'
+    let expected = `
+function foo() {
+return 1;
+}
+    `.trim()
+    expect(print(source)).toEqual(expected)
+  })
+
   test.todo('does not overwrite existing docblock')
+})
+
+describe('function expressions', () => {
+  test('var a = fun() {}', () => {
+    let source = 'var a = fun() {}'
+    let expected = '$a = function () {};'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('var a = fun(a) => 5', () => {
+    let source = 'var a = fun(a) => 5'
+    let expected = `
+$a = function ($a) {
+return 5;
+};
+    `.trim()
+    expect(print(source)).toEqual(expected)
+  })
+
+  test.todo('var a = fun(a: array<int>) {}')
+})
+
+describe('function calls', () => {
+  test('foo()', () => {
+    let source = 'foo()'
+    let expected = 'foo();'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('foo(a(), b+2)', () => {
+    let source = 'foo(a(), b+2)'
+    let expected = 'foo(a(), b + 2);'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test.todo('a.b()')
 })

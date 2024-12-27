@@ -96,9 +96,11 @@ export class PhpPrinter
   visitBooleanLiteral(node: nodes.BooleanLiteral): string {
     throw new Error('Method not implemented.')
   }
+
   visitCall(node: nodes.Call): string {
-    throw new Error('Method not implemented.')
+    return `${node.callee.accept(this)}(${node.args.map((a) => a.accept(this)).join(', ')})`
   }
+
   visitCatch(node: nodes.Catch): string {
     throw new Error('Method not implemented.')
   }
@@ -126,26 +128,33 @@ export class PhpPrinter
   visitClone(node: nodes.Clone): string {
     throw new Error('Method not implemented.')
   }
+
   visitEcho(node: nodes.Echo): string {
     return `echo ${node.expression.accept(this)};`
   }
+
   visitExpressionStatement(node: nodes.ExpressionStatement): string {
-    throw new Error('Method not implemented.')
+    return node.expression.accept(this) + ';'
   }
+
   visitForeach(node: nodes.Foreach): string {
     throw new Error('Method not implemented.')
   }
   visitFor(node: nodes.For): string {
     throw new Error('Method not implemented.')
   }
-  visitFunctionExpression(node: nodes.FunctionExpression): string {
-    throw new Error('Method not implemented.')
-  }
 
-  visitParam(node: nodes.Param): string {
-    let type = node.type ? `${node.type.simplify().accept(this)} ` : ''
-    let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''
-    return `${type}$${node.name}${init}`
+  visitFunctionExpression(node: nodes.FunctionExpression): string {
+    let params = node.params.map((p) => p.accept(this)).join(', ')
+    let type = node.returnType
+      ? `: ${node.returnType.simplify().accept(this)}`
+      : ''
+    let body = node.body.accept(this)
+    if (!(node.body instanceof nodes.Block)) {
+      body = '{\n' + `return ${body};` + '\n}'
+    }
+    let result = `function (${params})${type} ${body}`
+    return `${result}`
   }
 
   visitFunctionDeclaration(node: nodes.FunctionDeclaration): string {
@@ -154,6 +163,9 @@ export class PhpPrinter
       ? `: ${node.returnType.simplify().accept(this)}`
       : ''
     let body = node.body.accept(this)
+    if (!(node.body instanceof nodes.Block)) {
+      body = '{\n' + `return ${body};` + '\n}'
+    }
     let result = `function ${node.name}(${params})${type} ${body}`
     let docblock = this.functionDocblock(node.params, node.returnType)
     return `${docblock}${result}`
@@ -185,7 +197,8 @@ export class PhpPrinter
   }
 
   visitIdentifier(node: nodes.Identifier): string {
-    throw new Error('Method not implemented.')
+    // TODO need to add $ in some cases and not in others, meaning we need to know if it's a variable or a function. scope resolution, etc
+    return `${node.name}`
   }
 
   visitIf(node: nodes.If): string {
@@ -209,6 +222,13 @@ export class PhpPrinter
   visitOptionalGet(node: nodes.OptionalGet): string {
     throw new Error('Method not implemented.')
   }
+
+  visitParam(node: nodes.Param): string {
+    let type = node.type ? `${node.type.simplify().accept(this)} ` : ''
+    let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''
+    return `${type}$${node.name}${init}`
+  }
+
   visitPostfix(node: nodes.Postfix): string {
     throw new Error('Method not implemented.')
   }
