@@ -354,7 +354,9 @@ export class ClassProperty extends Node {
     public readonly isFinal: boolean,
     public readonly visibility: Visibility,
     public readonly isStatic: boolean,
-    public readonly variable: VarDeclaration,
+    public readonly name: string,
+    public readonly type: Type | null,
+    public readonly initializer: Expr | null,
   ) {
     super()
   }

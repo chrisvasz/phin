@@ -424,11 +424,9 @@ describe('class properties', () => {
             false,
             null,
             false,
-            new nodes.VarDeclaration(
-              'b',
-              new types.Number(),
-              new nodes.NumberLiteral('3'),
-            ),
+            'b',
+            new types.Number(),
+            new nodes.NumberLiteral('3'),
           ),
         ],
       ),
@@ -444,14 +442,7 @@ describe('class properties', () => {
         [],
         null,
         [],
-        [
-          new nodes.ClassProperty(
-            false,
-            'private',
-            false,
-            new nodes.VarDeclaration('b', null, null),
-          ),
-        ],
+        [new nodes.ClassProperty(false, 'private', false, 'b', null, null)],
       ),
     ]
     expect(ast(source)).toEqual(expected)
@@ -465,14 +456,7 @@ describe('class properties', () => {
         [],
         null,
         [],
-        [
-          new nodes.ClassProperty(
-            false,
-            null,
-            true,
-            new nodes.VarDeclaration('b', null, null),
-          ),
-        ],
+        [new nodes.ClassProperty(false, null, true, 'b', null, null)],
       ),
     ]
     expect(ast(source)).toEqual(expected)
@@ -486,14 +470,7 @@ describe('class properties', () => {
         [],
         null,
         [],
-        [
-          new nodes.ClassProperty(
-            true,
-            null,
-            false,
-            new nodes.VarDeclaration('b', null, null),
-          ),
-        ],
+        [new nodes.ClassProperty(true, null, false, 'b', null, null)],
       ),
     ]
     expect(ast(source)).toEqual(expected)
@@ -507,14 +484,7 @@ describe('class properties', () => {
         [],
         null,
         [],
-        [
-          new nodes.ClassProperty(
-            true,
-            'private',
-            true,
-            new nodes.VarDeclaration('b', null, null),
-          ),
-        ],
+        [new nodes.ClassProperty(true, 'private', true, 'b', null, null)],
       ),
     ]
     expect(ast(source)).toEqual(expected)

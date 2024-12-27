@@ -3,9 +3,10 @@ import { expect, test, describe } from 'bun:test'
 import scan from '../scanner'
 import parse from '../parser'
 import { PhpPrinter } from './print'
+import { Kind } from './environment'
 
 function print(src: string) {
-  let result = new PhpPrinter().print(parse(scan(src)))
+  let result = new PhpPrinter(() => Kind.Function).print(parse(scan(src)))
   return result.trim()
 }
 

@@ -7,9 +7,19 @@ const tab = '  '
 
 export class PrintError extends Error {}
 
+function defaultResolveUnknownIdentifier(name: string): Kind {
+  throw new PrintError(`Unknown identifier ${name}`)
+}
+
 export class PhpPrinter
   implements nodes.Visitor<string>, types.Visitor<string>
 {
+  constructor(
+    private resolveUnknownIdentifier: (
+      name: string,
+    ) => Kind = defaultResolveUnknownIdentifier,
+  ) {}
+
   private currentIndent = 0
   private environment = new Environment(null)
 
@@ -151,16 +161,22 @@ export class PhpPrinter
   }
 
   visitClassProperty(node: nodes.ClassProperty): string {
-    return node.variable.accept(this).trim()
+    let type = node.type
+      ? `/** @var ${node.type.accept(this)} $${node.name} */\n`
+      : ''
+    let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''
+    return `${type}$${node.name}${init};`
   }
 
   visitClassDeclaration(node: nodes.ClassDeclaration): string {
-    let result = `class ${node.name} {`
-    let constructor = this.classConstructor(node)
-    if (node.members.length === 0 && !constructor) return result + '}'
-    let members = node.members.map((m) => m.accept(this))
-    if (constructor) members.unshift(constructor)
-    return `class ${node.name} {\n${members.join('\n')}\n}`
+    return this.encloseWith(node.members, () => {
+      let result = `class ${node.name} {`
+      let constructor = this.classConstructor(node)
+      if (node.members.length === 0 && !constructor) return result + '}'
+      let members = node.members.map((m) => m.accept(this))
+      if (constructor) members.unshift(constructor)
+      return `${result}\n${members.join('\n')}\n}`
+    })
   }
 
   classConstructor(node: nodes.ClassDeclaration): string {
@@ -249,8 +265,12 @@ export class PhpPrinter
   }
 
   visitIdentifier(node: nodes.Identifier): string {
-    let kind = this.environment.get(node.name)
+    let kind =
+      this.environment.get(node.name) ??
+      this.resolveUnknownIdentifier(node.name)
     if (kind === Kind.Var) return `$${node.name}`
+    if (kind === Kind.ClassProperty) return `$this->${node.name}`
+    if (kind === Kind.ClassMethod) return `$this->${node.name}`
     return `${node.name}`
   }
 

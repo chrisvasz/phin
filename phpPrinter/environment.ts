@@ -1,6 +1,5 @@
 import { Node } from '../nodes'
 import * as Nodes from '../nodes'
-import { PrintError } from './print'
 
 export enum Kind {
   Var,
@@ -20,10 +19,8 @@ export class Environment {
     this.addNodes(nodes)
   }
 
-  get(name: string): Kind {
-    let result = this.values.get(name) ?? this.enclosing?.get(name) ?? null
-    if (result == null) throw new PrintError(`Unknown identifier ${name}`)
-    return result
+  get(name: string): Kind | null {
+    return this.values.get(name) ?? this.enclosing?.get(name) ?? null
   }
 
   add(value: string, kind: Kind) {
@@ -39,7 +36,7 @@ export class Environment {
       } else if (node instanceof Nodes.ClassParam) {
         this.add(node.name, Kind.Var)
       } else if (node instanceof Nodes.ClassProperty) {
-        this.add(node.variable.name, Kind.ClassProperty)
+        this.add(node.name, Kind.ClassProperty)
       } else if (node instanceof Nodes.ClassMethod) {
         this.add(node.name, Kind.ClassMethod)
       }
