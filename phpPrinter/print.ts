@@ -356,8 +356,9 @@ export class PhpPrinter
   }
 
   visitPostfix(node: nodes.Postfix): string {
-    throw new Error('Method not implemented.')
+    return `${node.left.accept(this)}${node.operator}`
   }
+
   visitPrefix(node: nodes.Prefix): string {
     throw new Error('Method not implemented.')
   }

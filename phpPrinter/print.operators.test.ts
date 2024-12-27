@@ -59,3 +59,17 @@ describe('print grouping', () => {
     expect(print(source)).toEqual(expected)
   })
 })
+
+describe('print postfix', () => {
+  test('a++', () => {
+    let source = 'a++'
+    let expected = '$a++;'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('a--', () => {
+    let source = 'a--'
+    let expected = '$a--;'
+    expect(print(source)).toEqual(expected)
+  })
+})
