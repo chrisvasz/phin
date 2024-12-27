@@ -441,6 +441,13 @@ describe('scan tokens', () => {
     expect(actual).toEqual(expected)
   })
 
+  test('.', () => {
+    let expected = [new Token(DOT, '.', undefined, 1), eof()]
+    let source = '.'
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+
   test('keywords', () => {
     const list = {
       abstract: ABSTRACT,
@@ -620,6 +627,36 @@ describe('scan number literals', () => {
   test('0b010_101_011', () => {
     let expected = [new Token(NUMBER, '0b010_101_011', '0b010101011', 1), eof()]
     let source = '0b010_101_011'
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+})
+
+describe('scan identifiers', () => {
+  test('abc', () => {
+    let expected = [new Token(IDENTIFIER, 'abc', undefined, 1), eof()]
+    let source = 'abc'
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+
+  test('abc123', () => {
+    let expected = [new Token(IDENTIFIER, 'abc123', undefined, 1), eof()]
+    let source = 'abc123'
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+
+  test('_abc', () => {
+    let expected = [new Token(IDENTIFIER, '_abc', undefined, 1), eof()]
+    let source = '_abc'
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+
+  test('abc_123', () => {
+    let expected = [new Token(IDENTIFIER, 'abc_123', undefined, 1), eof()]
+    let source = 'abc_123'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
