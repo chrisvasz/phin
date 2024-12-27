@@ -46,6 +46,7 @@ export type Expr =
   | OptionalGet
   | Postfix
   | Prefix
+  | ScopeResolution
   | StringLiteral
   | Super
   | Ternary
@@ -92,6 +93,7 @@ export interface Visitor<T> {
   visitPostfix(node: Postfix): T
   visitPrefix(node: Prefix): T
   visitReturn(node: Return): T
+  visitScopeResolution(node: ScopeResolution): T
   visitStringLiteral(node: StringLiteral): T
   visitSuper(): T
   visitTernary(node: Ternary): T
@@ -722,5 +724,18 @@ export class Super extends Node {
   _type = 'Super' as const
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitSuper()
+  }
+}
+
+export class ScopeResolution extends Node {
+  _type = 'ScopeResolution' as const
+  constructor(
+    public readonly left: Expr,
+    public readonly right: string,
+  ) {
+    super()
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitScopeResolution(this)
   }
 }

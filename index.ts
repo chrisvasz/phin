@@ -1,5 +1,5 @@
 // @ts-ignore
-import src from './sample.phlank' with { type: 'text' }
+import src from './movie.phlank' with { type: 'text' }
 // @ts-ignore
 import { $ } from 'bun'
 import parse from './parser'

@@ -6,7 +6,7 @@ import { PhpPrinter } from './print'
 import { Kind } from './environment'
 
 function print(src: string) {
-  let result = new PhpPrinter(() => Kind.Var).print(parse(scan(src)))
+  let result = new PhpPrinter(() => Kind.Variable).print(parse(scan(src)))
   return result.trim()
 }
 

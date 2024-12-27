@@ -117,12 +117,10 @@ export class PhpPrinter
 
   visitBlock(node: nodes.Block): string {
     if (node.statements.length === 0) return '{}'
-    return this.encloseWith(node.statements, () => {
-      let body = this.indentBlock(() =>
-        node.statements.map((s) => s.accept(this)),
-      )
-      return ['{', body, this.indent('}')].join('\n')
-    })
+    let body = this.indentBlock(() =>
+      node.statements.map((s) => s.accept(this)),
+    )
+    return ['{', body, this.indent('}')].join('\n')
   }
 
   visitBooleanLiteral(node: nodes.BooleanLiteral): string {
@@ -142,8 +140,12 @@ export class PhpPrinter
   /////////////////////////////
 
   visitClassConst(node: nodes.ClassConst): string {
-    throw new Error('Method not implemented.')
+    // TODO final, abstract, static, docblock
+    let visibility = node.visibility ? `${node.visibility} ` : ''
+    let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''
+    return `${visibility}const ${node.name}${init};`
   }
+
   visitClassInitializer(node: nodes.ClassInitializer): string {
     throw new Error('Method not implemented.')
   }
@@ -171,7 +173,9 @@ export class PhpPrinter
   }
 
   visitClassParam(node: nodes.ClassParam): string {
-    return `private readonly $${node.name}`
+    // TODO complex types
+    let type = node.type ? `${node.type.accept(this)} ` : ''
+    return `private readonly ${type}$${node.name}`
   }
 
   visitClassProperty(node: nodes.ClassProperty): string {
@@ -227,13 +231,12 @@ export class PhpPrinter
     let key = node.key ? `${node.key.accept(this)} => ` : ''
     let value = node.value.accept(this)
     let result = `foreach (${iterable} as ${key}${value}) `
-    let body = this.encloseWith([node.key ?? node.value, node.value], () =>
-      node.body.accept(this),
-    )
+    let body = node.body.accept(this)
     return result + body
   }
 
   visitForeachVariable(node: nodes.ForeachVariable): string {
+    this.environment.add(node.name, Kind.Variable)
     // TODO output var comment for type
     return `$${node.name}`
   }
@@ -268,7 +271,7 @@ export class PhpPrinter
 
   functionParam(param: nodes.Param): string {
     let result = param.accept(this)
-    this.environment.add(param.name, Kind.Var)
+    this.environment.add(param.name, Kind.Variable)
     return result
   }
 
@@ -313,7 +316,7 @@ export class PhpPrinter
     let kind =
       this.environment.get(node.name) ??
       this.resolveUnknownIdentifier(node.name)
-    if (kind === Kind.Var) return `$${node.name}`
+    if (kind === Kind.Variable) return `$${node.name}`
     if (kind === Kind.ClassProperty) return `$this->${node.name}`
     if (kind === Kind.ClassMethod) return `$this->${node.name}`
     return `${node.name}`
@@ -369,6 +372,11 @@ export class PhpPrinter
     let value = node.value ? ' ' + node.value.accept(this) : ''
     return `return${value};`
   }
+
+  visitScopeResolution(node: nodes.ScopeResolution): string {
+    return `${node.left.accept(this)}::${node.right}`
+  }
+
   visitStringLiteral(node: nodes.StringLiteral): string {
     return `"${node.value}"`
   }
@@ -395,7 +403,7 @@ export class PhpPrinter
   }
 
   visitVarDeclaration(node: nodes.VarDeclaration): string {
-    this.environment.add(node.name, Kind.Var)
+    this.environment.add(node.name, Kind.Variable)
     let type = node.type
       ? `/** @var ${node.type.accept(this)} $${node.name} */\n`
       : ''

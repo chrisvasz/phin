@@ -71,6 +71,17 @@ describe('print scoping: vars and functions', () => {
     let source = 'fun a(c = b) {}'
     expect(() => print(source)).toThrow(new PrintError('Unknown identifier b'))
   })
+
+  test('fun a() { var b; b; }', () => {
+    let source = 'fun a() { var b; b; }'
+    let expected = `
+function a() {
+  $b;
+  $b;
+}
+    `.trim()
+    expect(print(source)).toEqual(expected)
+  })
 })
 
 describe('print scoping: classes', () => {

@@ -6,7 +6,7 @@ import { PhpPrinter } from './print'
 import { Kind } from './environment'
 
 function print(src: string) {
-  let result = new PhpPrinter(() => Kind.Var).print(parse(scan(src)))
+  let result = new PhpPrinter(() => Kind.Variable).print(parse(scan(src)))
   return result.trim()
 }
 
@@ -90,6 +90,14 @@ describe('print postfix', () => {
   test('a--', () => {
     let source = 'a--'
     let expected = '$a--;'
+    expect(print(source)).toEqual(expected)
+  })
+})
+
+describe('print ::', () => {
+  test('A::b', () => {
+    let source = 'A::b'
+    let expected = '$A::b;'
     expect(print(source)).toEqual(expected)
   })
 })

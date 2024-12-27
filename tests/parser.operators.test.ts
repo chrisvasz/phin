@@ -260,6 +260,18 @@ describe('assign', () => {
   }
 })
 
+describe('::', () => {
+  test('Movie::REGULAR', () => {
+    let source = 'Movie::REGULAR'
+    let expected = expressions(
+      new nodes.ScopeResolution(identifier('Movie'), 'REGULAR'),
+    )
+    expect(ast(source)).toEqual(expected)
+  })
+  test.todo('precedence')
+  test.todo('associativity')
+})
+
 describe('new/clone', () => {
   test('new a', () => {
     let source = 'new a'

@@ -59,7 +59,6 @@ function foo() {
   test('fun foo(a: int|string = 3): int&float {}', () => {
     let source = 'fun foo(a: int|string = 3): int&float {}'
     let expected = 'function foo(int|string $a = 3): int&float {}'
-    console.log(print(source))
     expect(print(source)).toEqual(expected)
   })
 

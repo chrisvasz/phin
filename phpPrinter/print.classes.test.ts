@@ -64,6 +64,16 @@ class A {
       `.trim()
     expect(print(source)).toEqual(expected)
   })
+
+  test('class A { const B = 1; }', () => {
+    let source = 'class A { const B = 1; }'
+    let expected = `
+class A {
+  const B = 1;
+}
+      `.trim()
+    expect(print(source)).toEqual(expected)
+  })
 })
 
 describe('print class methods', () => {

@@ -9,13 +9,12 @@ function print(src: string) {
   return result.trim()
 }
 
-test('print Movie solution', () => {
+test('print Movie original', () => {
   let source = `
-var REGULAR = 0;
-var NEW_RELEASE = 1;
-var CHILDRENS = 2;
-
 class Movie(title: string, priceCode: int) {
+  const REGULAR = 0;
+  const NEW_RELEASE = 1;
+  const CHILDRENS = 2;
   fun getPriceCode(): int => priceCode;
   fun getTitle(): string => title;
 }
@@ -39,14 +38,14 @@ class Customer(name: string) {
     // determine amounts for each line
     foreach (rentals as rental) {
       var thisAmount = 0;
-      if (rental.getMovie().getPriceCode() == REGULAR) {
+      if (rental.getMovie().getPriceCode() == Movie::REGULAR) {
         thisAmount += 2;
         if (rental.getDaysRented() > 2) {
           thisAmount += (rental.getDaysRented() - 2) * 1.5;
         }
-      } else if (rental.getMovie().getPriceCode() == NEW_RELEASE) {
+      } else if (rental.getMovie().getPriceCode() == Movie::NEW_RELEASE) {
         thisAmount += rental.getDaysRented() * 3;
-      } else if (rental.getMovie().getPriceCode() == CHILDRENS) {
+      } else if (rental.getMovie().getPriceCode() == Movie::CHILDRENS) {
         thisAmount += 1.5;
         if (rental.getDaysRented() > 3) {
           thisAmount += (rental.getDaysRented() - 3) * 1.5;
@@ -57,7 +56,7 @@ class Customer(name: string) {
       frequentRenterPoints++;
 
       // add bonus for a two day new release rental
-      if ((rental.getMovie().getPriceCode() == NEW_RELEASE) &&
+      if ((rental.getMovie().getPriceCode() == Movie::NEW_RELEASE) &&
           rental.getDaysRented() > 1) frequentRenterPoints++;
 
       // show figures for this rental
@@ -73,9 +72,9 @@ class Customer(name: string) {
   }
 }
 
-var prognosisNegative = new Movie("Prognosis Negative", NEW_RELEASE);
-var sackLunch = new Movie("Sack Lunch", CHILDRENS);
-var painAndYearning = new Movie("The Pain and the Yearning", REGULAR);
+var prognosisNegative = new Movie("Prognosis Negative", Movie::NEW_RELEASE);
+var sackLunch = new Movie("Sack Lunch", Movie::CHILDRENS);
+var painAndYearning = new Movie("The Pain and the Yearning", Movie::REGULAR);
 
 var customer = new Customer("Susan Ross");
 customer.addRental(new Rental(prognosisNegative, 3));
@@ -85,11 +84,11 @@ customer.addRental(new Rental(sackLunch, 1));
 echo customer.statement();
   `.trim()
   let expected = `
-$REGULAR = 0;
-$NEW_RELEASE = 1;
-$CHILDRENS = 2;
 class Movie {
-  public function __construct(private readonly $title, private readonly $priceCode) {}
+  public function __construct(private readonly string $title, private readonly int $priceCode) {}
+  const REGULAR = 0;
+  const NEW_RELEASE = 1;
+  const CHILDRENS = 2;
   function getPriceCode(): int {
     return $this->priceCode;
   }
@@ -98,7 +97,7 @@ class Movie {
   }
 }
 class Rental {
-  public function __construct(private readonly $movie, private readonly $daysRented) {}
+  public function __construct(private readonly Movie $movie, private readonly int $daysRented) {}
   function getDaysRented(): int {
     return $this->daysRented;
   }
@@ -107,7 +106,7 @@ class Rental {
   }
 }
 class Customer {
-  public function __construct(private readonly $name) {}
+  public function __construct(private readonly string $name) {}
   private array $rentals = [];
   function addRental(Rental $rental) {
     return array_push($this->rentals, $rental);
@@ -121,21 +120,21 @@ class Customer {
     $result = "Rental Record for " . $this->name . ":";
     foreach ($this->rentals as $rental) {
       $thisAmount = 0;
-      if ($rental->getMovie()->getPriceCode() == $REGULAR) {
+      if ($rental->getMovie()->getPriceCode() == Movie::REGULAR) {
         $thisAmount += 2;
         if ($rental->getDaysRented() > 2) {
           $thisAmount += ($rental->getDaysRented() - 2) * 1.5;
         }
-      } else if ($rental->getMovie()->getPriceCode() == $NEW_RELEASE) {
+      } else if ($rental->getMovie()->getPriceCode() == Movie::NEW_RELEASE) {
         $thisAmount += $rental->getDaysRented() * 3;
-      } else if ($rental->getMovie()->getPriceCode() == $CHILDRENS) {
+      } else if ($rental->getMovie()->getPriceCode() == Movie::CHILDRENS) {
         $thisAmount += 1.5;
         if ($rental->getDaysRented() > 3) {
           $thisAmount += ($rental->getDaysRented() - 3) * 1.5;
         }
       }
       $frequentRenterPoints++;
-      if (($rental->getMovie()->getPriceCode() == $NEW_RELEASE) && $rental->getDaysRented() > 1) $frequentRenterPoints++;
+      if (($rental->getMovie()->getPriceCode() == Movie::NEW_RELEASE) && $rental->getDaysRented() > 1) $frequentRenterPoints++;
       $result .= $rental->getMovie()->getTitle() . " " . $thisAmount . " ";
       $totalAmount += $thisAmount;
     }
@@ -144,9 +143,9 @@ class Customer {
     return $result;
   }
 }
-$prognosisNegative = new Movie("Prognosis Negative", $NEW_RELEASE);
-$sackLunch = new Movie("Sack Lunch", $CHILDRENS);
-$painAndYearning = new Movie("The Pain and the Yearning", $REGULAR);
+$prognosisNegative = new Movie("Prognosis Negative", Movie::NEW_RELEASE);
+$sackLunch = new Movie("Sack Lunch", Movie::CHILDRENS);
+$painAndYearning = new Movie("The Pain and the Yearning", Movie::REGULAR);
 $customer = new Customer("Susan Ross");
 $customer->addRental(new Rental($prognosisNegative, 3));
 $customer->addRental(new Rental($painAndYearning, 1));

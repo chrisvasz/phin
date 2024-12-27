@@ -2,13 +2,14 @@ import { Node } from '../nodes'
 import * as Nodes from '../nodes'
 
 export enum Kind {
-  Var,
+  Variable = 1,
   Function,
   Class,
   ClassProperty,
   ClassMethod,
 }
 
+// TODO performance
 export class Environment {
   private readonly values = new Map<string, Kind>()
 
@@ -19,8 +20,15 @@ export class Environment {
     this.addNodes(nodes)
   }
 
+  // In PHP, functions do not inherit variables from the parent scope
+  private getNonVariable(name: string): Kind | null {
+    let local = this.values.get(name)
+    if (local && local !== Kind.Variable) return local
+    return this.enclosing?.getNonVariable(name) ?? null
+  }
+
   get(name: string): Kind | null {
-    return this.values.get(name) ?? this.enclosing?.get(name) ?? null
+    return this.values.get(name) ?? this.enclosing?.getNonVariable(name) ?? null
   }
 
   add(value: string, kind: Kind) {
@@ -39,8 +47,6 @@ export class Environment {
         this.add(node.name, Kind.ClassProperty)
       } else if (node instanceof Nodes.ClassMethod) {
         this.add(node.name, Kind.ClassMethod)
-      } else if (node instanceof Nodes.ForeachVariable) {
-        this.add(node.name, Kind.Var)
       }
     }
   }

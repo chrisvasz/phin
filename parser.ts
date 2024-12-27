@@ -762,6 +762,8 @@ export default function parse(tokens: Token[]): Stmt[] {
         ex = getExpression(ex)
       } else if (match(OPTIONAL_CHAIN)) {
         ex = optionalGetExpression(ex)
+      } else if (match(COLON_COLON)) {
+        ex = scopeResolution(ex)
       } else break
     }
     return ex
@@ -787,6 +789,11 @@ export default function parse(tokens: Token[]): Stmt[] {
   function optionalGetExpression(receiver: Expr): nodes.OptionalGet {
     let name = consume('Expect property name after ?.', IDENTIFIER).lexeme
     return new nodes.OptionalGet(receiver, name)
+  }
+
+  function scopeResolution(receiver: Expr): nodes.ScopeResolution {
+    let name = consume('Expect property name after ::', IDENTIFIER).lexeme
+    return new nodes.ScopeResolution(receiver, name)
   }
 
   function primary(): Expr {
