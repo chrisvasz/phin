@@ -112,3 +112,21 @@ describe('print number literals', () => {
     expect(print(source)).toEqual(expected)
   })
 })
+
+test('null', () => {
+  let source = 'null'
+  let expected = 'null;'
+  expect(print(source)).toEqual(expected)
+})
+
+test('true', () => {
+  let source = 'true'
+  let expected = 'true;'
+  expect(print(source)).toEqual(expected)
+})
+
+test('false', () => {
+  let source = 'false'
+  let expected = 'false;'
+  expect(print(source)).toEqual(expected)
+})

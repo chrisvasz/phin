@@ -9,7 +9,7 @@ function print(src: string) {
   return result.trim()
 }
 
-describe('print scoping', () => {
+describe('print scoping: vars and functions', () => {
   test('a', () => {
     let source = 'a'
     expect(() => print(source)).toThrow(new PrintError('Unknown identifier a'))
@@ -73,7 +73,7 @@ describe('print scoping', () => {
   })
 })
 
-describe('print scoping with classes', () => {
+describe('print scoping: classes', () => {
   test('class A {} A;', () => {
     let source = 'class A {} A;'
     let expected = 'class A {}\nA;'
@@ -102,5 +102,36 @@ class A {
   test('class A { var b; } b;', () => {
     let source = 'class A { var b; } b;'
     expect(() => print(source)).toThrow(new PrintError('Unknown identifier b'))
+  })
+})
+
+describe('print scoping: foreach', () => {
+  test('foreach (a as b) {}', () => {
+    let source = 'var a; foreach (a as b) {}'
+    let expected = '$a;\nforeach ($a as $b) {}'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('foreach (a as b) { b; }', () => {
+    let source = 'var a; foreach (a as b) { b; }'
+    let expected = `
+$a;
+foreach ($a as $b) {
+  $b;
+}
+    `.trim()
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('foreach (a as key => b) { b; }', () => {
+    let source = 'var a; foreach (a as key => b) { b;key; }'
+    let expected = `
+$a;
+foreach ($a as $key => $b) {
+  $b;
+  $key;
+}
+    `.trim()
+    expect(print(source)).toEqual(expected)
   })
 })

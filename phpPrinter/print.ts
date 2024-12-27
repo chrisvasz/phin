@@ -122,7 +122,7 @@ export class PhpPrinter
   }
 
   visitBooleanLiteral(node: nodes.BooleanLiteral): string {
-    throw new Error('Method not implemented.')
+    return node.value ? 'true' : 'false'
   }
 
   visitCall(node: nodes.Call): string {
@@ -219,8 +219,21 @@ export class PhpPrinter
   }
 
   visitForeach(node: nodes.Foreach): string {
-    throw new Error('Method not implemented.')
+    let iterable = node.iterable.accept(this)
+    let key = node.key ? `${node.key.accept(this)} => ` : ''
+    let value = node.value.accept(this)
+    let result = `foreach (${iterable} as ${key}${value}) `
+    let body = this.encloseWith([node.key ?? node.value, node.value], () =>
+      node.body.accept(this),
+    )
+    return this.indent(result) + body
   }
+
+  visitForeachVariable(node: nodes.ForeachVariable): string {
+    // TODO output var comment for type
+    return `$${node.name}`
+  }
+
   visitFor(node: nodes.For): string {
     throw new Error('Method not implemented.')
   }
@@ -302,11 +315,18 @@ export class PhpPrinter
   }
 
   visitIf(node: nodes.If): string {
-    throw new Error('Method not implemented.')
+    let result = `if (${node.condition.accept(this)}) `
+    let thenBranch = node.thenBranch.accept(this)
+    let elseBranch = node.elseBranch
+      ? ` else ${node.elseBranch.accept(this)}`
+      : ''
+    return this.indent(result) + thenBranch + elseBranch
   }
+
   visitMatchArm(node: nodes.MatchArm): string {
     throw new Error('Method not implemented.')
   }
+
   visitMatch(node: nodes.Match): string {
     throw new Error('Method not implemented.')
   }
@@ -316,7 +336,7 @@ export class PhpPrinter
   }
 
   visitNullLiteral(node: nodes.NullLiteral): string {
-    throw new Error('Method not implemented.')
+    return 'null'
   }
 
   visitNumberLiteral(node: nodes.NumberLiteral): string {

@@ -17,53 +17,47 @@ class Customer(name: string) {
 
   fun addRental(rental: Rental) => array_push(rentals, rental);
   fun getName(): string => name;
-  fun statement(): string => "hello world\n";
 
-  // public function statement(): string {
-  //   $totalAmount = 0;
-  //   $frequentRenterPoints = 0;
-  //   $result = "Rental Record for " . this.getName() . "\n";
+  public fun statement(): string {
+    var totalAmount = 0;
+    var frequentRenterPoints = 0;
+    var result = "Rental Record for " +. name +. ":";
 
-  //   // determine amounts for each line
-  //   foreach (this.rentals as $rental) {
-  //     $thisAmount = 0;
+    // determine amounts for each line
+    foreach (rentals as rental) {
+      var thisAmount = 0;
+      if (rental.getMovie().getPriceCode() == REGULAR) {
+        thisAmount += 2;
+        if (rental.getDaysRented() > 2) {
+          thisAmount += (rental.getDaysRented() - 2) * 1.5;
+        }
+      } else if (rental.getMovie().getPriceCode() == NEW_RELEASE) {
+        thisAmount += rental.getDaysRented() * 3;
+      } else if (rental.getMovie().getPriceCode() == CHILDRENS) {
+        thisAmount += 1.5;
+        if (rental.getDaysRented() > 3) {
+          thisAmount += (rental.getDaysRented() - 3) * 1.5;
+        }
+      }
 
-  //     switch ($rental.getMovie().getPriceCode()) {
-  //       case Movie::REGULAR:
-  //         $thisAmount += 2;
-  //         if($rental.getDaysRented() > 2)
-  //           $thisAmount += ($rental.getDaysRented() - 2) * 1.5;
-  //         break;
-  //       case Movie::NEW_RELEASE:
-  //         $thisAmount += $rental.getDaysRented() * 3;
-  //         break;
-  //       case Movie::CHILDRENS:
-  //         $thisAmount += 1.5;
-  //         if($rental.getDaysRented() > 3)
-  //           $thisAmount += ($rental.getDaysRented() - 3) *1.5;
-  //         break;
-  //     }
+      // add frequent renter points
+      frequentRenterPoints++;
 
-  //     // add frequent renter points
-  //     $frequentRenterPoints++;
+      // add bonus for a two day new release rental
+      if ((rental.getMovie().getPriceCode() == NEW_RELEASE) &&
+          rental.getDaysRented() > 1) frequentRenterPoints++;
 
-  //     // add bonus for a two day new release rental
-  //     if (($rental.getMovie().getPriceCode() == Movie::NEW_RELEASE) &&
-  //         $rental.getDaysRented() > 1) $frequentRenterPoints++;
+      // show figures for this rental
+      result +.= rental.getMovie().getTitle() +. " " +. thisAmount +. " ";
+      totalAmount += thisAmount;
+    }
 
-  //     // show figures for this rental
-  //     $result .= "\t" . $rental.getMovie().getTitle() . "\t" .
-  //                 $thisAmount . "\n";
-  //     $totalAmount += $thisAmount;
-  //   }
+    // add footer lines
+    result +.= "Amount owed is " +. totalAmount +. ". ";
+    result +.= "You earned " +. frequentRenterPoints +.  " frequent renter points";
 
-  //   // add footer lines
-  //   $result .= "Amount owed is " . $totalAmount . "\n";
-  //   $result .= "You earned " . $frequentRenterPoints .
-  //           " frequent renter points";
-
-  //   return $result;
-  // }
+    return result;
+  }
 }
 
 var prognosisNegative = new Movie("Prognosis Negative", NEW_RELEASE);

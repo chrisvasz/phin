@@ -75,6 +75,7 @@ export interface Visitor<T> {
   visitExpressionStatement(node: ExpressionStatement): T
   visitFor(node: For): T
   visitForeach(node: Foreach): T
+  visitForeachVariable(node: ForeachVariable): T
   visitFunctionDeclaration(node: FunctionDeclaration): T
   visitFunctionExpression(node: FunctionExpression): T
   visitGetExpr(node: Get): T
@@ -192,8 +193,8 @@ export class For extends Node {
 export class Foreach extends Node {
   _type = 'Foreach' as const
   constructor(
-    public readonly key: VarDeclaration | null, // TODO don't use var for this, can't have initializer
-    public readonly value: VarDeclaration, // TODO don't use var for this, can't have initializer
+    public readonly key: ForeachVariable | null,
+    public readonly value: ForeachVariable,
     public readonly iterable: Expr,
     public readonly body: Node,
   ) {
@@ -201,6 +202,19 @@ export class Foreach extends Node {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitForeach(this)
+  }
+}
+
+export class ForeachVariable extends Node {
+  _type = 'ForeachVariable' as const
+  constructor(
+    public readonly name: string,
+    public readonly type: Type | null,
+  ) {
+    super()
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitForeachVariable(this)
   }
 }
 

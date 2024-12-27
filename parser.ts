@@ -448,15 +448,21 @@ export default function parse(tokens: Token[]): Stmt[] {
     consume('Expect "(" after "foreach"', LEFT_PAREN)
     let iterable = expression()
     consume('Expect "as" after foreach iterable expression', AS)
-    let key: nodes.VarDeclaration | null = null
-    let value = varWithType()
+    let value = foreachVariable()
+    let key: null | nodes.ForeachVariable = null
     if (match(ARROW)) {
       key = value
-      value = varWithType()
+      value = foreachVariable()
     }
     consume('Expect ")" after foreach expression', RIGHT_PAREN)
     let body = statement()
     return new nodes.Foreach(key, value, iterable, body)
+  }
+
+  function foreachVariable(): nodes.ForeachVariable {
+    let name = consume('Expect variable name', IDENTIFIER).lexeme
+    let type = match(COLON) ? typeAnnotation() : null
+    return new nodes.ForeachVariable(name, type)
   }
 
   function forStatement(): nodes.For {

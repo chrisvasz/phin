@@ -124,7 +124,7 @@ describe('foreach', () => {
     let expected = [
       new nodes.Foreach(
         null,
-        new nodes.VarDeclaration('i', null, null),
+        new nodes.ForeachVariable('i', null),
         new nodes.Identifier('list'),
         new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
       ),
@@ -137,7 +137,7 @@ describe('foreach', () => {
     let expected = [
       new nodes.Foreach(
         null,
-        new nodes.VarDeclaration('i', null, null),
+        new nodes.ForeachVariable('i', null),
         new nodes.Identifier('list'),
         new nodes.Block([
           new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
@@ -152,7 +152,7 @@ describe('foreach', () => {
     let expected = [
       new nodes.Foreach(
         null,
-        new nodes.VarDeclaration('i', new types.Number(), null),
+        new nodes.ForeachVariable('i', new types.Number()),
         new nodes.Identifier('list'),
         new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
       ),
@@ -164,8 +164,8 @@ describe('foreach', () => {
     let source = 'foreach (list as i => l) 2'
     let expected = [
       new nodes.Foreach(
-        new nodes.VarDeclaration('i', null, null),
-        new nodes.VarDeclaration('l', null, null),
+        new nodes.ForeachVariable('i', null),
+        new nodes.ForeachVariable('l', null),
         new nodes.Identifier('list'),
         new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
       ),
@@ -177,8 +177,8 @@ describe('foreach', () => {
     let source = 'foreach (list as i: number => l: Rental) 2'
     let expected = [
       new nodes.Foreach(
-        new nodes.VarDeclaration('i', new types.Number(), null),
-        new nodes.VarDeclaration('l', new types.Identifier('Rental', []), null),
+        new nodes.ForeachVariable('i', new types.Number()),
+        new nodes.ForeachVariable('l', new types.Identifier('Rental', [])),
         new nodes.Identifier('list'),
         new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
       ),
