@@ -111,6 +111,7 @@ export class False extends Type {
   }
 }
 
+// TODO needs an override for isExpressibleInPhp and simplify
 export class Nullable extends Type {
   constructor(public readonly type: Type) {
     super();
@@ -120,6 +121,7 @@ export class Nullable extends Type {
   }
 }
 
+// TODO needs an override for isExpressibleInPhp and simplify
 export class Union extends Type {
   constructor(public readonly types: Type[]) {
     super();
@@ -129,6 +131,7 @@ export class Union extends Type {
   }
 }
 
+// TODO needs an override for isExpressibleInPhp and simplify
 export class Intersection extends Type {
   constructor(public readonly types: Type[]) {
     super();
