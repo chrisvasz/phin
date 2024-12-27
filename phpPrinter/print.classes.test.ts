@@ -59,7 +59,7 @@ describe('print class properties', () => {
     let source = 'class A { var a; }'
     let expected = `
 class A {
-  $a;
+  public $a;
 }
       `.trim()
     expect(print(source)).toEqual(expected)

@@ -180,7 +180,7 @@ export class PhpPrinter
 
   visitClassProperty(node: nodes.ClassProperty): string {
     // TODO final, abstract, static, docblock
-    let visibility = node.visibility ? `${node.visibility} ` : ''
+    let visibility = `${node.visibility ?? 'public'} `
     let type = node.type ? `${node.type.accept(this)} ` : ''
     let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''
     return `${visibility}${type}$${node.name}${init};`
@@ -188,7 +188,10 @@ export class PhpPrinter
 
   visitClassDeclaration(node: nodes.ClassDeclaration): string {
     return this.encloseWith([...node.params, ...node.members], () => {
-      let declaration = `class ${node.name} {`
+      let extends_ = node.superclass
+        ? ` extends ${node.superclass.accept(this)}`
+        : ''
+      let declaration = `class ${node.name}${extends_} {`
       let body = this.indentBlock(() => {
         let constructor = this.classConstructor(node)
         if (node.members.length === 0 && !constructor) return []
@@ -208,8 +211,9 @@ export class PhpPrinter
   }
 
   visitClassSuperclass(node: nodes.ClassSuperclass): string {
-    throw new Error('Method not implemented.')
+    return node.name
   }
+
   visitClone(node: nodes.Clone): string {
     throw new Error('Method not implemented.')
   }

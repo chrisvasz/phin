@@ -3,58 +3,89 @@ class Movie(title: string, priceCode: int) {
   const NEW_RELEASE = 1;
   const CHILDRENS = 2;
   fun getPriceCode(): int => priceCode;
-  fun getTitle(): string => title;
+  fun getTitle(): string => title; // TODO public readonly title
+
+  // TODO make me a factory
+  // TODO use a match expression
+  fun price(): Price {
+    // TODO implicit self::
+    if (priceCode == Movie::REGULAR) return new Regular();
+    else if (priceCode == Movie::NEW_RELEASE) return new NewRelease();
+    else if (priceCode == Movie::CHILDRENS) return new Childrens();
+    return new Regular();
+  }
+}
+
+abstract class Price {
+  // fun amount(daysRented: int): float; // TODO abstract
+  fun points(daysRented: int): int => 1;
+}
+
+class Regular extends Price {
+  fun amount(daysRented: int): float {
+    var result = 2;
+    if (daysRented > 2) {
+      result += (daysRented - 2) * 1.5;
+    }
+    return result;
+  }
+}
+
+class Childrens extends Price {
+  fun amount(daysRented: int): float {
+    var result = 1.5;
+    if (daysRented > 3) {
+      result += (daysRented - 3) * 1.5;
+    }
+    return result;
+  }
+}
+
+class NewRelease extends Price {
+  fun amount(daysRented: int): float => daysRented * 3;
+  // TODO ternaries
+  fun points(daysRented: int): int {
+    if (daysRented > 1) return 2;
+    return 1;
+  }
 }
 
 class Rental(movie: Movie, daysRented: int) {
-  fun getDaysRented(): int => daysRented;
-  fun getMovie(): Movie => movie;
+  fun getMovie(): Movie => movie; // TODO drop me
+  // var title = movie.getTitle(); // TODO
+  fun points(): int => movie.price().points(daysRented);
+  fun amount(): float => movie.price().amount(daysRented);
 }
 
-class Customer(name: string) {
-  private var rentals: array = [];
-
-  fun addRental(rental: Rental) => array_push(rentals, rental);
-  fun getName(): string => name;
-
-  public fun statement(): string {
-    var totalAmount = 0;
-    var frequentRenterPoints = 0;
-    var result = "Rental Record for " +. name +. ":";
-
-    // determine amounts for each line
+// TODO array<Rental>
+// TODO iterates rentals for foreach
+// TODO rentals.array_map(fun(r: Rental) => r.amount()).array_sum()
+class Rentals(rentals: array) {
+  fun getRentals(): array => rentals; // TODO array<Rental>
+  fun totalPoints(): int {
+    var result = 0;
     foreach (rentals as rental) {
-      var thisAmount = 0;
-      if (rental.getMovie().getPriceCode() == Movie::REGULAR) {
-        thisAmount += 2;
-        if (rental.getDaysRented() > 2) {
-          thisAmount += (rental.getDaysRented() - 2) * 1.5;
-        }
-      } else if (rental.getMovie().getPriceCode() == Movie::NEW_RELEASE) {
-        thisAmount += rental.getDaysRented() * 3;
-      } else if (rental.getMovie().getPriceCode() == Movie::CHILDRENS) {
-        thisAmount += 1.5;
-        if (rental.getDaysRented() > 3) {
-          thisAmount += (rental.getDaysRented() - 3) * 1.5;
-        }
-      }
-
-      // add frequent renter points
-      frequentRenterPoints++;
-
-      // add bonus for a two day new release rental
-      if ((rental.getMovie().getPriceCode() == Movie::NEW_RELEASE) &&
-          rental.getDaysRented() > 1) frequentRenterPoints++;
-
-      // show figures for this rental
-      result +.= rental.getMovie().getTitle() +. " " +. thisAmount +. " ";
-      totalAmount += thisAmount;
+      result += rental.points();
     }
+    return result;
+  }
+  fun totalAmount(): float {
+    var result = 0;
+    foreach (rentals as rental) {
+      result += rental.amount();
+    }
+    return result;
+  }
+}
 
-    // add footer lines
-    result +.= "Amount owed is " +. totalAmount +. ". ";
-    result +.= "You earned " +. frequentRenterPoints +.  " frequent renter points";
-
+class Customer(name: string, rentals: Rentals) {
+  fun statement(): string {
+    var result = "Rental Record for " +. name +. ":";
+    foreach (rentals.getRentals() as rental) {
+      result +.= rental.getMovie().getTitle() +. " " +. rental.amount() +. " ";
+    }
+    result +.= "Amount owed is " +. rentals.totalAmount() +. ". ";
+    result +.= "You earned " +. rentals.totalPoints() +.  " frequent renter points";
     return result;
   }
 }
@@ -62,10 +93,10 @@ class Customer(name: string) {
 var prognosisNegative = new Movie("Prognosis Negative", Movie::NEW_RELEASE);
 var sackLunch = new Movie("Sack Lunch", Movie::CHILDRENS);
 var painAndYearning = new Movie("The Pain and the Yearning", Movie::REGULAR);
-
-var customer = new Customer("Susan Ross");
-customer.addRental(new Rental(prognosisNegative, 3));
-customer.addRental(new Rental(painAndYearning, 1));
-customer.addRental(new Rental(sackLunch, 1));
-
+var rentals = new Rentals(array(
+  new Rental(prognosisNegative, 3),
+  new Rental(painAndYearning, 1),
+  new Rental(sackLunch, 1),
+));
+var customer = new Customer("Susan Ross", rentals);
 echo customer.statement();

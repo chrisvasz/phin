@@ -101,7 +101,7 @@ describe('print scoping: classes', () => {
     let source = 'class A { var b; fun c() => b }'
     let expected = `
 class A {
-  $b;
+  public $b;
   function c() {
     return $this->b;
   }
