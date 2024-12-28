@@ -8,7 +8,7 @@ function ast(source: string) {
   return parse(scan(source))
 }
 
-describe('match expressions', () => {
+describe('parse match expressions', () => {
   test('match (1) {}', () => {
     let source = 'match (1) {}'
     let expected = [
@@ -169,6 +169,63 @@ describe('match expressions', () => {
           new nodes.BooleanLiteral(true),
           [],
           new nodes.ThrowExpression(new nodes.Identifier('a')),
+        ),
+      ),
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+
+  test('match(1) { 1 => match(2) { 2 => 2 } }', () => {
+    let source = 'match(1) { 1 => match(2) { 2 => 2 } }'
+    let expected = [
+      new nodes.ExpressionStatement(
+        new nodes.Match(
+          new nodes.NumberLiteral('1'),
+          [
+            new nodes.MatchArm(
+              [new nodes.NumberLiteral('1')],
+              new nodes.Match(
+                new nodes.NumberLiteral('2'),
+                [
+                  new nodes.MatchArm(
+                    [new nodes.NumberLiteral('2')],
+                    new nodes.NumberLiteral('2'),
+                  ),
+                ],
+                null,
+              ),
+            ),
+          ],
+          null,
+        ),
+      ),
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+})
+
+describe('parse match expressions: precedence', () => {
+  test('higher than assignment', () => {
+    let source = 'a = match(true) {}'
+    let expected = [
+      new nodes.ExpressionStatement(
+        new nodes.Assign(
+          new nodes.Identifier('a'),
+          '=',
+          new nodes.Match(new nodes.BooleanLiteral(true), [], null),
+        ),
+      ),
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+
+  test('higher than !', () => {
+    let source = '!match(true) {}'
+    let expected = [
+      new nodes.ExpressionStatement(
+        new nodes.Unary(
+          '!',
+          new nodes.Match(new nodes.BooleanLiteral(true), [], null),
         ),
       ),
     ]

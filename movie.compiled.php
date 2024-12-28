@@ -1,7 +1,7 @@
 <?php
 class Movie {
   function __construct(public readonly string $title, int $priceCode, ?Price $_price = null) {
-    $this->price = match ($priceCode) {
+    $this->price = $_price ?? match ($priceCode) {
       self::REGULAR => new Regular(),
       self::NEW_RELEASE => new NewRelease(),
       self::CHILDRENS => new Childrens(),

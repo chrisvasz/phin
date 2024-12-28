@@ -542,48 +542,8 @@ export default function parse(tokens: Token[]): Stmt[] {
   function expression(): Expr {
     // TODO are these in the right places? think they need to be AFTER assign
     if (match(FUN)) return functionExpression()
-    if (match(MATCH)) return matchExpression()
     if (match(THROW)) return throwExpression()
     return assignment()
-  }
-
-  function matchExpression(): nodes.Match {
-    consume('Expect "(" after "match"', LEFT_PAREN)
-    let subject = expression()
-    consume('Expect ")" after match subject', RIGHT_PAREN)
-    consume('Expect "{" before match body', LEFT_BRACE)
-    let arms = matchArms()
-    let defaultArm = matchDefaultArm()
-    consume('Expect "}" after match body', RIGHT_BRACE)
-    return new nodes.Match(subject, arms, defaultArm)
-  }
-
-  function matchArms(): nodes.MatchArm[] {
-    let arms: nodes.MatchArm[] = []
-    while (!check(RIGHT_BRACE) && !check(DEFAULT) && !isAtEnd()) {
-      arms.push(matchArm())
-    }
-    return arms
-  }
-
-  function matchArm(): nodes.MatchArm {
-    let patterns = [expression()]
-    while (match(COMMA)) {
-      if (check(ARROW)) break // support trailing commas
-      patterns.push(expression())
-    }
-    consume('Expect "=>" after match patterns', ARROW)
-    let body = expression()
-    match(COMMA) // optional trailing comma
-    return new nodes.MatchArm(patterns, body)
-  }
-
-  function matchDefaultArm(): Expr | null {
-    if (!match(DEFAULT)) return null
-    consume('Expect "=>" after "default"', ARROW)
-    let result = expression()
-    match(COMMA) // optional trailing comma
-    return result
   }
 
   function throwExpression(): Expr {
@@ -740,7 +700,47 @@ export default function parse(tokens: Token[]): Stmt[] {
       let right = unary()
       return new nodes.Unary(operator.lexeme, right)
     }
-    return postfix()
+    return matchExpression()
+  }
+
+  function matchExpression(): Expr {
+    if (!match(MATCH)) return postfix()
+    consume('Expect "(" after "match"', LEFT_PAREN)
+    let subject = expression()
+    consume('Expect ")" after match subject', RIGHT_PAREN)
+    consume('Expect "{" before match body', LEFT_BRACE)
+    let arms = matchArms()
+    let defaultArm = matchDefaultArm()
+    consume('Expect "}" after match body', RIGHT_BRACE)
+    return new nodes.Match(subject, arms, defaultArm)
+  }
+
+  function matchArms(): nodes.MatchArm[] {
+    let arms: nodes.MatchArm[] = []
+    while (!check(RIGHT_BRACE) && !check(DEFAULT) && !isAtEnd()) {
+      arms.push(matchArm())
+    }
+    return arms
+  }
+
+  function matchArm(): nodes.MatchArm {
+    let patterns = [expression()]
+    while (match(COMMA)) {
+      if (check(ARROW)) break // support trailing commas
+      patterns.push(expression())
+    }
+    consume('Expect "=>" after match patterns', ARROW)
+    let body = expression()
+    match(COMMA) // optional trailing comma
+    return new nodes.MatchArm(patterns, body)
+  }
+
+  function matchDefaultArm(): Expr | null {
+    if (!match(DEFAULT)) return null
+    consume('Expect "=>" after "default"', ARROW)
+    let result = expression()
+    match(COMMA) // optional trailing comma
+    return result
   }
 
   function postfix(): Expr {

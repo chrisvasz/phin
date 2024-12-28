@@ -211,6 +211,12 @@ describe('ternary', () => {
     let expected = expressions(ternary(a, b, binary(c, '??', d)))
     expect(ast(source)).toEqual(expected)
   })
+
+  test('ternary lower precedence than ?? reversed', () => {
+    let source = 'a ?? b ? c : d'
+    let expected = expressions(ternary(binary(a, '??', b), c, d))
+    expect(ast(source)).toEqual(expected)
+  })
 })
 
 describe('assign', () => {
