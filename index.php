@@ -1,6 +1,6 @@
 <?php
-$name = 'chris';
-echo "${$name.'a'}" . PHP_EOL;
+$name = "chris\"";
+echo $name . "\n";
 
 
 

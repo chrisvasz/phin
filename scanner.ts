@@ -161,7 +161,7 @@ export default function scan(source: string): Token[] {
   chars[code('|')] = pipe
   chars[code('&')] = () => addToken(match('&') ? LOGICAL_AND : AMPERSAND)
   chars[code('%')] = percent
-  chars[code('"')] = string
+  chars[code('"')] = doubleQuoteString
   chars[code('/')] = slash
   chars[code(' ')] = () => {}
   chars[code('\r')] = () => {}
@@ -283,8 +283,10 @@ export default function scan(source: string): Token[] {
     } else addToken(PIPE)
   }
 
-  function string() {
-    while (peek() !== '"' && peek() !== '\n' && !isAtEnd()) {
+  function doubleQuoteString() {
+    while (!isAtEnd()) {
+      if (peek() === '"' && previous() !== '\\') break
+      if (peek() === '\n') line++
       advance()
     }
     if (peek() !== '"') {

@@ -1,7 +1,7 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import { Token, TokenType } from '../token'
-import scan from '../scanner'
+import { Token, TokenType } from './token'
+import scan from './scanner'
 
 const {
   ABSTRACT,
@@ -431,16 +431,6 @@ describe('scan tokens', () => {
     expect(actual).toEqual(expected)
   })
 
-  test('"string literal"', () => {
-    let expected = [
-      new Token(STRING, '"string literal"', 'string literal', 1),
-      eof(),
-    ]
-    let source = '"string literal"'
-    let actual = scan(source)
-    expect(actual).toEqual(expected)
-  })
-
   test('.', () => {
     let expected = [new Token(DOT, '.', undefined, 1), eof()]
     let source = '.'
@@ -657,6 +647,55 @@ describe('scan identifiers', () => {
   test('abc_123', () => {
     let expected = [new Token(IDENTIFIER, 'abc_123', undefined, 1), eof()]
     let source = 'abc_123'
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+})
+
+describe('scan string literals', () => {
+  test('""', () => {
+    let expected = [new Token(STRING, '""', '', 1), eof()]
+    let source = '""'
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+
+  test('"string literal"', () => {
+    let expected = [
+      new Token(STRING, '"string literal"', 'string literal', 1),
+      eof(),
+    ]
+    let source = '"string literal"'
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+
+  test('"string\\" literal"', () => {
+    let expected = [
+      new Token(STRING, '"string\\" literal"', 'string\\" literal', 1),
+      eof(),
+    ]
+    let source = '"string\\" literal"'
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+
+  test('"string\\t literal"', () => {
+    let expected = [
+      new Token(STRING, '"string\\t literal"', 'string\\t literal', 1),
+      eof(),
+    ]
+    let source = '"string\\t literal"'
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+
+  test('"string\\n literal"', () => {
+    let expected = [
+      new Token(STRING, '"string\\n literal"', 'string\\n literal', 1),
+      eof(),
+    ]
+    let source = '"string\\n literal"'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
