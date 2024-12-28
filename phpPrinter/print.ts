@@ -151,6 +151,7 @@ export class PhpPrinter
   }
 
   visitClassMethod(node: nodes.ClassMethod): string {
+    // TODO fill out encloseWith
     return this.encloseWith([], () => {
       // TODO visibility, final, abstract, static
       let params = this.functionParams(node.params)
@@ -182,33 +183,56 @@ export class PhpPrinter
     // TODO final, abstract, static, docblock
     let visibility = `${node.visibility ?? 'public'} `
     let type = node.type ? `${node.type.accept(this)} ` : ''
-    let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''
-    return `${visibility}${type}$${node.name}${init};`
+    return `${visibility}${type}$${node.name};`
   }
 
   visitClassDeclaration(node: nodes.ClassDeclaration): string {
-    return this.encloseWith([...node.params, ...node.members], () => {
-      let extends_ = node.superclass
-        ? ` extends ${node.superclass.accept(this)}`
-        : ''
-      let declaration = `class ${node.name}${extends_} {`
-      let body = this.indentBlock(() => {
-        let constructor = this.classConstructor(node)
-        if (node.members.length === 0 && !constructor) return []
-        let members = node.members.map((m) => m.accept(this))
-        if (constructor) members.unshift(constructor)
-        return members
-      })
-      if (body === '') return declaration + '}'
-      return [this.indent(declaration), body, this.indent('}')].join('\n')
-    })
+    return this.encloseWith(
+      [...node.params.filter((p) => p.hasModifiers()), ...node.members],
+      () => {
+        let extends_ = node.superclass
+          ? ` extends ${node.superclass.accept(this)}`
+          : ''
+        let declaration = `class ${node.name}${extends_} {`
+        let body = this.indentBlock(() => {
+          let constructor = this.classConstructor(node)
+          if (node.members.length === 0 && !constructor) return []
+          let members = node.members.map((m) => m.accept(this))
+          if (constructor) members.unshift(constructor)
+          return members
+        })
+        if (body === '') return declaration + '}'
+        return [this.indent(declaration), body, this.indent('}')].join('\n')
+      },
+    )
   }
 
   classConstructor(node: nodes.ClassDeclaration): string {
     let { params, constructorVisibility } = node
     let visibility = constructorVisibility ? `${constructorVisibility} ` : ''
-    if (!params.length && !visibility) return ''
-    return `${visibility}function __construct(${this.classParams(params)}) {}`
+    let propertiesWithInitializers = node
+      .properties()
+      .filter((p) => p.initializer) // TODO only non compile time constants
+    if (!params.length && !visibility && !propertiesWithInitializers.length)
+      return ''
+    let declaration = `${visibility}function __construct(${this.classParams(params)}) {`
+    if (!propertiesWithInitializers.length) return declaration + '}'
+    return (
+      declaration +
+      '\n' +
+      this.indentBlock(() =>
+        this.encloseWith([], () => {
+          for (let param of params) {
+            this.environment.add(param.name, Kind.Variable)
+          }
+          return propertiesWithInitializers.map(
+            (p) => `$this->${p.name} = ${p.initializer?.accept(this)};`,
+          )
+        }),
+      ) +
+      '\n' +
+      this.indent('}')
+    )
   }
 
   classParams(params: nodes.ClassParam[]): string {

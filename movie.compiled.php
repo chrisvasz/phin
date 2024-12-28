@@ -1,16 +1,16 @@
 <?php
 class Movie {
-  function __construct(public readonly string $title, private readonly int $priceCode) {}
+  function __construct(public readonly string $title, int $priceCode) {
+    $this->price = match ($priceCode) {
+      self::REGULAR => new Regular(),
+      self::NEW_RELEASE => new NewRelease(),
+      self::CHILDRENS => new Childrens(),
+};
+  }
   const REGULAR = 0;
   const NEW_RELEASE = 1;
   const CHILDRENS = 2;
-  function price(): Price {
-    return match ($this->priceCode) {
-    self::REGULAR => new Regular(),
-    self::NEW_RELEASE => new NewRelease(),
-    self::CHILDRENS => new Childrens(),
-};
-  }
+  public $price;
 }
 class Price {
   function points(int $daysRented): int {
@@ -44,15 +44,15 @@ class NewRelease extends Price {
   }
 }
 class Rental {
-  function __construct(private readonly Movie $movie, private readonly int $daysRented) {}
-  function title(): string {
-    return $this->movie->title;
+  function __construct(private readonly Movie $movie, private readonly int $daysRented) {
+    $this->title = $movie->title;
   }
+  public $title;
   function points(): int {
-    return $this->movie->price()->points($this->daysRented);
+    return $this->movie->price->points($this->daysRented);
   }
   function amount(): float {
-    return $this->movie->price()->amount($this->daysRented);
+    return $this->movie->price->amount($this->daysRented);
   }
 }
 class Rentals {
@@ -80,7 +80,7 @@ class Customer {
   function statement(): string {
     $result = "Rental Record for " . $this->name . ":";
     foreach ($this->rentals->getRentals() as $rental) {
-      $result .= $rental->title() . " " . $rental->amount() . " ";
+      $result .= $rental->title . " " . $rental->amount() . " ";
     }
     $result .= "Amount owed is " . $this->rentals->totalAmount() . ". ";
     $result .= "You earned " . $this->rentals->totalPoints() . " frequent renter points";

@@ -317,6 +317,12 @@ export class ThrowStatement extends Node {
   }
 }
 
+function classProperties(this: ClassDeclaration) {
+  return this.members.filter(
+    (m) => m instanceof ClassProperty,
+  ) as ClassProperty[]
+}
+
 export class ClassDeclaration extends Node {
   _type = 'ClassDeclaration' as const
   constructor(
@@ -333,6 +339,7 @@ export class ClassDeclaration extends Node {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitClassDeclaration(this)
   }
+  properties = classProperties
 }
 
 function classParamModifiers(this: ClassParam) {

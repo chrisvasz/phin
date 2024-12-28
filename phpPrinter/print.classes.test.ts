@@ -71,6 +71,10 @@ describe('print class params & constructor', () => {
   })
 })
 
+describe('print class initializers', () => {
+  test.todo('class A { init { echo "hello world"; } }')
+})
+
 describe('print class properties', () => {
   test('class A { var a; }', () => {
     let source = 'class A { var a; }'
@@ -82,11 +86,27 @@ describe('print class properties', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('class A { const B = 1; }', () => {
-    let source = 'class A { const B = 1; }'
+  test('class A { var a = 1; }', () => {
+    let source = 'class A { var a = 1; }'
     let expected = trimMargin(`
       class A {
-        const B = 1;
+        function __construct() {
+          $this->a = 1;
+        }
+        public $a;
+      }
+    `)
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('class A(a) { var b = a; }', () => {
+    let source = 'class A(a) { var b = a; }'
+    let expected = trimMargin(`
+      class A {
+        function __construct($a) {
+          $this->b = $a;
+        }
+        public $b;
       }
     `)
     expect(print(source)).toEqual(expected)

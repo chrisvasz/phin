@@ -36,6 +36,7 @@ export class Environment {
     this.values.set(value, kind)
   }
 
+  // TODO is this the right place for this responsibility?
   private addNodes(nodes: Node[]) {
     for (let node of nodes) {
       if (node instanceof Nodes.FunctionDeclaration) {
@@ -43,10 +44,7 @@ export class Environment {
       } else if (node instanceof Nodes.ClassDeclaration) {
         this.add(node.name, Kind.Class)
       } else if (node instanceof Nodes.ClassParam) {
-        if (node.hasModifiers()) {
-          // class params are only visible to the class if they have modifiers
-          this.add(node.name, Kind.ClassProperty)
-        }
+        this.add(node.name, Kind.ClassProperty)
       } else if (node instanceof Nodes.ClassProperty) {
         this.add(node.name, Kind.ClassProperty)
       } else if (node instanceof Nodes.ClassMethod) {
