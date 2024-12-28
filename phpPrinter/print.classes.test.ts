@@ -39,6 +39,16 @@ describe('print class params & constructor', () => {
     expect(print(source)).toEqual(expected)
   })
 
+  test('class A(a = 1) {}', () => {
+    let source = 'class A(a = 1) {}'
+    let expected = trimMargin(`
+      class A {
+        function __construct($a = 1) {}
+      }
+    `)
+    expect(print(source)).toEqual(expected)
+  })
+
   test('class A(a) { fun b() => a }', () => {
     let source = 'class A(a) { fun b() => a }'
     expect(() => print(source)).toThrow(new PrintError('Unknown identifier a'))

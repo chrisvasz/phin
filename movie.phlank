@@ -1,5 +1,5 @@
 // TODO pass a Price
-class Movie(+title: string, priceCode: int) {
+class Movie(+title: string, priceCode: int, _price: ?Price = null) {
   const REGULAR = 0;
   const NEW_RELEASE = 1;
   const CHILDRENS = 2;
@@ -7,7 +7,7 @@ class Movie(+title: string, priceCode: int) {
     REGULAR => new Regular(),
     NEW_RELEASE => new NewRelease(),
     CHILDRENS => new Childrens(),
-    // default => throw new DomainException("Unknown price code: " +. priceCode), // TODO
+    default => throw new DomainException("Unknown price code: " +. priceCode),
   };
 }
 

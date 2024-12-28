@@ -59,3 +59,4 @@ export class Environment {
 export const globalEnvironment = new Environment(null)
 globalEnvironment.add('array_push', Kind.Function)
 globalEnvironment.add('array', Kind.Function)
+globalEnvironment.add('DomainException', Kind.Class)

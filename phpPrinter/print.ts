@@ -176,7 +176,8 @@ export class PhpPrinter
   visitClassParam(node: nodes.ClassParam): string {
     // TODO complex types
     let type = node.type ? `${node.type.accept(this)} ` : ''
-    return `${node.modifiers()}${type}$${node.name}`
+    let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''
+    return `${node.modifiers()}${type}$${node.name}${init}`
   }
 
   visitClassProperty(node: nodes.ClassProperty): string {
@@ -376,7 +377,7 @@ export class PhpPrinter
       }
       return result
     })
-    return `${result}\n${arms}\n}`
+    return `${result}\n${arms}\n${this.indent('}')}`
   }
 
   visitMatchArm(node: nodes.MatchArm): string {
