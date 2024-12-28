@@ -17,32 +17,24 @@ function expressions(ex: Expr) {
   return [new nodes.ExpressionStatement(ex)]
 }
 
-function unary(operator: string, right: Expr) {
-  return new nodes.Unary(operator, right)
-}
+const unary = (operator: string, right: Expr) =>
+  new nodes.Unary(operator, right)
+const binary = (left: Expr, operator: string, right: Expr) =>
+  new nodes.Binary(left, operator, right)
+const ternary = (condition: Expr, left: Expr, right: Expr) =>
+  new nodes.Ternary(condition, left, right)
+const new_ = (ex: Expr) => new nodes.New(ex)
+const clone = (ex: Expr) => new nodes.Clone(ex)
+const identifier = (name: string) => new nodes.Identifier(name)
+const number = (value: string) => new nodes.NumberLiteral(value)
+const get = (left: Expr, property: string) => new nodes.Get(left, property)
 
-function binary(left: Expr, operator: string, right: Expr) {
-  return new nodes.Binary(left, operator, right)
-}
-
-function ternary(condition: Expr, left: Expr, right: Expr) {
-  return new nodes.Ternary(condition, left, right)
-}
-
-function assign(name: nodes.Identifier, operator: string, right: Expr) {
+function assign(
+  name: nodes.Identifier | nodes.Get | nodes.ArrayAccess,
+  operator: string,
+  right: Expr,
+) {
   return new nodes.Assign(name, operator, right)
-}
-
-function new_(ex: Expr) {
-  return new nodes.New(ex)
-}
-
-function clone(ex: Expr) {
-  return new nodes.Clone(ex)
-}
-
-function identifier(name: string) {
-  return new nodes.Identifier(name)
 }
 
 const a = identifier('a')
@@ -236,6 +228,9 @@ describe('assign', () => {
     testBasicAssign(op)
     testRightAssociative(op)
     testAssignLowerPrecedenceThanTernary(op)
+    testAssignAcceptsPropertyAccess(op)
+    testAssignAcceptsArrayAccess(op)
+    testAssignAcceptsAccessCombo(op)
   }
 
   function testBasicAssign(op: string) {
@@ -261,6 +256,39 @@ describe('assign', () => {
     test(`${op} lower precedence than ternary`, () => {
       let source = `a ${op} a ? b : c`
       let expected = expressions(assign(a, op, ternary(a, b, c)))
+      expect(ast(source)).toEqual(expected)
+    })
+  }
+
+  function testAssignAcceptsArrayAccess(op: string) {
+    test(`${op} accepts array access`, () => {
+      let source = `a[b] ${op} c`
+      let expected = expressions(assign(new nodes.ArrayAccess(a, b), op, c))
+      expect(ast(source)).toEqual(expected)
+    })
+  }
+
+  function testAssignAcceptsPropertyAccess(op: string) {
+    test(`${op} accepts get expressions`, () => {
+      let source = `a.b = c`
+      let expected = expressions(assign(get(a, 'b'), '=', c))
+      expect(ast(source)).toEqual(expected)
+    })
+  }
+
+  function testAssignAcceptsAccessCombo(op: string) {
+    test(`${op} accepts access combo`, () => {
+      let source = `a.b[3].c[1+2] ${op} d`
+      let expected = expressions(
+        assign(
+          new nodes.ArrayAccess(
+            get(new nodes.ArrayAccess(get(a, 'b'), number('3')), 'c'),
+            binary(number('1'), '+', number('2')),
+          ),
+          op,
+          d,
+        ),
+      )
       expect(ast(source)).toEqual(expected)
     })
   }

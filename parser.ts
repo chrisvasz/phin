@@ -568,7 +568,11 @@ export default function parse(tokens: Token[]): Stmt[] {
     ) {
       let operator = previous()
       let value = assignment()
-      if (result instanceof nodes.Identifier) {
+      if (
+        result instanceof nodes.Identifier ||
+        result instanceof nodes.Get ||
+        result instanceof nodes.ArrayAccess
+      ) {
         return new nodes.Assign(result, operator.lexeme, value)
       }
       throw error(operator, 'Invalid assignment target')
