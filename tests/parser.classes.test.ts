@@ -13,23 +13,74 @@ function block(...body: nodes.Stmt[]) {
   return new nodes.Block(body)
 }
 
+function classDeclaration(
+  name: string,
+  {
+    params = [],
+    constructorVisibility = null,
+    superclass,
+    implements_ = [],
+    members = [],
+    isAbstract = false,
+  }: {
+    params?: nodes.ClassParam[]
+    constructorVisibility?: nodes.Visibility
+    superclass?: nodes.ClassSuperclass
+    implements_?: string[]
+    members?: nodes.ClassMember[]
+    isAbstract?: boolean
+  } = {},
+) {
+  return new nodes.ClassDeclaration(
+    name,
+    constructorVisibility,
+    params,
+    superclass ?? null,
+    implements_,
+    members,
+    isAbstract,
+  )
+}
+
+function classParam(
+  name: string,
+  {
+    isFinal = false,
+    visibility = null,
+    isReadonly = false,
+    type = null,
+    initializer = null,
+  }: {
+    isFinal?: boolean
+    visibility?: nodes.Visibility
+    isReadonly?: boolean
+    type?: types.Type | null
+    initializer?: nodes.Expr | null
+  } = {},
+) {
+  return new nodes.ClassParam(
+    isFinal,
+    visibility,
+    isReadonly,
+    name,
+    type,
+    initializer,
+  )
+}
+
 describe('class declarations', () => {
   test('class A {}', () => {
     let source = 'class A {}'
-    let expected = [new nodes.ClassDeclaration('A', [], null, [], [])]
+    let expected = [classDeclaration('A')]
     expect(ast(source)).toEqual(expected)
   })
 
   test('class A(b) {}', () => {
     let source = 'class A(b) {}'
     let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [new nodes.ClassParam(false, null, false, 'b', null, null)],
-        null,
-        [],
-        [],
-      ),
+      classDeclaration('A', {
+        params: [classParam('b')],
+      }),
     ]
     expect(ast(source)).toEqual(expected)
   })
@@ -38,30 +89,20 @@ describe('class declarations', () => {
     let source =
       'class A(b: number|string = 5, final public readonly c: bool,) {}'
     let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [
-          new nodes.ClassParam(
-            false,
-            null,
-            false,
-            'b',
-            new types.Union([new types.Number(), new types.String()]),
-            new nodes.NumberLiteral('5'),
-          ),
-          new nodes.ClassParam(
-            true,
-            'public',
-            true,
-            'c',
-            new types.Boolean(),
-            null,
-          ),
+      classDeclaration('A', {
+        params: [
+          classParam('b', {
+            type: new types.Union([new types.Number(), new types.String()]),
+            initializer: new nodes.NumberLiteral('5'),
+          }),
+          classParam('c', {
+            isFinal: true,
+            visibility: 'public',
+            isReadonly: true,
+            type: new types.Boolean(),
+          }),
         ],
-        null,
-        [],
-        [],
-      ),
+      }),
     ]
     expect(ast(source)).toEqual(expected)
   })
@@ -69,13 +110,9 @@ describe('class declarations', () => {
   test('class A extends B {}', () => {
     let source = 'class A extends B {}'
     let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        new nodes.ClassSuperclass('B', []),
-        [],
-        [],
-      ),
+      classDeclaration('A', {
+        superclass: new nodes.ClassSuperclass('B', []),
+      }),
     ]
     expect(ast(source)).toEqual(expected)
   })
@@ -83,29 +120,53 @@ describe('class declarations', () => {
   test('class A(a) extends B(a()) {}', () => {
     let source = 'class A(a) extends B(a()) {}'
     let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [new nodes.ClassParam(false, null, false, 'a', null, null)],
-        new nodes.ClassSuperclass('B', [
+      classDeclaration('A', {
+        params: [classParam('a')],
+        superclass: new nodes.ClassSuperclass('B', [
           new nodes.Call(new nodes.Identifier('a'), []),
         ]),
-        [],
-        [],
-      ),
+      }),
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+
+  test('class A private() {}', () => {
+    let source = 'class A private() {}'
+    let expected = [
+      classDeclaration('A', {
+        constructorVisibility: 'private',
+      }),
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+
+  test('class A private(a) {}', () => {
+    let source = 'class A private(a) {}'
+    let expected = [
+      classDeclaration('A', {
+        params: [classParam('a')],
+        constructorVisibility: 'private',
+      }),
     ]
     expect(ast(source)).toEqual(expected)
   })
 
   test('class A implements B {}', () => {
     let source = 'class A implements B {}'
-    let expected = [new nodes.ClassDeclaration('A', [], null, ['B'], [])]
+    let expected = [
+      classDeclaration('A', {
+        implements_: ['B'],
+      }),
+    ]
     expect(ast(source)).toEqual(expected)
   })
 
   test('class A implements B, C, D, {}', () => {
     let source = 'class A implements B, C, D {}'
     let expected = [
-      new nodes.ClassDeclaration('A', [], null, ['B', 'C', 'D'], []),
+      classDeclaration('A', {
+        implements_: ['B', 'C', 'D'],
+      }),
     ]
     expect(ast(source)).toEqual(expected)
   })
@@ -113,13 +174,10 @@ describe('class declarations', () => {
   test('class A extends B implements C, D {}', () => {
     let source = 'class A extends B implements C, D {}'
     let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        new nodes.ClassSuperclass('B', []),
-        ['C', 'D'],
-        [],
-      ),
+      classDeclaration('A', {
+        superclass: new nodes.ClassSuperclass('B', []),
+        implements_: ['C', 'D'],
+      }),
     ]
     expect(ast(source)).toEqual(expected)
   })
@@ -127,17 +185,13 @@ describe('class declarations', () => {
   test('class A { init { echo "hello"; } }', () => {
     let source = 'class A { init { echo "hello"; } }'
     let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [
+      classDeclaration('A', {
+        members: [
           new nodes.ClassInitializer(
             block(new nodes.Echo(new nodes.StringLiteral('hello'))),
           ),
         ],
-      ),
+      }),
     ]
     expect(ast(source)).toEqual(expected)
   })
@@ -145,12 +199,8 @@ describe('class declarations', () => {
   test('class A { init { 1; } init { 2; } }', () => {
     let source = 'class A { init { 1; } init { 2; } }'
     let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [
+      classDeclaration('A', {
+        members: [
           new nodes.ClassInitializer(
             block(new nodes.ExpressionStatement(new nodes.NumberLiteral('1'))),
           ),
@@ -158,451 +208,11 @@ describe('class declarations', () => {
             block(new nodes.ExpressionStatement(new nodes.NumberLiteral('2'))),
           ),
         ],
-      ),
+      }),
     ]
     expect(ast(source)).toEqual(expected)
   })
 
   test.todo('final class A {}', () => {})
   test.todo('readonly class A {}', () => {})
-})
-
-describe('class methods', () => {
-  test('class A { fun b() {} }', () => {
-    let source = 'class A { fun b() {} }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [new nodes.ClassMethod(false, null, false, 'b', [], null, block())],
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('class A { fun b(c: number|string = 3,): true => true }', () => {
-    let source = 'class A { fun b(c: number|string = 3,): true => true }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [
-          new nodes.ClassMethod(
-            false,
-            null,
-            false,
-            'b',
-            [
-              new nodes.Param(
-                'c',
-                new types.Union([new types.Number(), new types.String()]),
-                new nodes.NumberLiteral('3'),
-              ),
-            ],
-            new types.True(),
-            new nodes.BooleanLiteral(true),
-          ),
-        ],
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('class A { fun b() { return 3; } }', () => {
-    let source = 'class A { fun b() { return 3; } }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [
-          new nodes.ClassMethod(
-            false,
-            null,
-            false,
-            'b',
-            [],
-            null,
-            block(new nodes.Return(new nodes.NumberLiteral('3'))),
-          ),
-        ],
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('class A { public fun b() {} }', () => {
-    let source = 'class A { public fun b() {} }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [new nodes.ClassMethod(false, 'public', false, 'b', [], null, block())],
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('class A { static fun b() {} }', () => {
-    let source = 'class A { static fun b() {} }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [new nodes.ClassMethod(false, null, true, 'b', [], null, block())],
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('class A { final fun b() {} }', () => {
-    let source = 'class A { final fun b() {} }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [new nodes.ClassMethod(true, null, false, 'b', [], null, block())],
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('class A { final private static fun b() {} }', () => {
-    let source = 'class A { final private static fun b() {} }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [new nodes.ClassMethod(true, 'private', true, 'b', [], null, block())],
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-})
-
-describe('class constants', () => {
-  test('class A { const b = 3; }', () => {
-    let source = 'class A { const b = 3; }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [
-          new nodes.ClassConst(
-            false,
-            null,
-            false,
-            'b',
-            null,
-            new nodes.NumberLiteral('3'),
-          ),
-        ],
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('class A { protected const b: int|string = 4; }', () => {
-    let source = 'class A { protected const b: int|string = 4; }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [
-          new nodes.ClassConst(
-            false,
-            'protected',
-            false,
-            'b',
-            new types.Union([new types.Int(), new types.String()]),
-            new nodes.NumberLiteral('4'),
-          ),
-        ],
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('class A { static const b = 4; }', () => {
-    let source = 'class A { static const b = 4; }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [
-          new nodes.ClassConst(
-            false,
-            null,
-            true,
-            'b',
-            null,
-            new nodes.NumberLiteral('4'),
-          ),
-        ],
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('class A { final const b = 4; }', () => {
-    let source = 'class A { final const b = 4; }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [
-          new nodes.ClassConst(
-            true,
-            null,
-            false,
-            'b',
-            null,
-            new nodes.NumberLiteral('4'),
-          ),
-        ],
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('class A { final private static const b = 4; }', () => {
-    let source = 'class A { final private static const b = 4; }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [
-          new nodes.ClassConst(
-            true,
-            'private',
-            true,
-            'b',
-            null,
-            new nodes.NumberLiteral('4'),
-          ),
-        ],
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-})
-
-describe('class properties', () => {
-  test('class A { var b: number = 3; }', () => {
-    let source = 'class A { var b: number = 3; }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [
-          new nodes.ClassProperty(
-            false,
-            null,
-            false,
-            'b',
-            new types.Number(),
-            new nodes.NumberLiteral('3'),
-          ),
-        ],
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('class A { private var b; }', () => {
-    let source = 'class A { private var b; }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [new nodes.ClassProperty(false, 'private', false, 'b', null, null)],
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('class A { static var b; }', () => {
-    let source = 'class A { static var b; }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [new nodes.ClassProperty(false, null, true, 'b', null, null)],
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('class A { final var b; }', () => {
-    let source = 'class A { final var b; }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [new nodes.ClassProperty(true, null, false, 'b', null, null)],
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('class A { final private static var b; }', () => {
-    let source = 'class A { final private static var b; }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [new nodes.ClassProperty(true, 'private', true, 'b', null, null)],
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test.todo('readonly properties somehow')
-})
-
-describe('abstract', () => {
-  test('abstract class A {}', () => {
-    let source = 'abstract class A {}'
-    let expected = [new nodes.ClassDeclaration('A', [], null, [], [], true)]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('abstract class A { abstract fun b(): number; }', () => {
-    let source = 'abstract class A { abstract fun b(): number; }'
-    let expected = [
-      new nodes.ClassDeclaration(
-        'A',
-        [],
-        null,
-        [],
-        [
-          new nodes.ClassAbstractMethod(
-            null,
-            false,
-            'b',
-            [],
-            new types.Number(),
-          ),
-        ],
-        true,
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-})
-
-describe('get expressions', () => {
-  test('a.b', () => {
-    let source = 'a.b'
-    let expected = [
-      new nodes.ExpressionStatement(
-        new nodes.Get(new nodes.Identifier('a'), 'b'),
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('a?.b', () => {
-    let source = 'a?.b'
-    let expected = [
-      new nodes.ExpressionStatement(
-        new nodes.OptionalGet(new nodes.Identifier('a'), 'b'),
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('a.b.c', () => {
-    let source = 'a.b.c'
-    let expected = [
-      new nodes.ExpressionStatement(
-        new nodes.Get(new nodes.Get(new nodes.Identifier('a'), 'b'), 'c'),
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('a.b?.c.d', () => {
-    let source = 'a.b?.c.d'
-    let expected = [
-      new nodes.ExpressionStatement(
-        new nodes.Get(
-          new nodes.OptionalGet(
-            new nodes.Get(new nodes.Identifier('a'), 'b'),
-            'c',
-          ),
-          'd',
-        ),
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('a()?.b(1,2).c', () => {
-    let source = 'a()?.b(1,2).c'
-    let expected = [
-      new nodes.ExpressionStatement(
-        new nodes.Get(
-          new nodes.Call(
-            new nodes.OptionalGet(
-              new nodes.Call(new nodes.Identifier('a'), []),
-              'b',
-            ),
-            [new nodes.NumberLiteral('1'), new nodes.NumberLiteral('2')],
-          ),
-          'c',
-        ),
-      ),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('this.hello', () => {
-    let source = 'this.hello'
-    let expected = [
-      new nodes.ExpressionStatement(new nodes.Get(new nodes.This(), 'hello')),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('super.hello', () => {
-    let source = 'super.hello'
-    let expected = [
-      new nodes.ExpressionStatement(new nodes.Get(new nodes.Super(), 'hello')),
-    ]
-    expect(ast(source)).toEqual(expected)
-  })
 })

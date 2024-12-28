@@ -85,7 +85,7 @@ echo customer.statement();
   `.trim()
   let expected = `
 class Movie {
-  public function __construct(private readonly string $title, private readonly int $priceCode) {}
+  function __construct(private readonly string $title, private readonly int $priceCode) {}
   const REGULAR = 0;
   const NEW_RELEASE = 1;
   const CHILDRENS = 2;
@@ -97,7 +97,7 @@ class Movie {
   }
 }
 class Rental {
-  public function __construct(private readonly Movie $movie, private readonly int $daysRented) {}
+  function __construct(private readonly Movie $movie, private readonly int $daysRented) {}
   function getDaysRented(): int {
     return $this->daysRented;
   }
@@ -106,7 +106,7 @@ class Rental {
   }
 }
 class Customer {
-  public function __construct(private readonly string $name) {}
+  function __construct(private readonly string $name) {}
   private array $rentals = [];
   function addRental(Rental $rental) {
     return array_push($this->rentals, $rental);

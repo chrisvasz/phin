@@ -321,6 +321,7 @@ export class ClassDeclaration extends Node {
   _type = 'ClassDeclaration' as const
   constructor(
     public readonly name: string,
+    public readonly constructorVisibility: Visibility,
     public readonly params: ClassParam[],
     public readonly superclass: ClassSuperclass | null,
     public readonly interfaces: string[],

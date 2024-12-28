@@ -189,6 +189,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     isAbstract: boolean = false,
   ): nodes.ClassDeclaration {
     let name = consume('Expect class name', IDENTIFIER).lexeme
+    let constructorVisibility = classVisibility()
     let params = match(LEFT_PAREN) ? classParams() : []
     let superclass = match(EXTENDS) ? classSuperclass() : null
     let interfaces = match(IMPLEMENTS) ? classInterfaces() : []
@@ -197,6 +198,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     consume('Expect "}" after class body', RIGHT_BRACE)
     return new nodes.ClassDeclaration(
       name,
+      constructorVisibility,
       params,
       superclass,
       interfaces,

@@ -205,9 +205,14 @@ export class PhpPrinter
   }
 
   classConstructor(node: nodes.ClassDeclaration): string {
-    if (node.params.length === 0) return ''
-    let params = node.params.map((p) => p.accept(this)).join(', ')
-    return `public function __construct(${params}) {}`
+    let { params, constructorVisibility } = node
+    let visibility = constructorVisibility ? `${constructorVisibility} ` : ''
+    if (!params.length && !visibility) return ''
+    return `${visibility}function __construct(${this.classParams(params)}) {}`
+  }
+
+  classParams(params: nodes.ClassParam[]): string {
+    return params.map((p) => p.accept(this)).join(', ')
   }
 
   visitClassSuperclass(node: nodes.ClassSuperclass): string {
