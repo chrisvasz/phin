@@ -393,9 +393,12 @@ export class PhpPrinter
   visitSuper(): string {
     return 'super'
   }
+
   visitTernary(node: nodes.Ternary): string {
-    throw new Error('Method not implemented.')
+    let { condition, left, right } = node
+    return `${condition.accept(this)} ? ${left.accept(this)} : ${right.accept(this)}`
   }
+
   visitThis(): string {
     return '$this'
   }

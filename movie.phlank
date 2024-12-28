@@ -40,11 +40,7 @@ class Childrens extends Price {
 
 class NewRelease extends Price {
   fun amount(daysRented: int): float => daysRented * 3;
-  // TODO ternaries
-  fun points(daysRented: int): int {
-    if (daysRented > 1) return 2;
-    return 1;
-  }
+  fun points(daysRented: int): int => daysRented > 1 ? 2 : 1;
 }
 
 class Rental(-movie: Movie, -daysRented: int) {

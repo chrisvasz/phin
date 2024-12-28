@@ -4,6 +4,7 @@ import scan from '../scanner'
 import parse from '../parser'
 import { PhpPrinter, PrintError } from './print'
 import { Kind } from './environment'
+import { trimMargin } from './trimMargin'
 
 function print(src: string) {
   let result = new PhpPrinter(() => Kind.Variable).print(parse(scan(src)))
@@ -43,13 +44,27 @@ describe('print: if', () => {
 
   test('if (true) { echo "hello"; } else { echo "world"; }', () => {
     let source = 'if (true) { echo "hello"; } else { echo "world"; }'
-    let expected = `
-if (true) {
-  echo "hello";
-} else {
-  echo "world";
-}
-    `.trim()
+    let expected = trimMargin(`
+      if (true) {
+        echo "hello";
+      } else {
+        echo "world";
+      }
+    `)
+    expect(print(source)).toEqual(expected)
+  })
+})
+
+describe('print: ternary', () => {
+  test('true ? 1 : 2', () => {
+    let source = 'true ? 1 : 2'
+    let expected = 'true ? 1 : 2;'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('true ? a() : b()', () => {
+    let source = 'true ? a() : b()'
+    let expected = 'true ? $a() : $b();'
     expect(print(source)).toEqual(expected)
   })
 })

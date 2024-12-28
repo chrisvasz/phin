@@ -39,8 +39,7 @@ class NewRelease extends Price {
     return $daysRented * 3;
   }
   function points(int $daysRented): int {
-    if ($daysRented > 1) return 2;
-    return 1;
+    return $daysRented > 1 ? 2 : 1;
   }
 }
 class Rental {
