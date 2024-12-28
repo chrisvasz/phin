@@ -171,6 +171,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     let params = match(LEFT_PAREN) ? classParams() : []
     let superclass = match(EXTENDS) ? classSuperclass() : null
     let interfaces = match(IMPLEMENTS) ? classInterfaces() : []
+    let iterates = classIterates()
     consume('Expect "{" before class body', LEFT_BRACE)
     let members = classMembers()
     consume('Expect "}" after class body', RIGHT_BRACE)
@@ -180,6 +181,7 @@ export default function parse(tokens: Token[]): Stmt[] {
       params,
       superclass,
       interfaces,
+      iterates,
       members,
       isAbstract,
     )
@@ -242,6 +244,14 @@ export default function parse(tokens: Token[]): Stmt[] {
       interfaces.push(consume('Expect interface name', IDENTIFIER).lexeme)
     }
     return interfaces
+  }
+
+  function classIterates(): nodes.Identifier | null {
+    if (matchIdentifier('iterates')) {
+      consume('Expect identifier after iterates', IDENTIFIER)
+      return identifier()
+    }
+    return null
   }
 
   function classMembers(): nodes.ClassMember[] {

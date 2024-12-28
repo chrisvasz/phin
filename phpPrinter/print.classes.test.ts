@@ -186,3 +186,52 @@ describe('print this/super', () => {
     expect(print(source)).toEqual(expected)
   })
 })
+
+describe('print class implements', () => {
+  test('class A implements B {}', () => {
+    let source = 'class A implements B {}'
+    let expected = 'class A implements B {}'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('class A implements B, C {}', () => {
+    let source = 'class A implements B, C {}'
+    let expected = trimMargin(`
+      class A implements B, C {}
+    `)
+    expect(print(source)).toEqual(expected)
+  })
+})
+
+describe('print class iterates', () => {
+  test('class A iterates a {}', () => {
+    let source = 'class A iterates a {}'
+    expect(() => print(source)).toThrow(new PrintError('Unknown identifier a'))
+  })
+
+  test('class A(-a) iterates a {}', () => {
+    let source = 'class A(-a) iterates a {}'
+    let expected = trimMargin(`
+      class A implements IteratorAggregate {
+        function __construct(private readonly $a) {}
+        function getIterator(): Traversable {
+          return new ArrayIterator($this->a);
+        }
+      }
+    `)
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('class A iterates a { private var a; }', () => {
+    let source = 'class A iterates a { private var a; }'
+    let expected = trimMargin(`
+      class A implements IteratorAggregate {
+        function getIterator(): Traversable {
+          return new ArrayIterator($this->a);
+        }
+        private $a;
+      }
+    `)
+    expect(print(source)).toEqual(expected)
+  })
+})

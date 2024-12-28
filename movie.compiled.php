@@ -58,10 +58,13 @@ class Rental {
     return $this->movie->price->amount($this->daysRented);
   }
 }
-class Rentals {
+class Rentals implements IteratorAggregate {
   function __construct(private readonly array $rentals) {}
-  function getRentals(): array {
-    return $this->rentals;
+  function getIterator(): Traversable {
+    return new ArrayIterator($this->rentals);
+  }
+  function count(): int {
+    return $this->rentals->count();
   }
   function totalPoints(): int {
     $result = 0;
@@ -82,7 +85,7 @@ class Customer {
   function __construct(private readonly string $name, private readonly Rentals $rentals) {}
   function statement(): string {
     $result = "Rental Record for " . $this->name . "\n";
-    foreach ($this->rentals->getRentals() as $rental) {
+    foreach ($this->rentals as $rental) {
       $result .= "\t" . $rental->title . "\t" . $rental->amount() . "\n";
     }
     $result .= "Amount owed is " . $this->rentals->totalAmount() . "\n";

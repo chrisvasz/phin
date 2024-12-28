@@ -4,6 +4,7 @@ import scan from '../scanner'
 import parse from '../parser'
 import * as nodes from '../nodes'
 import * as types from '../types'
+import { TokenType } from '../token'
 
 function ast(source: string) {
   return parse(scan(source))
@@ -19,24 +20,27 @@ function classDeclaration(
     params = [],
     constructorVisibility = null,
     superclass,
-    implements_ = [],
+    interfaces = [],
+    iterates = null,
     members = [],
     isAbstract = false,
   }: {
     params?: nodes.ClassParam[]
     constructorVisibility?: nodes.Visibility
     superclass?: nodes.ClassSuperclass
-    implements_?: string[]
+    interfaces?: string[]
+    iterates?: nodes.Identifier | null
     members?: nodes.ClassMember[]
     isAbstract?: boolean
   } = {},
-) {
+): nodes.ClassDeclaration {
   return new nodes.ClassDeclaration(
     name,
     constructorVisibility,
     params,
     superclass ?? null,
-    implements_,
+    interfaces,
+    iterates,
     members,
     isAbstract,
   )
@@ -102,7 +106,7 @@ describe('class declarations', () => {
     let source = 'class A implements B {}'
     let expected = [
       classDeclaration('A', {
-        implements_: ['B'],
+        interfaces: ['B'],
       }),
     ]
     expect(ast(source)).toEqual(expected)
@@ -112,7 +116,7 @@ describe('class declarations', () => {
     let source = 'class A implements B, C, D {}'
     let expected = [
       classDeclaration('A', {
-        implements_: ['B', 'C', 'D'],
+        interfaces: ['B', 'C', 'D'],
       }),
     ]
     expect(ast(source)).toEqual(expected)
@@ -123,7 +127,7 @@ describe('class declarations', () => {
     let expected = [
       classDeclaration('A', {
         superclass: new nodes.ClassSuperclass('B', []),
-        implements_: ['C', 'D'],
+        interfaces: ['C', 'D'],
       }),
     ]
     expect(ast(source)).toEqual(expected)
@@ -313,5 +317,17 @@ describe('class param modifiers', () => {
     })
     let expected = 'final public readonly '
     expect(param.modifiers()).toEqual(expected)
+  })
+})
+
+describe('class iterates', () => {
+  test('class A iterates a {}', () => {
+    let source = 'class A iterates a {}'
+    let expected = [
+      classDeclaration('A', {
+        iterates: new nodes.Identifier('a'),
+      }),
+    ]
+    expect(ast(source)).toEqual(expected)
   })
 })

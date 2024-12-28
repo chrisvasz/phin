@@ -49,10 +49,8 @@ class Rental(-movie: Movie, -daysRented: int) {
 }
 
 // TODO array<Rental>
-// TODO iterates rentals for foreach
-// TODO rentals.array_map(fun(r: Rental) => r.amount()).array_sum()
-class Rentals(-rentals: array) {
-  fun getRentals(): array => rentals; // TODO array<Rental>
+class Rentals(-rentals: array) iterates rentals {
+  fun count(): int => rentals.count();
   fun totalPoints(): int {
     var result = 0;
     foreach (rentals as rental) {
@@ -67,13 +65,19 @@ class Rentals(-rentals: array) {
     }
     return result;
   }
+  // TODO one of these
+  // fun totalAmount(): float => map(fun(r: Rental) => r.amount()).reduce(fun(a, b) => a + b, 0);
+  // fun totalAmount(): float => map(fun(r: Rental) => r.amount()).sum()
+  // fun totalAmount(): float => rentals#array_map(fun(r: Rental) => r.amount())#array_sum()
+  // fun totalAmount(): float => rentals#map(fun(r: Rental) => r.amount())#sum()
+
 }
 
 class Customer(-name: string, -rentals: Rentals) {
   fun statement(): string {
-    // TODO `` string interpolation: var result = `Rental Record for $name\n`;
+    // TODO `` or "" string interpolation: var result = `Rental Record for $name\n`;
     var result = "Rental Record for " +. name +. "\n";
-    foreach (rentals.getRentals() as rental) {
+    foreach (rentals as rental) {
       // result +.= `\t${rental.title}\t${rental.amount()}\n`;
       result +.= "\t" +. rental.title +. "\t" +. rental.amount() +. "\n";
     }

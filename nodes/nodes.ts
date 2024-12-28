@@ -331,6 +331,7 @@ export class ClassDeclaration extends Node {
     public readonly params: ClassParam[],
     public readonly superclass: ClassSuperclass | null,
     public readonly interfaces: string[],
+    public readonly iterates: Identifier | null,
     public readonly members: ClassMember[],
     public readonly isAbstract: boolean = false,
   ) {

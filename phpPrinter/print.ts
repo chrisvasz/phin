@@ -24,7 +24,7 @@ export class PhpPrinter
 
   print(statements: nodes.Node[]): string {
     return this.encloseWith(statements, () => {
-      return statements.map((s) => s.accept(this)).join('\n')
+      return statements.map((s) => s.accept(this)).join('\n') + '\n'
     })
   }
 
@@ -191,21 +191,56 @@ export class PhpPrinter
     return this.encloseWith(
       [...node.params.filter((p) => p.hasModifiers()), ...node.members],
       () => {
-        let extends_ = node.superclass
-          ? ` extends ${node.superclass.accept(this)}`
-          : ''
-        let declaration = `class ${node.name}${extends_} {`
+        let declaration = [
+          'class',
+          node.name,
+          this.classExtends(node),
+          this.classImplements(node),
+          '{',
+        ]
+          .filter(Boolean)
+          .join(' ')
         let body = this.indentBlock(() => {
           let constructor = this.classConstructor(node)
-          if (node.members.length === 0 && !constructor) return []
+          if (node.members.length === 0 && !constructor && !node.iterates)
+            return []
           let members = node.members.map((m) => m.accept(this))
+          if (node.iterates) members.unshift(this.classGetIterator(node))
           if (constructor) members.unshift(constructor)
           return members
         })
         if (body === '') return declaration + '}'
-        return [this.indent(declaration), body, this.indent('}')].join('\n')
+        return [declaration, body, this.indent('}')].join('\n')
       },
     )
+  }
+
+  classExtends(node: nodes.ClassDeclaration): string {
+    if (!node.superclass) return ''
+    return `extends ${node.superclass.accept(this)}`
+  }
+
+  classImplements(node: nodes.ClassDeclaration): string {
+    let interfaces = node.interfaces
+    if (node.iterates) interfaces = [...interfaces, 'IteratorAggregate']
+    if (interfaces.length === 0) return ''
+    return `implements ${interfaces.join(', ')}`
+  }
+
+  classGetIterator(node: nodes.ClassDeclaration): string {
+    if (!node.iterates) return ''
+    let method = new nodes.ClassMethod(
+      false,
+      null,
+      false,
+      'getIterator',
+      [],
+      new types.Identifier('Traversable', []),
+      new nodes.New(
+        new nodes.Call(new nodes.Identifier('ArrayIterator'), [node.iterates]),
+      ),
+    )
+    return method.accept(this)
   }
 
   classConstructor(node: nodes.ClassDeclaration): string {

@@ -1,6 +1,6 @@
 <?php
-$price = null ?? false ? 1 : 2;
-echo $price . PHP_EOL;
+$name = 'chris';
+echo "${$name.'a'}" . PHP_EOL;
 
 
 
