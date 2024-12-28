@@ -1,7 +1,7 @@
 class Movie(+title: string, +price: Price) {}
 
 abstract class Price {
-  // fun amount(daysRented: int): float; // TODO abstract
+  abstract fun amount(daysRented: int): float;
   fun points(daysRented: int): int => 1;
 }
 
@@ -34,6 +34,7 @@ class PriceFactory {
   const REGULAR = 0;
   const NEW_RELEASE = 1;
   const CHILDRENS = 2;
+
   fun from(priceCode: int): Price => match(priceCode) {
     REGULAR => new Regular(),
     NEW_RELEASE => new NewRelease(),
@@ -50,7 +51,6 @@ class Rental(-movie: Movie, -daysRented: int) {
 
 // TODO array<Rental>
 class Rentals(-rentals: array) iterates rentals {
-  fun count(): int => rentals.count();
   fun totalPoints(): int {
     var result = 0;
     foreach (rentals as rental) {

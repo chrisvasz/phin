@@ -2,7 +2,8 @@
 class Movie {
   function __construct(public readonly string $title, public readonly Price $price) {}
 }
-class Price {
+abstract class Price {
+  abstract function amount(int $daysRented): float;
   function points(int $daysRented): int {
     return 1;
   }
@@ -62,9 +63,6 @@ class Rentals implements IteratorAggregate {
   function __construct(private readonly array $rentals) {}
   function getIterator(): Traversable {
     return new ArrayIterator($this->rentals);
-  }
-  function count(): int {
-    return $this->rentals->count();
   }
   function totalPoints(): int {
     $result = 0;

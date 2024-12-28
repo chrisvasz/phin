@@ -235,3 +235,21 @@ describe('print class iterates', () => {
     expect(print(source)).toEqual(expected)
   })
 })
+
+describe('print abstract class', () => {
+  test('abstract class A {}', () => {
+    let source = 'abstract class A {}'
+    let expected = 'abstract class A {}'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('abstract class A { abstract fun a(); }', () => {
+    let source = 'abstract class A { abstract fun a(); }'
+    let expected = trimMargin(`
+      abstract class A {
+        abstract function a();
+      }
+    `)
+    expect(print(source)).toEqual(expected)
+  })
+})

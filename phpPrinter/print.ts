@@ -92,9 +92,6 @@ export class PhpPrinter
   // STATEMENTS
   /////////////////////////////
 
-  visitClassAbstractMethod(node: nodes.ClassAbstractMethod): string {
-    throw new Error('Method not implemented.')
-  }
   visitArrayElement(node: nodes.ArrayElement): string {
     throw new Error('Method not implemented.')
   }
@@ -150,6 +147,14 @@ export class PhpPrinter
     throw new Error('Method not implemented.')
   }
 
+  visitClassAbstractMethod(node: nodes.ClassAbstractMethod): string {
+    let params = this.functionParams(node.params)
+    let type = this.typeAnnotation(node.returnType)
+    let result = `abstract function ${node.name}(${params})${type};`
+    let docblock = this.functionDocblock(node.params, node.returnType)
+    return `${docblock}${result}`
+  }
+
   visitClassMethod(node: nodes.ClassMethod): string {
     // TODO fill out encloseWith
     return this.encloseWith([], () => {
@@ -192,6 +197,7 @@ export class PhpPrinter
       [...node.params.filter((p) => p.hasModifiers()), ...node.members],
       () => {
         let declaration = [
+          node.isAbstract ? 'abstract' : '',
           'class',
           node.name,
           this.classExtends(node),
