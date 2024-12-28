@@ -4,12 +4,12 @@ class Movie(+title: string, -priceCode: int) {
   const CHILDRENS = 2;
 
   // TODO make me a factory
-  // TODO use a match expression
-  fun price(): Price {
-    if (priceCode == REGULAR) return new Regular();
-    else if (priceCode == NEW_RELEASE) return new NewRelease();
-    else if (priceCode == CHILDRENS) return new Childrens();
-    return new Regular();
+  // TODO use a var instead
+  fun price(): Price => match(priceCode) {
+    REGULAR => new Regular(),
+    NEW_RELEASE => new NewRelease(),
+    CHILDRENS => new Childrens(),
+    // default => throw new DomainException("Unknown price code: " +. priceCode), // TODO
   }
 }
 

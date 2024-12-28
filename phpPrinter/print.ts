@@ -341,12 +341,24 @@ export class PhpPrinter
     return result + thenBranch + elseBranch
   }
 
-  visitMatchArm(node: nodes.MatchArm): string {
-    throw new Error('Method not implemented.')
+  visitMatch(node: nodes.Match): string {
+    let subject = node.subject.accept(this)
+    let result = `match (${subject}) {`
+    if (!node.arms.length && !node.defaultArm) return result + '}'
+    let arms = this.indentBlock(() => {
+      let result = node.arms.map((a) => a.accept(this))
+      if (node.defaultArm) {
+        result.push('default => ' + node.defaultArm.accept(this) + ',')
+      }
+      return result
+    })
+    return `${result}\n${arms}\n}`
   }
 
-  visitMatch(node: nodes.Match): string {
-    throw new Error('Method not implemented.')
+  visitMatchArm(node: nodes.MatchArm): string {
+    let pattern = node.patterns.map((p) => p.accept(this)).join(', ')
+    let body = node.body.accept(this)
+    return `${pattern} => ${body},`
   }
 
   visitNew(node: nodes.New): string {
@@ -402,9 +414,11 @@ export class PhpPrinter
   visitThis(): string {
     return '$this'
   }
+
   visitThrowExpression(node: nodes.ThrowExpression): string {
-    throw new Error('Method not implemented.')
+    return `throw ${node.expression.accept(this)}`
   }
+
   visitThrowStatement(node: nodes.ThrowStatement): string {
     throw new Error('Method not implemented.')
   }

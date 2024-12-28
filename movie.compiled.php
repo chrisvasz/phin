@@ -5,10 +5,11 @@ class Movie {
   const NEW_RELEASE = 1;
   const CHILDRENS = 2;
   function price(): Price {
-    if ($this->priceCode == self::REGULAR) return new Regular();
-    if ($this->priceCode == self::NEW_RELEASE) return new NewRelease();
-    if ($this->priceCode == self::CHILDRENS) return new Childrens();
-    return new Regular();
+    return match ($this->priceCode) {
+    self::REGULAR => new Regular(),
+    self::NEW_RELEASE => new NewRelease(),
+    self::CHILDRENS => new Childrens(),
+};
   }
 }
 class Price {
