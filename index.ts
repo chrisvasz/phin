@@ -8,10 +8,19 @@ import { PhpPrinter } from './phpPrinter/print'
 // @ts-ignore
 const Bun: any = globalThis.Bun
 
-let tokens = scan(src)
-let ast = parse(tokens)
-
-let php = new PhpPrinter().print(ast)
+let php = ''
+let hasError = false
+try {
+  let tokens = scan(src)
+  let ast = parse(tokens)
+  php = new PhpPrinter().print(ast)
+} catch (e: any) {
+  console.error(e)
+  php = e.message
+  hasError = true
+}
 const out = Bun.file('movie.compiled.php')
 await Bun.write(out, '<?php\n' + php)
-await $`php -r ${php}`
+if (!hasError) {
+  await $`php -r ${php}`
+}

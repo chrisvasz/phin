@@ -104,47 +104,25 @@ export default function parse(tokens: Token[]): Stmt[] {
   function parse(): Stmt[] {
     const statements: Stmt[] = []
     while (!isAtEnd()) {
-      const next = declaration()
-      if (next) statements.push(next)
+      if (!match(SEMICOLON)) {
+        const next = declaration()
+        if (next) statements.push(next)
+      }
     }
     return statements
   }
 
-  function synchronize(): void {
-    advance()
-    while (!isAtEnd()) {
-      if (previous().type === SEMICOLON) return
-      switch (peek().type) {
-        case CLASS:
-        case FUN:
-        case VAR:
-        case VAL:
-        case FOR:
-        case IF:
-        case RETURN:
-          return
-      }
-      advance()
-    }
-  }
-
   function declaration(): Stmt | null {
-    try {
-      if (match(TRY)) return tryDeclaration()
-      if (match(THROW)) return throwDeclaration()
-      if (match(CLASS)) return classDeclaration()
-      if (match(FUN)) return functionDeclaration()
-      if (match(VAR)) return varDeclaration()
-      if (match(ABSTRACT)) {
-        consume('Expect "class" after "abstract"', CLASS)
-        return classDeclaration(true)
-      }
-      return statement()
-    } catch (error) {
-      if (!(error instanceof ParseError)) throw error
-      synchronize()
-      return null
+    if (match(TRY)) return tryDeclaration()
+    if (match(THROW)) return throwDeclaration()
+    if (match(CLASS)) return classDeclaration()
+    if (match(FUN)) return functionDeclaration()
+    if (match(VAR)) return varDeclaration()
+    if (match(ABSTRACT)) {
+      consume('Expect "class" after "abstract"', CLASS)
+      return classDeclaration(true)
     }
+    return statement()
   }
 
   function tryDeclaration(): nodes.Try | null {
@@ -422,7 +400,11 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function functionBody(): Expr | nodes.Block {
-    if (match(ARROW)) return expression()
+    if (match(ARROW)) {
+      let result = expression()
+      match(SEMICOLON) // optional trailing semicolon
+      return result
+    }
     if (match(LEFT_BRACE)) return block()
     throw error(peek(), 'Expect "=>" or "{" before function body')
   }
@@ -446,7 +428,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(IF)) return ifStatement()
     if (match(WHILE)) return whileStatement()
     if (match(ECHO)) return echoStatement()
-    if (match(RETURN)) return new nodes.Return(expression())
+    if (match(RETURN)) return returnStatement()
     if (match(LEFT_BRACE)) return block()
     return expressionStatement()
   }
@@ -513,6 +495,12 @@ export default function parse(tokens: Token[]): Stmt[] {
     let result = expression()
     terminator()
     return new nodes.Echo(result)
+  }
+
+  function returnStatement(): nodes.Return {
+    let result = expression()
+    terminator()
+    return new nodes.Return(result)
   }
 
   function whileStatement(): nodes.While {
@@ -964,7 +952,9 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function error(token: Token, message: string): Error {
-    return new ParseError(`[line ${token.line}] Error${token}: ${message}`)
+    return new ParseError(
+      `[line ${token.line}] Error ${TokenType[token.type]}: ${message}`,
+    )
   }
 
   function check(...anyOf: TokenType[]): boolean {

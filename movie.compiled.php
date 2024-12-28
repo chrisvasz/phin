@@ -1,17 +1,6 @@
 <?php
 class Movie {
-  function __construct(public readonly string $title, int $priceCode, ?Price $_price = null) {
-    $this->price = $_price ?? match ($priceCode) {
-      self::REGULAR => new Regular(),
-      self::NEW_RELEASE => new NewRelease(),
-      self::CHILDRENS => new Childrens(),
-      default => throw new DomainException("Unknown price code: " . $priceCode),
-    };
-  }
-  const REGULAR = 0;
-  const NEW_RELEASE = 1;
-  const CHILDRENS = 2;
-  public $price;
+  function __construct(public readonly string $title, public readonly Price $price) {}
 }
 class Price {
   function points(int $daysRented): int {
@@ -42,6 +31,19 @@ class NewRelease extends Price {
   }
   function points(int $daysRented): int {
     return $daysRented > 1 ? 2 : 1;
+  }
+}
+class PriceFactory {
+  const REGULAR = 0;
+  const NEW_RELEASE = 1;
+  const CHILDRENS = 2;
+  function from(int $priceCode): Price {
+    return match ($priceCode) {
+    self::REGULAR => new Regular(),
+    self::NEW_RELEASE => new NewRelease(),
+    self::CHILDRENS => new Childrens(),
+    default => throw new DomainException("Unknown price code: " . $priceCode),
+  };
   }
 }
 class Rental {
@@ -79,18 +81,16 @@ class Rentals {
 class Customer {
   function __construct(private readonly string $name, private readonly Rentals $rentals) {}
   function statement(): string {
-    $result = "Rental Record for " . $this->name . ":";
+    $result = "Rental Record for " . $this->name . "\n";
     foreach ($this->rentals->getRentals() as $rental) {
-      $result .= $rental->title . " " . $rental->amount() . " ";
+      $result .= "\t" . $rental->title . "\t" . $rental->amount() . "\n";
     }
-    $result .= "Amount owed is " . $this->rentals->totalAmount() . ". ";
-    $result .= "You earned " . $this->rentals->totalPoints() . " frequent renter points";
+    $result .= "Amount owed is " . $this->rentals->totalAmount() . "\n";
+    $result .= "You earned " . $this->rentals->totalPoints() . " frequent renter points\n";
     return $result;
   }
 }
-$prognosisNegative = new Movie("Prognosis Negative", Movie::NEW_RELEASE);
-$sackLunch = new Movie("Sack Lunch", Movie::CHILDRENS);
-$painAndYearning = new Movie("The Pain and the Yearning", Movie::REGULAR);
-$rentals = new Rentals(array(new Rental($prognosisNegative, 3), new Rental($painAndYearning, 1), new Rental($sackLunch, 1)));
-$customer = new Customer("Susan Ross", $rentals);
+$priceFactory = new PriceFactory();
+$rentals = array(new Rental(new Movie("Prognosis Negative", $priceFactory->from(PriceFactory::NEW_RELEASE)), 3), new Rental(new Movie("The Pain and the Yearning", $priceFactory->from(PriceFactory::REGULAR)), 1), new Rental(new Movie("Sack Lunch", $priceFactory->from(PriceFactory::CHILDRENS)), 1));
+$customer = new Customer("Susan Ross", new Rentals($rentals));
 echo $customer->statement();

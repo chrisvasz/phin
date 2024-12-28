@@ -1,15 +1,4 @@
-// TODO pass a Price
-class Movie(+title: string, priceCode: int, _price: ?Price = null) {
-  const REGULAR = 0;
-  const NEW_RELEASE = 1;
-  const CHILDRENS = 2;
-  var price = _price ?? match(priceCode) {
-    REGULAR => new Regular(),
-    NEW_RELEASE => new NewRelease(),
-    CHILDRENS => new Childrens(),
-    default => throw new DomainException("Unknown price code: " +. priceCode),
-  };
-}
+class Movie(+title: string, +price: Price) {}
 
 abstract class Price {
   // fun amount(daysRented: int): float; // TODO abstract
@@ -41,6 +30,18 @@ class NewRelease extends Price {
   fun points(daysRented: int): int => daysRented > 1 ? 2 : 1;
 }
 
+class PriceFactory {
+  const REGULAR = 0;
+  const NEW_RELEASE = 1;
+  const CHILDRENS = 2;
+  fun from(priceCode: int): Price => match(priceCode) {
+    REGULAR => new Regular(),
+    NEW_RELEASE => new NewRelease(),
+    CHILDRENS => new Childrens(),
+    default => throw new DomainException("Unknown price code: " +. priceCode),
+  };
+}
+
 class Rental(-movie: Movie, -daysRented: int) {
   var title = movie.title;
   fun points(): int => movie.price.points(daysRented);
@@ -70,23 +71,44 @@ class Rentals(-rentals: array) {
 
 class Customer(-name: string, -rentals: Rentals) {
   fun statement(): string {
-    var result = "Rental Record for " +. name +. ":";
+    // TODO `` string interpolation: var result = `Rental Record for $name\n`;
+    var result = "Rental Record for " +. name +. "\n";
     foreach (rentals.getRentals() as rental) {
-      result +.= rental.title +. " " +. rental.amount() +. " ";
+      // result +.= `\t${rental.title}\t${rental.amount()}\n`;
+      result +.= "\t" +. rental.title +. "\t" +. rental.amount() +. "\n";
     }
-    result +.= "Amount owed is " +. rentals.totalAmount() +. ". ";
-    result +.= "You earned " +. rentals.totalPoints() +.  " frequent renter points";
+    // result +.= `Amount owed is ${rentals.totalAmount()}\n`;
+    result +.= "Amount owed is " +. rentals.totalAmount() +. "\n";
+    // result +.= `You earned ${rentals.totalPoints()} frequent renter points\n`;
+    result +.= "You earned " +. rentals.totalPoints() +.  " frequent renter points\n";
     return result;
   }
 }
 
-var prognosisNegative = new Movie("Prognosis Negative", Movie::NEW_RELEASE);
-var sackLunch = new Movie("Sack Lunch", Movie::CHILDRENS);
-var painAndYearning = new Movie("The Pain and the Yearning", Movie::REGULAR);
-var rentals = new Rentals(array(
-  new Rental(prognosisNegative, 3),
-  new Rental(painAndYearning, 1),
-  new Rental(sackLunch, 1),
-));
-var customer = new Customer("Susan Ross", rentals);
+// TODO build from a raw dataset with array access operator
+var priceFactory = new PriceFactory();
+var rentals = array(
+  new Rental(
+    new Movie(
+      "Prognosis Negative",
+      priceFactory.from(PriceFactory::NEW_RELEASE),
+    ),
+    3,
+  ),
+  new Rental(
+    new Movie(
+      "The Pain and the Yearning",
+      priceFactory.from(PriceFactory::REGULAR),
+    ),
+    1,
+  ),
+  new Rental(
+    new Movie(
+      "Sack Lunch",
+      priceFactory.from(PriceFactory::CHILDRENS),
+    ),
+    1,
+  ),
+);
+var customer = new Customer("Susan Ross", new Rentals(rentals));
 echo customer.statement();
