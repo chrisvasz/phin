@@ -93,11 +93,19 @@ export class PhpPrinter
   /////////////////////////////
 
   visitArrayElement(node: nodes.ArrayElement): string {
-    throw new Error('Method not implemented.')
+    let value = node.value.accept(this)
+    if (!node.key) return value
+    let key = node.key.accept(this)
+    return `${key} => ${value}`
   }
 
   visitArrayLiteral(node: nodes.ArrayLiteral): string {
-    return '[]' // TODO
+    let elements = node.elements.map((e) => e.accept(this)).join(', ')
+    return `[${elements}]`
+  }
+
+  visitArrayAccess(node: nodes.ArrayAccess): string {
+    return `${node.left.accept(this)}[${node.index.accept(this)}]`
   }
 
   visitAssign(node: nodes.Assign): string {

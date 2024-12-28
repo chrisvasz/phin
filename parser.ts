@@ -771,6 +771,8 @@ export default function parse(tokens: Token[]): Stmt[] {
         ex = optionalGetExpression(ex)
       } else if (match(COLON_COLON)) {
         ex = scopeResolution(ex)
+      } else if (match(LEFT_BRACKET)) {
+        ex = arrayAccess(ex)
       } else break
     }
     return ex
@@ -801,6 +803,12 @@ export default function parse(tokens: Token[]): Stmt[] {
   function scopeResolution(receiver: Expr): nodes.ScopeResolution {
     let name = consume('Expect property name after ::', IDENTIFIER).lexeme
     return new nodes.ScopeResolution(receiver, name)
+  }
+
+  function arrayAccess(left: Expr): nodes.ArrayAccess {
+    let index = expression()
+    consume('Expect "]" after array index', RIGHT_BRACKET)
+    return new nodes.ArrayAccess(left, index)
   }
 
   function primary(): Expr {

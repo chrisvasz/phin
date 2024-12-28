@@ -85,30 +85,17 @@ class Customer(-name: string, -rentals: Rentals) {
   }
 }
 
-// TODO build from a raw dataset with array access operator
+var raw = [
+  ["Prognosis Negative", PriceFactory::NEW_RELEASE, 3],
+  ["The Pain and the Yearning", PriceFactory::REGULAR, 1],
+  ["Sack Lunch", PriceFactory::CHILDRENS, 1],
+];
+var rentals = [];
 var priceFactory = new PriceFactory();
-var rentals = array(
-  new Rental(
-    new Movie(
-      "Prognosis Negative",
-      priceFactory.from(PriceFactory::NEW_RELEASE),
-    ),
-    3,
-  ),
-  new Rental(
-    new Movie(
-      "The Pain and the Yearning",
-      priceFactory.from(PriceFactory::REGULAR),
-    ),
-    1,
-  ),
-  new Rental(
-    new Movie(
-      "Sack Lunch",
-      priceFactory.from(PriceFactory::CHILDRENS),
-    ),
-    1,
-  ),
-);
+foreach (raw as row) {
+  // TODO destructuring assignment
+  var movie = new Movie(row[0], priceFactory.from(row[1]));
+  array_push(rentals, new Rental(movie, row[2]));
+}
 var customer = new Customer("Susan Ross", new Rentals(rentals));
 echo customer.statement();

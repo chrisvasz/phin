@@ -8,7 +8,7 @@ function ast(source: string) {
   return parse(scan(source))
 }
 
-describe('array literals', () => {
+describe('parse array literals', () => {
   test('[]', () => {
     let source = '[]'
     let expected = [new nodes.ExpressionStatement(new nodes.ArrayLiteral([]))]
@@ -129,6 +129,50 @@ describe('array literals', () => {
             new nodes.Call(new nodes.Identifier('a'), []),
           ),
         ]),
+      ),
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+})
+
+describe('parse array access', () => {
+  test('a[1]', () => {
+    let source = 'a[1]'
+    let expected = [
+      new nodes.ExpressionStatement(
+        new nodes.ArrayAccess(
+          new nodes.Identifier('a'),
+          new nodes.NumberLiteral('1'),
+        ),
+      ),
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+
+  test('a[1][2]', () => {
+    let source = 'a[1][2]'
+    let expected = [
+      new nodes.ExpressionStatement(
+        new nodes.ArrayAccess(
+          new nodes.ArrayAccess(
+            new nodes.Identifier('a'),
+            new nodes.NumberLiteral('1'),
+          ),
+          new nodes.NumberLiteral('2'),
+        ),
+      ),
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+
+  test('a.b[1]', () => {
+    let source = 'a.b[1]'
+    let expected = [
+      new nodes.ExpressionStatement(
+        new nodes.ArrayAccess(
+          new nodes.Get(new nodes.Identifier('a'), 'b'),
+          new nodes.NumberLiteral('1'),
+        ),
       ),
     ]
     expect(ast(source)).toEqual(expected)

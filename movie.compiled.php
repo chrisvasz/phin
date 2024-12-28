@@ -91,7 +91,12 @@ class Customer {
     return $result;
   }
 }
+$raw = [["Prognosis Negative", PriceFactory::NEW_RELEASE, 3], ["The Pain and the Yearning", PriceFactory::REGULAR, 1], ["Sack Lunch", PriceFactory::CHILDRENS, 1]];
+$rentals = [];
 $priceFactory = new PriceFactory();
-$rentals = array(new Rental(new Movie("Prognosis Negative", $priceFactory->from(PriceFactory::NEW_RELEASE)), 3), new Rental(new Movie("The Pain and the Yearning", $priceFactory->from(PriceFactory::REGULAR)), 1), new Rental(new Movie("Sack Lunch", $priceFactory->from(PriceFactory::CHILDRENS)), 1));
+foreach ($raw as $row) {
+  $movie = new Movie($row[0], $priceFactory->from($row[1]));
+  array_push($rentals, new Rental($movie, $row[2]));
+}
 $customer = new Customer("Susan Ross", new Rentals($rentals));
 echo $customer->statement();

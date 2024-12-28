@@ -29,6 +29,7 @@ export type Stmt =
   | VarDeclaration
   | While
 export type Expr =
+  | ArrayAccess
   | ArrayLiteral
   | Assign
   | Binary
@@ -56,6 +57,7 @@ export type Expr =
   | Unary
 
 export interface Visitor<T> {
+  visitArrayAccess(node: ArrayAccess): T
   visitArrayElement(node: ArrayElement): T
   visitArrayLiteral(node: ArrayLiteral): T
   visitAssign(node: Assign): T
@@ -625,6 +627,19 @@ export class ArrayElement extends Node {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitArrayElement(this)
+  }
+}
+
+export class ArrayAccess extends Node {
+  _type = 'ArrayAccess' as const
+  constructor(
+    public readonly left: Expr,
+    public readonly index: Expr,
+  ) {
+    super()
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitArrayAccess(this)
   }
 }
 
