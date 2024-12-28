@@ -31,9 +31,6 @@ export enum TokenType {
   // template strings
   BACKTICK,
   TEMPLATE_PART,
-  TEMPLATE_EXPRESSION,
-  TEMPLATE_EXPRESSION_START,
-  TEMPLATE_EXPRESSION_END,
 
   // math operators
   MINUS,

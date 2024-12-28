@@ -75,16 +75,12 @@ class Rentals(-rentals: array) iterates rentals {
 
 class Customer(-name: string, -rentals: Rentals) {
   fun statement(): string {
-    // TODO `` or "" string interpolation: var result = `Rental Record for $name\n`;
-    var result = "Rental Record for " +. name +. "\n";
+    var result = `Rental Record for {name}\n`;
     foreach (rentals as rental) {
-      // result +.= `\t${rental.title}\t${rental.amount()}\n`;
-      result +.= "\t" +. rental.title +. "\t" +. rental.amount() +. "\n";
+      result +.= `\t{rental.title}\t{rental.amount()}\n`;
     }
-    // result +.= `Amount owed is ${rentals.totalAmount()}\n`;
-    result +.= "Amount owed is " +. rentals.totalAmount() +. "\n";
-    // result +.= `You earned ${rentals.totalPoints()} frequent renter points\n`;
-    result +.= "You earned " +. rentals.totalPoints() +.  " frequent renter points\n";
+    result +.= `Amount owed is {rentals.totalAmount()}\n`;
+    result +.= `You earned {rentals.totalPoints()} frequent renter points\n`;
     return result;
   }
 }

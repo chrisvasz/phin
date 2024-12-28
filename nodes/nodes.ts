@@ -49,6 +49,7 @@ export type Expr =
   | ScopeResolution
   | StringLiteral
   | Super
+  | TemplateStringLiteral
   | Ternary
   | This
   | ThrowExpression
@@ -96,6 +97,7 @@ export interface Visitor<T> {
   visitScopeResolution(node: ScopeResolution): T
   visitStringLiteral(node: StringLiteral): T
   visitSuper(): T
+  visitTemplateStringLiteral(node: TemplateStringLiteral): T
   visitTernary(node: Ternary): T
   visitThis(): T
   visitThrowExpression(node: ThrowExpression): T
@@ -573,6 +575,16 @@ export class StringLiteral extends Node {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitStringLiteral(this)
+  }
+}
+
+export class TemplateStringLiteral extends Node {
+  _type = 'TemplateStringLiteral' as const
+  constructor(public readonly parts: Array<StringLiteral | Expr>) {
+    super()
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitTemplateStringLiteral(this)
   }
 }
 

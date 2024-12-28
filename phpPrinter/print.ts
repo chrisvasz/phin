@@ -468,6 +468,20 @@ export class PhpPrinter
   visitStringLiteral(node: nodes.StringLiteral): string {
     return `"${node.value}"`
   }
+
+  visitTemplateStringLiteral(node: nodes.TemplateStringLiteral): string {
+    if (node.parts.length === 0) return '""'
+    let parts = node.parts.map((p) => p.accept(this))
+    if (
+      node.parts.length === 1 &&
+      !(node.parts[0] instanceof nodes.StringLiteral)
+    ) {
+      parts.unshift('""')
+    }
+    if (parts.length <= 1) return parts.join('')
+    return `(${parts.join(' . ')})`
+  }
+
   visitSuper(): string {
     return 'super'
   }

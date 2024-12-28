@@ -9,6 +9,7 @@ const {
   AMPERSAND,
   ARROW,
   AS,
+  BACKTICK,
   BANG_EQUAL_EQUAL,
   BANG_EQUAL,
   BANG,
@@ -86,6 +87,7 @@ const {
   STATIC,
   STRING,
   SUPER,
+  TEMPLATE_PART,
   THIS,
   THROW,
   TRUE,
@@ -805,6 +807,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(NULL)) return new nodes.NullLiteral()
     if (match(NUMBER)) return numberLiteral()
     if (match(STRING)) return stringLiteral()
+    if (match(BACKTICK)) return templateStringLiteral()
     if (match(TRUE)) return new nodes.BooleanLiteral(true)
     if (match(FALSE)) return new nodes.BooleanLiteral(false)
     if (match(LEFT_PAREN)) return grouping()
@@ -821,6 +824,22 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function stringLiteral() {
     return new nodes.StringLiteral(previous().literal)
+  }
+
+  function templateStringLiteral(): nodes.TemplateStringLiteral {
+    if (match(BACKTICK)) return new nodes.TemplateStringLiteral([])
+    let parts: Array<nodes.StringLiteral | nodes.Expr> = []
+    while (!isAtEnd()) {
+      if (match(TEMPLATE_PART)) {
+        parts.push(stringLiteral())
+      } else if (match(LEFT_BRACE)) {
+        parts.push(expression())
+        consume('Expect "}" after expression in template string', RIGHT_BRACE)
+      }
+      if (check(BACKTICK)) break
+    }
+    consume('Expect ` to end template string', BACKTICK)
+    return new nodes.TemplateStringLiteral(parts)
   }
 
   function grouping(): Expr {

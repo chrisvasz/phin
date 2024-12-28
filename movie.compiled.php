@@ -82,12 +82,12 @@ class Rentals implements IteratorAggregate {
 class Customer {
   function __construct(private readonly string $name, private readonly Rentals $rentals) {}
   function statement(): string {
-    $result = "Rental Record for " . $this->name . "\n";
+    $result = ("Rental Record for " . $this->name . "\n");
     foreach ($this->rentals as $rental) {
-      $result .= "\t" . $rental->title . "\t" . $rental->amount() . "\n";
+      $result .= ("\t" . $rental->title . "\t" . $rental->amount() . "\n");
     }
-    $result .= "Amount owed is " . $this->rentals->totalAmount() . "\n";
-    $result .= "You earned " . $this->rentals->totalPoints() . " frequent renter points\n";
+    $result .= ("Amount owed is " . $this->rentals->totalAmount() . "\n");
+    $result .= ("You earned " . $this->rentals->totalPoints() . " frequent renter points\n");
     return $result;
   }
 }
