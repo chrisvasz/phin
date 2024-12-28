@@ -2,12 +2,14 @@
 import { expect, test, describe } from 'bun:test'
 import { Token, TokenType } from './token'
 import scan from './scanner'
+import { tokenToString } from 'typescript'
 
 const {
   ABSTRACT,
   AMPERSAND,
   ARROW,
   AS,
+  BACKTICK,
   BANG_EQUAL_EQUAL,
   BANG_EQUAL,
   BANG,
@@ -86,6 +88,10 @@ const {
   STATIC,
   STRING,
   SUPER,
+  TEMPLATE_EXPRESSION_END,
+  TEMPLATE_EXPRESSION_START,
+  TEMPLATE_EXPRESSION,
+  TEMPLATE_PART,
   THIS,
   THROW,
   TRUE,
@@ -700,3 +706,119 @@ describe('scan string literals', () => {
     expect(actual).toEqual(expected)
   })
 })
+
+describe('scan template string literals', () => {
+  const backtick = new Token(BACKTICK, '`', undefined, 1)
+  const part = (text: string) => new Token(TEMPLATE_PART, text, text, 1)
+  const leftBrace = new Token(LEFT_BRACE, '{', undefined, 1)
+  const rightBrace = new Token(RIGHT_BRACE, '}', undefined, 1)
+  const string = (text: string) => new Token(STRING, `"${text}"`, text, 1)
+  const identifier = (text: string) => new Token(IDENTIFIER, text, undefined, 1)
+
+  test('``', () => {
+    let source = '``'
+    let expected = [backtick, backtick, eof()]
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+
+  test('`hello`', () => {
+    let source = '`hello`'
+    let expected = [backtick, part('hello'), backtick, eof()]
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+
+  test('`hello{world}`', () => {
+    let source = '`hello{world}`'
+    let expected = [
+      backtick,
+      part('hello'),
+      leftBrace,
+      identifier('world'),
+      rightBrace,
+      backtick,
+      eof(),
+    ]
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+
+  test('`he{ll}o{wo}{rl}d`', () => {
+    let source = '`he{ll}o{wo}{rl}d`'
+    let expected = [
+      backtick,
+      part('he'),
+      leftBrace,
+      identifier('ll'),
+      rightBrace,
+      part('o'),
+      leftBrace,
+      identifier('wo'),
+      rightBrace,
+      leftBrace,
+      identifier('rl'),
+      rightBrace,
+      part('d'),
+      backtick,
+      eof(),
+    ]
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+
+  test('`hello{`{"wo" +. "rld"}`}.`', () => {
+    let source = '`hello{`{"wo" +. "rld"}`}.`'
+    let expected = [
+      backtick,
+      part('hello'),
+      leftBrace,
+      backtick,
+      leftBrace,
+      string('wo'),
+      new Token(PLUS_DOT, '+.', undefined, 1),
+      string('rld'),
+      rightBrace,
+      backtick,
+      rightBrace,
+      part('.'),
+      backtick,
+      eof(),
+    ]
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+
+  test('`1{`2{`3`}4`}5`', () => {
+    let source = '`1{`2{`3`}4`}5`'
+    let expected = [
+      backtick,
+      part('1'),
+      leftBrace,
+      backtick,
+      part('2'),
+      leftBrace,
+      backtick,
+      part('3'),
+      backtick,
+      rightBrace,
+      part('4'),
+      backtick,
+      rightBrace,
+      part('5'),
+      backtick,
+      eof(),
+    ]
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+
+  test.todo('`hello\\`world`')
+  test.todo('escaped left and right braces')
+})
+
+function print(tokens: Token[]) {
+  for (let token of tokens) {
+    console.log(token.toString())
+  }
+}

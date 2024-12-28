@@ -7,7 +7,7 @@ export class Token {
   ) {}
 
   public toString() {
-    return `${this.type} ${this.lexeme} ${this.literal}`;
+    return `${TokenType[this.type]} ${this.lexeme}`
   }
 }
 
@@ -27,6 +27,13 @@ export enum TokenType {
   AMPERSAND,
   PIPE,
   PLUS_DOT, // string concat
+
+  // template strings
+  BACKTICK,
+  TEMPLATE_PART,
+  TEMPLATE_EXPRESSION,
+  TEMPLATE_EXPRESSION_START,
+  TEMPLATE_EXPRESSION_END,
 
   // math operators
   MINUS,

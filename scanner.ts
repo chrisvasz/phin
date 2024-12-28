@@ -5,6 +5,7 @@ const {
   AMPERSAND,
   ARROW,
   AS,
+  BACKTICK,
   BANG_EQUAL_EQUAL,
   BANG_EQUAL,
   BANG,
@@ -83,6 +84,10 @@ const {
   STATIC,
   STRING,
   SUPER,
+  TEMPLATE_EXPRESSION_END,
+  TEMPLATE_EXPRESSION_START,
+  TEMPLATE_EXPRESSION,
+  TEMPLATE_PART,
   THIS,
   THROW,
   TRUE,
@@ -162,6 +167,7 @@ export default function scan(source: string): Token[] {
   chars[code('&')] = () => addToken(match('&') ? LOGICAL_AND : AMPERSAND)
   chars[code('%')] = percent
   chars[code('"')] = doubleQuoteString
+  chars[code('`')] = templateString
   chars[code('/')] = slash
   chars[code(' ')] = () => {}
   chars[code('\r')] = () => {}
@@ -172,7 +178,6 @@ export default function scan(source: string): Token[] {
 
   function scanTokens() {
     while (!isAtEnd()) {
-      start = current
       scanToken()
     }
     tokens.push(new Token(EOF, '', null, line))
@@ -181,6 +186,7 @@ export default function scan(source: string): Token[] {
   }
 
   function scanToken() {
+    start = current
     let c = advance()
     if (chars[code(c)]) return chars[code(c)]()
     if (isDigit(c)) return number()
@@ -285,8 +291,8 @@ export default function scan(source: string): Token[] {
 
   function doubleQuoteString() {
     while (!isAtEnd()) {
-      if (peek() === '"' && previous() !== '\\') break
       if (peek() === '\n') line++
+      if (peek() === '"' && previous() !== '\\') break
       advance()
     }
     if (peek() !== '"') {
@@ -297,6 +303,48 @@ export default function scan(source: string): Token[] {
     advance() // consume the closing "
     const value = source.substring(start + 1, current - 1)
     addToken(STRING, value)
+  }
+
+  function templateString() {
+    addToken(BACKTICK)
+    start = current
+    while (!isAtEnd()) {
+      templatePart()
+      if (peek() === '`') break
+      if (peek() === '{') templateExpression()
+      else advance()
+      start = current
+    }
+    if (peek() !== '`') {
+      console.error('Unterminated string on line ' + line)
+      hasError = true
+      return
+    }
+    advance() // consume the closing `
+    addToken(BACKTICK)
+  }
+
+  function templatePart() {
+    while (!isAtEnd()) {
+      if (peek() === '\n') line++
+      if (peek() === '`' || peek() === '{') break
+      advance()
+    }
+    if (start !== current) {
+      addToken(TEMPLATE_PART, source.substring(start, current))
+      start = current
+    }
+  }
+
+  function templateExpression() {
+    while (!isAtEnd()) {
+      scanToken()
+      if (previousToken().type === RIGHT_BRACE) break
+    }
+    if (previous() !== '}') {
+      console.error('Unterminated template expression on line ' + line)
+      hasError = true
+    }
   }
 
   function eol() {
@@ -354,6 +402,10 @@ export default function scan(source: string): Token[] {
     const text = source.substring(start, current)
     const type = keywords.get(text) || IDENTIFIER
     addToken(type)
+  }
+
+  function previousToken(): Token {
+    return tokens[tokens.length - 1] ?? EOF
   }
 
   function previous() {
