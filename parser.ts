@@ -220,8 +220,7 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function classParam(): nodes.ClassParam {
     let isFinal = match(FINAL)
-    let visibility = classVisibility()
-    let isReadonly = match(READONLY)
+    let [visibility, isReadonly] = classParamModifierSugar()
     let name = consume('Expect class param name', IDENTIFIER).lexeme
     let type = match(COLON) ? typeAnnotation() : null
     let initializer = match(EQUAL) ? expression() : null
@@ -233,6 +232,12 @@ export default function parse(tokens: Token[]): Stmt[] {
       type,
       initializer,
     )
+  }
+
+  function classParamModifierSugar(): [nodes.Visibility, boolean] {
+    if (match(PLUS)) return ['public', true]
+    if (match(MINUS)) return ['private', true]
+    return [classVisibility(), match(READONLY)]
   }
 
   function classSuperclass(): nodes.ClassSuperclass {

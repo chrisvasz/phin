@@ -335,6 +335,18 @@ export class ClassDeclaration extends Node {
   }
 }
 
+function classParamModifiers(this: ClassParam) {
+  let result = ''
+  if (this.isFinal) result += 'final '
+  if (this.visibility !== null) result += this.visibility + ' '
+  if (this.isReadonly) result += 'readonly '
+  return result
+}
+
+function classParamHasModifiers(this: ClassParam) {
+  return this.isFinal || this.visibility !== null || this.isReadonly
+}
+
 export class ClassParam extends Node {
   _type = 'ClassParam' as const
   constructor(
@@ -350,6 +362,8 @@ export class ClassParam extends Node {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitClassParam(this)
   }
+  hasModifiers = classParamHasModifiers
+  modifiers = classParamModifiers
 }
 
 export class ClassSuperclass extends Node {

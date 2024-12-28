@@ -175,7 +175,7 @@ export class PhpPrinter
   visitClassParam(node: nodes.ClassParam): string {
     // TODO complex types
     let type = node.type ? `${node.type.accept(this)} ` : ''
-    return `private readonly ${type}$${node.name}`
+    return `${node.modifiers()}${type}$${node.name}`
   }
 
   visitClassProperty(node: nodes.ClassProperty): string {

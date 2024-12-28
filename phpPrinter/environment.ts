@@ -42,7 +42,10 @@ export class Environment {
       } else if (node instanceof Nodes.ClassDeclaration) {
         this.add(node.name, Kind.Class)
       } else if (node instanceof Nodes.ClassParam) {
-        this.add(node.name, Kind.ClassProperty)
+        if (node.hasModifiers()) {
+          // class params are only visible to the class if they have modifiers
+          this.add(node.name, Kind.ClassProperty)
+        }
       } else if (node instanceof Nodes.ClassProperty) {
         this.add(node.name, Kind.ClassProperty)
       } else if (node instanceof Nodes.ClassMethod) {

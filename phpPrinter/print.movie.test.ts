@@ -11,7 +11,7 @@ function print(src: string) {
 
 test('print Movie original', () => {
   let source = `
-class Movie(title: string, priceCode: int) {
+class Movie(-title: string, -priceCode: int) {
   const REGULAR = 0;
   const NEW_RELEASE = 1;
   const CHILDRENS = 2;
@@ -19,12 +19,12 @@ class Movie(title: string, priceCode: int) {
   fun getTitle(): string => title;
 }
 
-class Rental(movie: Movie, daysRented: int) {
+class Rental(-movie: Movie, -daysRented: int) {
   fun getDaysRented(): int => daysRented;
   fun getMovie(): Movie => movie;
 }
 
-class Customer(name: string) {
+class Customer(-name: string) {
   private var rentals: array = [];
 
   fun addRental(rental: Rental) => array_push(rentals, rental);

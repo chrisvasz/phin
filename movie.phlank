@@ -1,9 +1,7 @@
-class Movie(title: string, priceCode: int) {
+class Movie(+title: string, -priceCode: int) {
   const REGULAR = 0;
   const NEW_RELEASE = 1;
   const CHILDRENS = 2;
-  fun getPriceCode(): int => priceCode;
-  fun getTitle(): string => title; // TODO public readonly title
 
   // TODO make me a factory
   // TODO use a match expression
@@ -50,9 +48,9 @@ class NewRelease extends Price {
   }
 }
 
-class Rental(movie: Movie, daysRented: int) {
+class Rental(-movie: Movie, -daysRented: int) {
   fun getMovie(): Movie => movie; // TODO drop me
-  // var title = movie.getTitle(); // TODO
+  // var title = movie.title // TODO
   fun points(): int => movie.price().points(daysRented);
   fun amount(): float => movie.price().amount(daysRented);
 }
@@ -60,7 +58,7 @@ class Rental(movie: Movie, daysRented: int) {
 // TODO array<Rental>
 // TODO iterates rentals for foreach
 // TODO rentals.array_map(fun(r: Rental) => r.amount()).array_sum()
-class Rentals(rentals: array) {
+class Rentals(-rentals: array) {
   fun getRentals(): array => rentals; // TODO array<Rental>
   fun totalPoints(): int {
     var result = 0;
@@ -78,11 +76,11 @@ class Rentals(rentals: array) {
   }
 }
 
-class Customer(name: string, rentals: Rentals) {
+class Customer(-name: string, -rentals: Rentals) {
   fun statement(): string {
     var result = "Rental Record for " +. name +. ":";
     foreach (rentals.getRentals() as rental) {
-      result +.= rental.getMovie().getTitle() +. " " +. rental.amount() +. " ";
+      result +.= rental.getMovie().title +. " " +. rental.amount() +. " ";
     }
     result +.= "Amount owed is " +. rentals.totalAmount() +. ". ";
     result +.= "You earned " +. rentals.totalPoints() +.  " frequent renter points";

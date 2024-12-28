@@ -2,7 +2,7 @@
 import { expect, test, describe } from 'bun:test'
 import scan from '../scanner'
 import parse from '../parser'
-import { PhpPrinter } from './print'
+import { PhpPrinter, PrintError } from './print'
 
 function print(src: string) {
   let result = new PhpPrinter().print(parse(scan(src)))
@@ -38,17 +38,9 @@ describe('print class declaration', () => {
     let expected = 'class A {}'
     expect(print(source)).toEqual(expected)
   })
+})
 
-  test('class A(a) {}', () => {
-    let source = 'class A(a) {}'
-    let expected = trimMargin(`
-      class A {
-        function __construct(private readonly $a) {}
-      }
-    `)
-    expect(print(source)).toEqual(expected)
-  })
-
+describe('print class params & constructor', () => {
   test('class A private() {}', () => {
     let source = 'class A private() {}'
     let expected = trimMargin(`
@@ -59,23 +51,11 @@ describe('print class declaration', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('class A private(a) {}', () => {
-    let source = 'class A private(a) {}'
-    let expected = trimMargin(`
-      class A {
-        private function __construct(private readonly $a) {}
-      }
-    `)
-    expect(print(source)).toEqual(expected)
-  })
-})
-
-describe('print class params', () => {
   test('class A(a) {}', () => {
     let source = 'class A(a) {}'
     let expected = trimMargin(`
       class A {
-        function __construct(private readonly $a) {}
+        function __construct($a) {}
       }
     `)
     expect(print(source)).toEqual(expected)
@@ -83,11 +63,29 @@ describe('print class params', () => {
 
   test('class A(a) { fun b() => a }', () => {
     let source = 'class A(a) { fun b() => a }'
+    expect(() => print(source)).toThrow(new PrintError('Unknown identifier a'))
+  })
+
+  test('class A(private a) { fun b() => a }', () => {
+    let source = 'class A(private a) { fun b() => 1 }'
     let expected = trimMargin(`
       class A {
-        function __construct(private readonly $a) {}
+        function __construct(private $a) {}
         function b() {
-          return $this->a;
+          return 1;
+        }
+      }
+    `)
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('class A(public a, final private readonly b) { fun b() => a }', () => {
+    let source = 'class A(private a, final private readonly b) { fun b() => 1 }'
+    let expected = trimMargin(`
+      class A {
+        function __construct(private $a, final private readonly $b) {}
+        function b() {
+          return 1;
         }
       }
     `)
