@@ -328,6 +328,7 @@ export class PhpPrinter
     if (kind === Kind.Variable) return `$${node.name}`
     if (kind === Kind.ClassProperty) return `$this->${node.name}`
     if (kind === Kind.ClassMethod) return `$this->${node.name}`
+    if (kind === Kind.ClassConst) return `self::${node.name}`
     return `${node.name}`
   }
 

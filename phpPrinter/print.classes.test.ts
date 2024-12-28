@@ -3,34 +3,12 @@ import { expect, test, describe } from 'bun:test'
 import scan from '../scanner'
 import parse from '../parser'
 import { PhpPrinter, PrintError } from './print'
+import { trimMargin } from './trimMargin'
 
 function print(src: string) {
   let result = new PhpPrinter().print(parse(scan(src)))
   return result.trim()
 }
-
-function trimMargin(s: string) {
-  if (s[0] === '\n') s = s.slice(1)
-  let leading = 0
-  while (s[leading] === ' ') {
-    leading++
-  }
-  const replace = '\n' + ' '.repeat(leading)
-  return s
-    .slice(leading - 1)
-    .replaceAll(replace, '\n')
-    .trim()
-}
-
-test('trimMargin', () => {
-  let s = `
-    class A {
-      function a() {}
-    }
-  `
-  let expected = 'class A {\n  function a() {}\n}'
-  expect(trimMargin(s)).toEqual(expected)
-})
 
 describe('print class declaration', () => {
   test('class A {}', () => {
@@ -109,6 +87,44 @@ describe('print class properties', () => {
     let expected = trimMargin(`
       class A {
         const B = 1;
+      }
+    `)
+    expect(print(source)).toEqual(expected)
+  })
+})
+
+describe('print class constants', () => {
+  test('class A { const B = 1; }', () => {
+    let source = 'class A { const B = 1; }'
+    let expected = trimMargin(`
+      class A {
+        const B = 1;
+      }
+    `)
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('class A { const B = 1; fun a() => B }', () => {
+    let source = 'class A { const B = 1; fun a() => B }'
+    let expected = trimMargin(`
+      class A {
+        const B = 1;
+        function a() {
+          return self::B;
+        }
+      }
+    `)
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('class A { const B = 1; fun a(B) => B }', () => {
+    let source = 'class A { const B = 1; fun a(B) => B }'
+    let expected = trimMargin(`
+      class A {
+        const B = 1;
+        function a($B) {
+          return $B;
+        }
       }
     `)
     expect(print(source)).toEqual(expected)

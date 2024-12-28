@@ -7,6 +7,7 @@ export enum Kind {
   Class,
   ClassProperty,
   ClassMethod,
+  ClassConst,
 }
 
 // TODO performance
@@ -50,6 +51,8 @@ export class Environment {
         this.add(node.name, Kind.ClassProperty)
       } else if (node instanceof Nodes.ClassMethod) {
         this.add(node.name, Kind.ClassMethod)
+      } else if (node instanceof Nodes.ClassConst) {
+        this.add(node.name, Kind.ClassConst)
       }
     }
   }
