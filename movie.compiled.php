@@ -1,6 +1,6 @@
 <?php
 class Movie {
-  function __construct(public readonly string $title, public readonly Price $price) {}
+  function __construct(public string $title, public Price $price) {}
 }
 abstract class Price {
   abstract function amount(int $daysRented): float;
@@ -48,7 +48,7 @@ class PriceFactory {
   }
 }
 class Rental {
-  function __construct(private readonly Movie $movie, private readonly int $daysRented) {
+  function __construct(private Movie $movie, private int $daysRented) {
     $this->title = $movie->title;
   }
   public $title;
@@ -60,7 +60,7 @@ class Rental {
   }
 }
 class Rentals implements IteratorAggregate {
-  function __construct(private readonly array $rentals) {}
+  function __construct(private array $rentals) {}
   function getIterator(): Traversable {
     return new ArrayIterator($this->rentals);
   }
@@ -80,7 +80,7 @@ class Rentals implements IteratorAggregate {
   }
 }
 class Customer {
-  function __construct(private readonly string $name, private readonly Rentals $rentals) {}
+  function __construct(private string $name, private Rentals $rentals) {}
   function statement(): string {
     $result = ("Rental Record for " . $this->name . "\n");
     foreach ($this->rentals as $rental) {

@@ -1,4 +1,4 @@
-class Movie(+title: string, +price: Price) {}
+class Movie(var title: string, var price: Price) {}
 
 abstract class Price {
   abstract fun amount(daysRented: int): float;
@@ -43,14 +43,14 @@ class PriceFactory {
   };
 }
 
-class Rental(-movie: Movie, -daysRented: int) {
+class Rental(-var movie: Movie, -var daysRented: int) {
   var title = movie.title;
   fun points(): int => movie.price.points(daysRented);
   fun amount(): float => movie.price.amount(daysRented);
 }
 
 // TODO array<Rental> should generate @implements on the class and @param on the constructor
-class Rentals(-rentals: array) iterates rentals {
+class Rentals(-var rentals: array) iterates rentals {
   fun totalPoints(): int {
     var result = 0;
     foreach (rentals as rental) {
@@ -73,7 +73,7 @@ class Rentals(-rentals: array) iterates rentals {
 
 }
 
-class Customer(-name: string, -rentals: Rentals) {
+class Customer(-var name: string, -var rentals: Rentals) {
   fun statement(): string {
     var result = `Rental Record for {name}\n`;
     foreach (rentals as rental) {

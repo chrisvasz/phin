@@ -71,7 +71,6 @@ export interface Visitor<T> {
   visitClassDeclaration(node: ClassDeclaration): T
   visitClassInitializer(node: ClassInitializer): T
   visitClassMethod(node: ClassMethod): T
-  visitClassParam(node: ClassParam): T
   visitClassProperty(node: ClassProperty): T
   visitClassSuperclass(node: ClassSuperclass): T
   visitClone(node: Clone): T
@@ -332,7 +331,7 @@ export class ClassDeclaration extends Node {
   constructor(
     public readonly name: string,
     public readonly constructorVisibility: Visibility,
-    public readonly params: ClassParam[],
+    public readonly params: Array<Param | ClassProperty>,
     public readonly superclass: ClassSuperclass | null,
     public readonly interfaces: string[],
     public readonly iterates: Identifier | null,
@@ -345,37 +344,6 @@ export class ClassDeclaration extends Node {
     return visitor.visitClassDeclaration(this)
   }
   properties = classProperties
-}
-
-function classParamModifiers(this: ClassParam) {
-  let result = ''
-  if (this.isFinal) result += 'final '
-  if (this.visibility !== null) result += this.visibility + ' '
-  if (this.isReadonly) result += 'readonly '
-  return result
-}
-
-function classParamHasModifiers(this: ClassParam) {
-  return this.isFinal || this.visibility !== null || this.isReadonly
-}
-
-export class ClassParam extends Node {
-  _type = 'ClassParam' as const
-  constructor(
-    public readonly isFinal: boolean,
-    public readonly visibility: Visibility,
-    public readonly isReadonly: boolean,
-    public readonly name: string,
-    public readonly type: Type | null,
-    public readonly initializer: Expr | null,
-  ) {
-    super()
-  }
-  accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitClassParam(this)
-  }
-  hasModifiers = classParamHasModifiers
-  modifiers = classParamModifiers
 }
 
 export class ClassSuperclass extends Node {

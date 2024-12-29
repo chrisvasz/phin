@@ -43,8 +43,6 @@ export class Environment {
         this.add(node.name, Kind.Function)
       } else if (node instanceof Nodes.ClassDeclaration) {
         this.add(node.name, Kind.Class)
-      } else if (node instanceof Nodes.ClassParam) {
-        this.add(node.name, Kind.ClassProperty)
       } else if (node instanceof Nodes.ClassProperty) {
         this.add(node.name, Kind.ClassProperty)
       } else if (node instanceof Nodes.ClassMethod) {

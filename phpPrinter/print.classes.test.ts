@@ -54,11 +54,11 @@ describe('print class params & constructor', () => {
     expect(() => print(source)).toThrow(new PrintError('Unknown identifier a'))
   })
 
-  test('class A(private a) { fun b() => a }', () => {
-    let source = 'class A(private a) { fun b() => 1 }'
+  test('class A(var a) { fun b() => a }', () => {
+    let source = 'class A(var a) { fun b() => 1 }'
     let expected = trimMargin(`
       class A {
-        function __construct(private $a) {}
+        function __construct(public $a) {}
         function b() {
           return 1;
         }
@@ -67,11 +67,11 @@ describe('print class params & constructor', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('class A(public a, final private readonly b) { fun b() => a }', () => {
-    let source = 'class A(private a, final private readonly b) { fun b() => 1 }'
+  test('class A(public var a, final private var b) { fun b() => a }', () => {
+    let source = 'class A(public var a, final private var b) { fun b() => 1 }'
     let expected = trimMargin(`
       class A {
-        function __construct(private $a, final private readonly $b) {}
+        function __construct(public $a, final private $b) {}
         function b() {
           return 1;
         }
@@ -209,11 +209,11 @@ describe('print class iterates', () => {
     expect(() => print(source)).toThrow(new PrintError('Unknown identifier a'))
   })
 
-  test('class A(-a) iterates a {}', () => {
-    let source = 'class A(-a) iterates a {}'
+  test('class A(-var a) iterates a {}', () => {
+    let source = 'class A(-var a) iterates a {}'
     let expected = trimMargin(`
       class A implements IteratorAggregate {
-        function __construct(private readonly $a) {}
+        function __construct(private $a) {}
         function getIterator(): Traversable {
           return new ArrayIterator($this->a);
         }

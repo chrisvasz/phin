@@ -189,7 +189,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     )
   }
 
-  function classParams(): nodes.ClassParam[] {
+  function classParams(): Array<nodes.Param | nodes.ClassProperty> {
     if (match(RIGHT_PAREN)) return []
     let params = [classParam()]
     while (match(COMMA)) {
@@ -200,26 +200,22 @@ export default function parse(tokens: Token[]): Stmt[] {
     return params
   }
 
-  function classParam(): nodes.ClassParam {
+  function classParam(): nodes.Param | nodes.ClassProperty {
+    if (check(IDENTIFIER)) return functionParam()
     let isFinal = match(FINAL)
-    let [visibility, isReadonly] = classParamModifierSugar()
+    let visibility = classVisibility()
+    consume('Expect var before class promoted property', VAR)
     let name = consume('Expect class param name', IDENTIFIER).lexeme
     let type = match(COLON) ? typeAnnotation() : null
     let initializer = match(EQUAL) ? expression() : null
-    return new nodes.ClassParam(
+    return new nodes.ClassProperty(
       isFinal,
       visibility,
-      isReadonly,
+      false, // TODO
       name,
       type,
       initializer,
     )
-  }
-
-  function classParamModifierSugar(): [nodes.Visibility, boolean] {
-    if (match(PLUS)) return ['public', true]
-    if (match(MINUS)) return ['private', true]
-    return [classVisibility(), match(READONLY)]
   }
 
   function classSuperclass(): nodes.ClassSuperclass {
@@ -303,11 +299,9 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function classVisibility(): nodes.Visibility {
-    let token = match(PUBLIC, PROTECTED, PRIVATE) ? previous() : null
-    if (token === null) return null
-    if (token.type === PUBLIC) return 'public'
-    if (token.type === PROTECTED) return 'protected'
-    if (token.type === PRIVATE) return 'private'
+    if (match(PUBLIC, PLUS)) return 'public'
+    if (match(PROTECTED)) return 'protected'
+    if (match(PRIVATE, MINUS)) return 'private'
     return null
   }
 

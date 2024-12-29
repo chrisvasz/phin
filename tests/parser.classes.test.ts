@@ -25,7 +25,7 @@ function classDeclaration(
     members = [],
     isAbstract = false,
   }: {
-    params?: nodes.ClassParam[]
+    params?: Array<nodes.Param | nodes.ClassProperty>
     constructorVisibility?: nodes.Visibility
     superclass?: nodes.ClassSuperclass
     interfaces?: string[]
@@ -46,7 +46,15 @@ function classDeclaration(
   )
 }
 
-function classParam(
+function param(
+  name: string,
+  type: types.Type | null = null,
+  initializer: nodes.Expr | null = null,
+) {
+  return new nodes.Param(name, type, initializer)
+}
+
+function classProperty(
   name: string,
   {
     isFinal = false,
@@ -62,10 +70,10 @@ function classParam(
     initializer?: nodes.Expr | null
   } = {},
 ) {
-  return new nodes.ClassParam(
+  return new nodes.ClassProperty(
     isFinal,
     visibility,
-    isReadonly,
+    false, // TODO
     name,
     type,
     initializer,
@@ -93,7 +101,7 @@ describe('class declarations', () => {
     let source = 'class A(a) extends B(a()) {}'
     let expected = [
       classDeclaration('A', {
-        params: [classParam('a')],
+        params: [param('a')],
         superclass: new nodes.ClassSuperclass('B', [
           new nodes.Call(new nodes.Identifier('a'), []),
         ]),
@@ -173,36 +181,35 @@ describe('class params/constructor', () => {
     let source = 'class A(b) {}'
     let expected = [
       classDeclaration('A', {
-        params: [classParam('b')],
+        params: [param('b')],
       }),
     ]
     expect(ast(source)).toEqual(expected)
   })
 
-  test('class A(private b) {}', () => {
-    let source = 'class A(private b) {}'
+  test('class A(var b) {}', () => {
+    let source = 'class A(var b) {}'
     let expected = [
       classDeclaration('A', {
-        params: [classParam('b', { visibility: 'private' })],
+        params: [classProperty('b')],
       }),
     ]
     expect(ast(source)).toEqual(expected)
   })
 
-  test('class A(b: number|string = 5, final public readonly c: bool,) {}', () => {
-    let source =
-      'class A(b: number|string = 5, final public readonly c: bool,) {}'
+  test('class A(b: number|string = 5, final public var c: bool,) {}', () => {
+    let source = 'class A(b: number|string = 5, final public var c: bool,) {}'
     let expected = [
       classDeclaration('A', {
         params: [
-          classParam('b', {
-            type: new types.Union([new types.Number(), new types.String()]),
-            initializer: new nodes.NumberLiteral('5'),
-          }),
-          classParam('c', {
+          param(
+            'b',
+            new types.Union([new types.Number(), new types.String()]),
+            new nodes.NumberLiteral('5'),
+          ),
+          classProperty('c', {
             isFinal: true,
             visibility: 'public',
-            isReadonly: true,
             type: new types.Boolean(),
           }),
         ],
@@ -211,25 +218,24 @@ describe('class params/constructor', () => {
     expect(ast(source)).toEqual(expected)
   })
 
-  test('class A(-b) {}', () => {
-    let source = 'class A(-b) {}'
+  test('class A(-var b) {}', () => {
+    let source = 'class A(-var b) {}'
     let expected = [
       classDeclaration('A', {
-        params: [classParam('b', { visibility: 'private', isReadonly: true })],
+        params: [classProperty('b', { visibility: 'private' })],
       }),
     ]
     expect(ast(source)).toEqual(expected)
   })
 
-  test('class A(-b: number) {}', () => {
-    let source = 'class A(-b: number) {}'
+  test('class A(-var b: number) {}', () => {
+    let source = 'class A(-var b: number) {}'
     let expected = [
       classDeclaration('A', {
         params: [
-          classParam('b', {
+          classProperty('b', {
             visibility: 'private',
             type: new types.Number(),
-            isReadonly: true,
           }),
         ],
       }),
@@ -237,28 +243,24 @@ describe('class params/constructor', () => {
     expect(ast(source)).toEqual(expected)
   })
 
-  test('class A(b, +c) {}', () => {
-    let source = 'class A(b, +c) {}'
+  test('class A(b, +var c) {}', () => {
+    let source = 'class A(b, +var c) {}'
     let expected = [
       classDeclaration('A', {
-        params: [
-          classParam('b'),
-          classParam('c', { visibility: 'public', isReadonly: true }),
-        ],
+        params: [param('b'), classProperty('c', { visibility: 'public' })],
       }),
     ]
     expect(ast(source)).toEqual(expected)
   })
 
-  test('class A(b, +c: number=5) {}', () => {
-    let source = 'class A(b, +c: number=5) {}'
+  test('class A(b, +var c: number=5) {}', () => {
+    let source = 'class A(b, +var c: number=5) {}'
     let expected = [
       classDeclaration('A', {
         params: [
-          classParam('b'),
-          classParam('c', {
+          param('b'),
+          classProperty('c', {
             visibility: 'public',
-            isReadonly: true,
             type: new types.Number(),
             initializer: new nodes.NumberLiteral('5'),
           }),
@@ -278,45 +280,25 @@ describe('class params/constructor', () => {
     expect(ast(source)).toEqual(expected)
   })
 
-  test('class A private(a) {}', () => {
-    let source = 'class A private(a) {}'
+  test('class A -() {}', () => {
+    let source = 'class A -() {}'
     let expected = [
       classDeclaration('A', {
-        params: [classParam('a')],
         constructorVisibility: 'private',
       }),
     ]
     expect(ast(source)).toEqual(expected)
   })
-})
 
-describe('class param modifiers', () => {
-  test('final ', () => {
-    let param = classParam('a', { isFinal: true })
-    let expected = 'final '
-    expect(param.modifiers()).toEqual(expected)
-  })
-
-  test('public', () => {
-    let param = classParam('a', { visibility: 'public' })
-    let expected = 'public '
-    expect(param.modifiers()).toEqual(expected)
-  })
-
-  test('readonly', () => {
-    let param = classParam('a', { isReadonly: true })
-    let expected = 'readonly '
-    expect(param.modifiers()).toEqual(expected)
-  })
-
-  test('final public readonly', () => {
-    let param = classParam('a', {
-      isFinal: true,
-      visibility: 'public',
-      isReadonly: true,
-    })
-    let expected = 'final public readonly '
-    expect(param.modifiers()).toEqual(expected)
+  test('class A private(a) {}', () => {
+    let source = 'class A private(a) {}'
+    let expected = [
+      classDeclaration('A', {
+        params: [param('a')],
+        constructorVisibility: 'private',
+      }),
+    ]
+    expect(ast(source)).toEqual(expected)
   })
 })
 

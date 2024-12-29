@@ -186,47 +186,38 @@ export class PhpPrinter
     ].join('\n')
   }
 
-  visitClassParam(node: nodes.ClassParam): string {
-    // TODO complex types
-    let type = node.type ? `${node.type.accept(this)} ` : ''
-    let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''
-    return `${node.modifiers()}${type}$${node.name}${init}`
-  }
-
   visitClassProperty(node: nodes.ClassProperty): string {
-    // TODO final, abstract, static, docblock
+    // TODO abstract, static, docblock
+    let final = node.isFinal ? 'final ' : ''
     let visibility = `${node.visibility ?? 'public'} `
     let type = node.type ? `${node.type.accept(this)} ` : ''
-    return `${visibility}${type}$${node.name};`
+    return `${final}${visibility}${type}$${node.name};`
   }
 
   visitClassDeclaration(node: nodes.ClassDeclaration): string {
-    return this.encloseWith(
-      [...node.params.filter((p) => p.hasModifiers()), ...node.members],
-      () => {
-        let declaration = [
-          node.isAbstract ? 'abstract' : '',
-          'class',
-          node.name,
-          this.classExtends(node),
-          this.classImplements(node),
-          '{',
-        ]
-          .filter(Boolean)
-          .join(' ')
-        let body = this.indentBlock(() => {
-          let constructor = this.classConstructor(node)
-          if (node.members.length === 0 && !constructor && !node.iterates)
-            return []
-          let members = node.members.map((m) => m.accept(this))
-          if (node.iterates) members.unshift(this.classGetIterator(node))
-          if (constructor) members.unshift(constructor)
-          return members
-        })
-        if (body === '') return declaration + '}'
-        return [declaration, body, this.indent('}')].join('\n')
-      },
-    )
+    return this.encloseWith([...node.params, ...node.members], () => {
+      let declaration = [
+        node.isAbstract ? 'abstract' : '',
+        'class',
+        node.name,
+        this.classExtends(node),
+        this.classImplements(node),
+        '{',
+      ]
+        .filter(Boolean)
+        .join(' ')
+      let body = this.indentBlock(() => {
+        let constructor = this.classConstructor(node)
+        if (node.members.length === 0 && !constructor && !node.iterates)
+          return []
+        let members = node.members.map((m) => m.accept(this))
+        if (node.iterates) members.unshift(this.classGetIterator(node))
+        if (constructor) members.unshift(constructor)
+        return members
+      })
+      if (body === '') return declaration + '}'
+      return [declaration, body, this.indent('}')].join('\n')
+    })
   }
 
   classExtends(node: nodes.ClassDeclaration): string {
@@ -285,8 +276,16 @@ export class PhpPrinter
     )
   }
 
-  classParams(params: nodes.ClassParam[]): string {
-    return params.map((p) => p.accept(this)).join(', ')
+  classParams(params: Array<nodes.Param | nodes.ClassProperty>): string {
+    return params
+      .map((p) => {
+        let result = p.accept(this)
+        if (p instanceof nodes.ClassProperty) {
+          result = result.slice(0, -1) // remove semicolon
+        }
+        return result
+      })
+      .join(', ')
   }
 
   visitClassSuperclass(node: nodes.ClassSuperclass): string {
