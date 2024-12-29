@@ -43,7 +43,7 @@ class PriceFactory {
     self::REGULAR => new Regular(),
     self::NEW_RELEASE => new NewRelease(),
     self::CHILDRENS => new Childrens(),
-    default => throw new DomainException("Unknown price code: " . $priceCode),
+    default => throw new DomainException(("Unknown price code: " . $priceCode)),
   };
   }
 }

@@ -39,7 +39,7 @@ class PriceFactory {
     REGULAR => new Regular(),
     NEW_RELEASE => new NewRelease(),
     CHILDRENS => new Childrens(),
-    default => throw new DomainException("Unknown price code: " +. priceCode),
+    default => throw new DomainException(`Unknown price code: {priceCode}`),
   };
 }
 
@@ -49,7 +49,7 @@ class Rental(-movie: Movie, -daysRented: int) {
   fun amount(): float => movie.price.amount(daysRented);
 }
 
-// TODO array<Rental>
+// TODO array<Rental> should generate @implements on the class and @param on the constructor
 class Rentals(-rentals: array) iterates rentals {
   fun totalPoints(): int {
     var result = 0;
@@ -85,6 +85,7 @@ class Customer(-name: string, -rentals: Rentals) {
   }
 }
 
+// TODO optional semis
 var raw = [
   ["Prognosis Negative", PriceFactory::NEW_RELEASE, 3],
   ["The Pain and the Yearning", PriceFactory::REGULAR, 1],
@@ -93,7 +94,7 @@ var raw = [
 var rentals = [];
 var priceFactory = new PriceFactory();
 foreach (raw as row) {
-  // TODO destructuring assignment
+  // var [title, priceCode, daysRented] = row; // TODO
   var movie = new Movie(row[0], priceFactory.from(row[1]));
   array_push(rentals, new Rental(movie, row[2]));
 }
