@@ -1,0 +1,5 @@
+class Rental(-var movie: Movie, -var daysRented: int) {
+  var title = movie.title;
+  fun points(): int => movie.price.points(daysRented);
+  fun amount(): float => movie.price.amount(daysRented);
+}

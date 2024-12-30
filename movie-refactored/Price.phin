@@ -1,0 +1,4 @@
+abstract class Price {
+  fun points(daysRented: int): int => 1;
+  abstract fun amount(daysRented: int): float;
+}

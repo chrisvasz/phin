@@ -1,0 +1,13 @@
+class Customer(var name: string, -var rentals: Rentals) {
+  fun statement(): string {
+    // TODO use string embedded expressions
+    var result = "Rental Record for " +. name +. "\n";
+    foreach (rentals as rental) {
+      var thisAmount = rental.amount();
+      result +.= "\t" +. rental.title +. "\t" +. thisAmount +. "\n";
+    }
+    result +.= "Amount owed is " +. rentals.amount() +. "\n";
+    result +.= "You earned " +. rentals.points() +. " frequent renter points";
+    return result;
+  }
+}

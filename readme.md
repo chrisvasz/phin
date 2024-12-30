@@ -1,5 +1,7 @@
 # Phlank
 
+TODO rename to phin
+
 > PHP from a different angle
 
 Phlank is a compile-to-PHP language that attempts to bridge the gap between PHP's lasting influence and the comforts of modern language syntax. TODO improve that

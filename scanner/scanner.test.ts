@@ -1,6 +1,6 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import { Token, TokenType } from './token'
+import { Token, TokenType } from '../token'
 import scan from './scanner'
 import { tokenToString } from 'typescript'
 

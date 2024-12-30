@@ -1,0 +1,30 @@
+class Movie
+{
+  const REGULAR = 0;
+  const NEW_RELEASE = 1;
+  const CHILDRENS = 2;
+
+  private var title;
+  private var priceCode;
+
+  public fun __construct(title: string, priceCode: int)
+  {
+    this.title = title;
+    this.priceCode = priceCode;
+  }
+
+  public fun getPriceCode(): int
+  {
+    return this.priceCode;
+  }
+
+  public fun setPriceCode(priceCode: int)
+  {
+    this.priceCode = priceCode;
+  }
+
+  public fun getTitle(): string
+  {
+    return this.title;
+  }
+}

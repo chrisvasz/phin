@@ -1,0 +1,12 @@
+class PriceFactory {
+  const REGULAR = 0;
+  const NEW_RELEASE = 1;
+  const CHILDRENS = 2;
+
+  fun from(priceCode: int): Price => match(priceCode) {
+    REGULAR => new Regular()
+    NEW_RELEASE => new NewRelease()
+    CHILDRENS => new Childrens()
+    default => throw new DomainException("Invalid price code")
+  };
+}

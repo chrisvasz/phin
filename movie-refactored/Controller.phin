@@ -1,0 +1,24 @@
+class Controller {
+  fun __invoke() {
+    var rows = [
+      ["Prognois Negative", PriceFactory::NEW_RELEASE, 3],
+      ["Sack Lunch", PriceFactory::CHILDRENS, 1],
+      ["The Pain and the Yearning", PriceFactory::REGULAR, 1]
+    ];
+    var rentals = [];
+    var priceFactory = new PriceFactory();
+    foreach (rows as row) {
+      // TODO var [name, priceCode, daysRented] = row;
+      var name = row[0];
+      var priceCode = row[1];
+      var daysRented = row[2];
+      var movie = new Movie(name, priceFactory.from(priceCode));
+      var rental = new Rental(movie, daysRented);
+      array_push(rentals, rental);
+    }
+
+    var customer = new Customer("Susan Ross", new Rentals(rentals));
+    var statement = customer.statement();
+    echo statement;
+  }
+}

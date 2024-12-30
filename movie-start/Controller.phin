@@ -1,0 +1,14 @@
+class Controller {
+  fun __invoke() {
+    var prognosisNegative = new Movie("Prognosis Negative", Movie::NEW_RELEASE);
+    var sackLunch = new Movie("Sack Lunch", Movie::CHILDRENS);
+    var painAndYearning = new Movie("The Pain and the Yearning", Movie::REGULAR);
+
+    var customer = new Customer("Susan Ross");
+    customer.addRental(new Rental(prognosisNegative, 3));
+    customer.addRental(new Rental(painAndYearning, 1));
+    customer.addRental(new Rental(sackLunch, 1));
+    var statement = customer.statement();
+    echo statement;
+  }
+}

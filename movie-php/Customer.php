@@ -1,58 +1,5 @@
 <?php
 
-class Movie
-{
-    const CHILDRENS = 2;
-    const REGULAR = 0;
-    const NEW_RELEASE = 1;
-
-    private $title;
-    private $priceCode;
-
-    public function __construct(string $title, int $priceCode)
-    {
-        $this->title = $title;
-        $this->priceCode = $priceCode;
-    }
-
-    public function getPriceCode(): int
-    {
-        return $this->priceCode;
-    }
-
-    public function setPriceCode(int $priceCode)
-    {
-        $this->priceCode = $priceCode;
-    }
-
-    public function getTitle(): string
-    {
-        return $this->title;
-    }
-}
-
-class Rental
-{
-    private $movie;
-    private $daysRented;
-
-    public function __construct(Movie $movie, int $daysRented)
-    {
-        $this->movie = $movie;
-        $this->daysRented = $daysRented;
-    }
-
-    public function getDaysRented(): int
-    {
-        return $this->daysRented;
-    }
-
-    public function getMovie(): Movie
-    {
-        return $this->movie;
-    }
-}
-
 class Customer
 {
     private $name;
@@ -120,24 +67,3 @@ class Customer
         return $result;
     }
 }
-
-$prognosisNegative = new Movie("Prognosis Negative", Movie::NEW_RELEASE);
-$sackLunch = new Movie("Sack Lunch", Movie::CHILDRENS);
-$painAndYearning = new Movie("The Pain and the Yearning", Movie::REGULAR);
-
-$customer = new Customer("Susan Ross");
-$customer->addRental(
-  new Rental($prognosisNegative, 3)
-);
-$customer->addRental(
-  new Rental($painAndYearning, 1)
-);
-$customer->addRental(
-  new Rental($sackLunch, 1)
-);
-
-$statement = $customer->statement();
-
-echo '<pre>';
-echo $statement;
-echo '</pre>';

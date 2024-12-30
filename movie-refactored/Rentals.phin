@@ -1,0 +1,22 @@
+class Rentals(-var rentals: array) iterates rentals {
+  fun points(): int {
+    var result = 0;
+    foreach (rentals as rental) {
+      result += rental.points();
+    }
+    return result;
+  }
+
+  fun amount(): float {
+    var result = 0;
+    foreach (rentals as rental) {
+      result += rental.amount();
+    }
+    return result;
+  }
+
+  // TODO
+  // fun points(): int => rentals
+  //   #map(fun(rental) => rental.points())
+  //   #sum()
+}

@@ -1,0 +1,4 @@
+class NewRelease extends Price {
+  fun points(daysRented: int): int => daysRented > 1 ? 2 : 1;
+  fun amount(daysRented: int): float => daysRented * 3;
+}

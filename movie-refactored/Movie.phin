@@ -1,0 +1,1 @@
+class Movie(+var title: string, +var price: Price) {}

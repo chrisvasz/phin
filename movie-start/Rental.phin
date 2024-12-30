@@ -1,0 +1,21 @@
+class Rental
+{
+  private var movie;
+  private var daysRented;
+
+  public fun __construct(movie: Movie, daysRented: int)
+  {
+    this.movie = movie;
+    this.daysRented = daysRented;
+  }
+
+  public fun getDaysRented(): int
+  {
+    return this.daysRented;
+  }
+
+  public fun getMovie(): Movie
+  {
+    return this.movie;
+  }
+}

@@ -1,8 +1,8 @@
-import { Token, TokenType } from './token'
-import { Node, Expr, Stmt } from './nodes'
-import * as nodes from './nodes'
-import * as types from './types'
-import { Type } from './types'
+import { Token, TokenType } from '../token'
+import { Node, Expr, Stmt } from '../nodes'
+import * as nodes from '../nodes'
+import * as types from '../types'
+import { Type } from '../types'
 
 const {
   ABSTRACT,
