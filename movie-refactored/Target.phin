@@ -1,0 +1,75 @@
+abstract class Price {
+  fun points(daysRented: int): int => 1
+  abstract fun amount(daysRented: int): float
+}
+
+class NewRelease extends Price {
+  fun points(daysRented: int): int => daysRented > 1 ? 2 : 1
+  fun amount(daysRented: int): float => daysRented * 3
+}
+
+class Regular extends Price {
+  fun amount(daysRented: int): float {
+    var result = 2
+    if (daysRented > 2) {
+      result += (daysRented - 2) * 1.5
+    }
+    return result
+  }
+}
+
+class Childrens extends Price {
+  fun amount(daysRented: int): float {
+    var result = 1.5
+    if (daysRented > 3) {
+      result += (daysRented - 3) * 1.5
+    }
+    return result
+  }
+}
+
+class Movie(val title: string, val price: Price) {}
+
+class Rental(-val movie: Movie, -val daysRented: int) {
+  val title = movie.title
+  fun points(): int => movie.price.points(daysRented)
+  fun amount(): float => movie.price.amount(daysRented)
+}
+
+class Rentals(-val rentals: array<Rental>) iterates rentals {
+  fun points(): int => rentals#map(fun(r)) => r.points())#sum()
+  fun amount(): float => rentals#map(fun(r) => r.amount())#sum()
+}
+
+class Customer(val name: string, -val rentals: Rentals) {
+  fun statement(): string {
+    var result = "Rental Record for $name\n"
+    foreach (rentals as rental) {
+      result +.= "\t${rental.title}\t${rental.amount()}\n"
+    }
+    result +.= "Amount owed is ${rentals.amount()}\n"
+    result +.= "You earned ${rentals.points()} frequent renter points\n"
+    return result
+  }
+}
+
+class Controller {
+  fun __invoke() {
+    var rows = [
+      ["Prognois Negative", PriceFactory::NEW_RELEASE, 3],
+      ["Sack Lunch", PriceFactory::CHILDRENS, 1],
+      ["The Pain and the Yearning", PriceFactory::REGULAR, 1]
+    ];
+    var rentals = [];
+    var priceFactory = new PriceFactory();
+    foreach (rows as row) {
+      var [name, priceCode, daysRented] = row;
+      var movie = new Movie(name, priceFactory.from(priceCode));
+      var rental = new Rental(movie, daysRented);
+      array_push(rentals, rental);
+    }
+    var customer = new Customer("Susan Ross", new Rentals(rentals));
+    var statement = customer.statement();
+    echo statement;
+  }
+}
