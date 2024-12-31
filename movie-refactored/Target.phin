@@ -1,55 +1,59 @@
+// TODO drop semis
+// TODO val, not var
+
 abstract class Price {
-  fun points(daysRented: int): int => 1
-  abstract fun amount(daysRented: int): float
+  fun points(daysRented: int): int => 1;
+  abstract fun amount(daysRented: int): float;
 }
 
 class NewRelease extends Price {
-  fun points(daysRented: int): int => daysRented > 1 ? 2 : 1
-  fun amount(daysRented: int): float => daysRented * 3
+  fun points(daysRented: int): int => daysRented > 1 ? 2 : 1;
+  fun amount(daysRented: int): float => daysRented * 3;
 }
 
 class Regular extends Price {
   fun amount(daysRented: int): float {
-    var result = 2
+    var result = 2;
     if (daysRented > 2) {
-      result += (daysRented - 2) * 1.5
+      result += (daysRented - 2) * 1.5;
     }
-    return result
+    return result;
   }
 }
 
 class Childrens extends Price {
   fun amount(daysRented: int): float {
-    var result = 1.5
+    var result = 1.5;
     if (daysRented > 3) {
-      result += (daysRented - 3) * 1.5
+      result += (daysRented - 3) * 1.5;
     }
-    return result
+    return result;
   }
 }
 
-class Movie(val title: string, val price: Price) {}
+class Movie(var title: string, var price: Price) {}
 
-class Rental(-val movie: Movie, -val daysRented: int) {
-  val title = movie.title
-  fun points(): int => movie.price.points(daysRented)
-  fun amount(): float => movie.price.amount(daysRented)
+class Rental(-var movie: Movie, -var daysRented: int) {
+  var title = movie.title;
+  fun points(): int => movie.price.points(daysRented);
+  fun amount(): float => movie.price.amount(daysRented);
 }
 
-class Rentals(-val rentals: array<Rental>) iterates rentals {
-  fun points(): int => rentals#map(fun(r)) => r.points())#sum()
-  fun amount(): float => rentals#map(fun(r) => r.amount())#sum()
+// TODO array<Rental>
+class Rentals(-var rentals: array) iterates rentals {
+  // fun points(): int => rentals#map(fun(r)) => r.points())#sum(); // TODO
+  // fun amount(): float => rentals#map(fun(r) => r.amount())#sum(); // TODO
 }
 
-class Customer(val name: string, -val rentals: Rentals) {
+class Customer(var name: string, -var rentals: Rentals) {
   fun statement(): string {
-    var result = "Rental Record for $name\n"
+    var result = "Rental Record for $name\n";
     foreach (rentals as rental) {
-      result +.= "\t${rental.title}\t${rental.amount()}\n"
+      result +.= "\t${rental.title}\t${rental.amount()}\n";
     }
-    result +.= "Amount owed is ${rentals.amount()}\n"
-    result +.= "You earned ${rentals.points()} frequent renter points\n"
-    return result
+    result +.= "Amount owed is ${rentals.amount()}\n";
+    result +.= "You earned ${rentals.points()} frequent renter points\n";
+    return result;
   }
 }
 
@@ -63,7 +67,10 @@ class Controller {
     var rentals = [];
     var priceFactory = new PriceFactory();
     foreach (rows as row) {
-      var [name, priceCode, daysRented] = row;
+      // var [name, priceCode, daysRented] = row; // TODO
+      var name = row[0];
+      var priceCode = row[1];
+      var daysRented = row[2];
       var movie = new Movie(name, priceFactory.from(priceCode));
       var rental = new Rental(movie, daysRented);
       array_push(rentals, rental);

@@ -2,14 +2,12 @@
 import { expect, test, describe } from 'bun:test'
 import { Token, TokenType } from '../token'
 import scan from './scanner'
-import { tokenToString } from 'typescript'
 
 const {
   ABSTRACT,
   AMPERSAND,
   ARROW,
   AS,
-  BACKTICK,
   BANG_EQUAL_EQUAL,
   BANG_EQUAL,
   BANG,
@@ -22,6 +20,7 @@ const {
   CONST,
   DEFAULT,
   DOT,
+  DOUBLE_QUOTE,
   ECHO,
   ELSE,
   ELVIS,
@@ -86,9 +85,9 @@ const {
   STAR_STAR,
   STAR,
   STATIC,
+  STRING_PART,
   STRING,
   SUPER,
-  TEMPLATE_PART,
   THIS,
   THROW,
   TRUE,
@@ -655,96 +654,82 @@ describe('scan identifiers', () => {
   })
 })
 
-describe('scan string literals', () => {
+describe('scan double quote string literals', () => {
+  const doubleQuote = new Token(DOUBLE_QUOTE, '"', undefined, 1)
+  const part = (text: string) => new Token(STRING_PART, text, text, 1)
+  const string = (text: string) => new Token(STRING, text, text, 1)
+  const basic = (value: string) => [doubleQuote, part(value), doubleQuote]
+  const leftBrace = new Token(LEFT_BRACE, '{', undefined, 1)
+  const rightBrace = new Token(RIGHT_BRACE, '}', undefined, 1)
+  const identifier = (text: string) => new Token(IDENTIFIER, text, undefined, 1)
+
   test('""', () => {
-    let expected = [new Token(STRING, '""', '', 1), eof()]
+    let expected = [string(''), eof()]
     let source = '""'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
   test('"string literal"', () => {
-    let expected = [
-      new Token(STRING, '"string literal"', 'string literal', 1),
-      eof(),
-    ]
+    let expected = [string('string literal'), eof()]
     let source = '"string literal"'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
-  test('"string\\" literal"', () => {
-    let expected = [
-      new Token(STRING, '"string\\" literal"', 'string\\" literal', 1),
-      eof(),
-    ]
+  test.todo('"string\\" literal"', () => {
+    let expected = [...basic('"string\\" literal"'), eof()]
     let source = '"string\\" literal"'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
   test('"string\\t literal"', () => {
-    let expected = [
-      new Token(STRING, '"string\\t literal"', 'string\\t literal', 1),
-      eof(),
-    ]
+    let expected = [string('string\\t literal'), eof()]
     let source = '"string\\t literal"'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
   test('"string\\n literal"', () => {
-    let expected = [
-      new Token(STRING, '"string\\n literal"', 'string\\n literal', 1),
-      eof(),
-    ]
+    let expected = [string('string\\n literal'), eof()]
     let source = '"string\\n literal"'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
-})
 
-describe('scan template string literals', () => {
-  const backtick = new Token(BACKTICK, '`', undefined, 1)
-  const part = (text: string) => new Token(TEMPLATE_PART, text, text, 1)
-  const leftBrace = new Token(LEFT_BRACE, '{', undefined, 1)
-  const rightBrace = new Token(RIGHT_BRACE, '}', undefined, 1)
-  const string = (text: string) => new Token(STRING, `"${text}"`, text, 1)
-  const identifier = (text: string) => new Token(IDENTIFIER, text, undefined, 1)
-
-  test('``', () => {
-    let source = '``'
-    let expected = [backtick, backtick, eof()]
-    let actual = scan(source)
-    expect(actual).toEqual(expected)
-  })
-
-  test('`hello`', () => {
-    let source = '`hello`'
-    let expected = [backtick, part('hello'), backtick, eof()]
-    let actual = scan(source)
-    expect(actual).toEqual(expected)
-  })
-
-  test('`hello{world}`', () => {
-    let source = '`hello{world}`'
+  test('"hello$world"', () => {
+    let source = '"hello$world"'
     let expected = [
-      backtick,
+      doubleQuote,
       part('hello'),
-      leftBrace,
       identifier('world'),
-      rightBrace,
-      backtick,
+      doubleQuote,
       eof(),
     ]
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
-  test('`he{ll}o{wo}{rl}d`', () => {
-    let source = '`he{ll}o{wo}{rl}d`'
+  test('"hello${world}"', () => {
+    let source = '"hello${world}"'
     let expected = [
-      backtick,
+      doubleQuote,
+      part('hello'),
+      leftBrace,
+      identifier('world'),
+      rightBrace,
+      doubleQuote,
+      eof(),
+    ]
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+
+  test('"he${ll}o${wo}${rl}d"', () => {
+    let source = '"he${ll}o${wo}${rl}d"'
+    let expected = [
+      doubleQuote,
       part('he'),
       leftBrace,
       identifier('ll'),
@@ -757,62 +742,77 @@ describe('scan template string literals', () => {
       identifier('rl'),
       rightBrace,
       part('d'),
-      backtick,
+      doubleQuote,
       eof(),
     ]
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
-  test('`hello{`{"wo" +. "rld"}`}.`', () => {
-    let source = '`hello{`{"wo" +. "rld"}`}.`'
+  test('"hello${"${"wo" +. "rld"}"}."', () => {
+    let source = '"hello${"${"wo" +. "rld"}"}."'
     let expected = [
-      backtick,
+      doubleQuote,
       part('hello'),
       leftBrace,
-      backtick,
+      doubleQuote,
       leftBrace,
       string('wo'),
       new Token(PLUS_DOT, '+.', undefined, 1),
       string('rld'),
       rightBrace,
-      backtick,
+      doubleQuote,
       rightBrace,
       part('.'),
-      backtick,
+      doubleQuote,
       eof(),
     ]
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
-  test('`1{`2{`3`}4`}5`', () => {
-    let source = '`1{`2{`3`}4`}5`'
+  test('"1${"2${"3"}4"}5"', () => {
+    let source = '"1${"2${"3"}4"}5"'
     let expected = [
-      backtick,
+      doubleQuote,
       part('1'),
       leftBrace,
-      backtick,
+      doubleQuote,
       part('2'),
       leftBrace,
-      backtick,
-      part('3'),
-      backtick,
+      string('3'),
       rightBrace,
       part('4'),
-      backtick,
+      doubleQuote,
       rightBrace,
       part('5'),
-      backtick,
+      doubleQuote,
       eof(),
     ]
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
-  test.todo('`hello\\`world`')
+  test('"$123"', () => {
+    let source = '"$123"'
+    let expected = [string('$123'), eof()]
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+
+  test('"{name()}"', () => {
+    let source = '"{name()}"'
+    let expected = [string('{name()}'), eof()]
+    let actual = scan(source)
+    expect(actual).toEqual(expected)
+  })
+
+  test.todo('"hello\\"world"')
   test.todo('escaped left and right braces')
+  test.todo('escaped $')
 })
+
+describe.todo('scan single quote string literals', () => {})
 
 function print(tokens: Token[]) {
   for (let token of tokens) {

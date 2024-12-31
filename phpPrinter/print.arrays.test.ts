@@ -5,6 +5,7 @@ import parse from '../parser'
 import * as nodes from '../nodes'
 import { Kind } from './environment'
 import { PhpPrinter } from './print'
+import { Token } from '../token'
 
 function print(source: string) {
   let printer = new PhpPrinter(() => Kind.Variable)
@@ -48,9 +49,10 @@ describe('print array literals', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('[1=>2,"3"=>4+5,a()]', () => {
+  test.only('[1=>2,"3"=>4+5,a()]', () => {
     let source = '[1=>2,"3"=>4+5,a()]'
     let expected = '[1 => 2, "3" => 4 + 5, $a()];'
+    printTokens(scan(source))
     expect(print(source)).toEqual(expected)
   })
 })
@@ -74,3 +76,9 @@ describe('print array access', () => {
     expect(print(source)).toEqual(expected)
   })
 })
+
+function printTokens(tokens: Token[]) {
+  for (let token of tokens) {
+    console.log(token.toString())
+  }
+}

@@ -4,6 +4,7 @@ import scan from '../scanner'
 import parse from '../parser'
 import * as nodes from '../nodes'
 import { Expr } from '../nodes'
+import { Token } from '../token'
 
 function ast(source: string) {
   return parse(scan(source))
@@ -43,48 +44,54 @@ describe('parse double-quoted strings', () => {
   })
 })
 
-describe('parse template strings', () => {
-  test('``', () => {
-    let source = '``'
-    let expected = e(template())
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('`hello`', () => {
-    let source = '`hello`'
-    let expected = e(template(string('hello')))
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('`{name}`', () => {
-    let source = '`{name}`'
+describe('parse double-quoted strings with embedded expressions', () => {
+  test('"$name"', () => {
+    let source = '"$name"'
     let expected = e(template(identifier('name')))
     expect(ast(source)).toEqual(expected)
   })
 
-  test('`{name()}`', () => {
-    let source = '`{name()}`'
+  test('"$123"', () => {
+    let source = '"$123"'
+    let expected = e(string('$123'))
+    expect(ast(source)).toEqual(expected)
+  })
+
+  test('"${name}"', () => {
+    let source = '"${name}"'
+    let expected = e(template(identifier('name')))
+    expect(ast(source)).toEqual(expected)
+  })
+
+  test('"${name()}"', () => {
+    let source = '"${name()}"'
     let expected = e(template(new nodes.Call(identifier('name'), [])))
     expect(ast(source)).toEqual(expected)
   })
 
-  test('`hello {name}?`', () => {
-    let source = '`hello {name}?`'
+  test('"hello ${name}?"', () => {
+    let source = '"hello ${name}?"'
     let expected = e(
       template(string('hello '), identifier('name'), string('?')),
     )
     expect(ast(source)).toEqual(expected)
   })
 
-  test('`1{`2{`3`}4`}5`', () => {
-    let source = '`1{`2{`3`}4`}5`'
+  test('"1${"2${"3"}4"}5"', () => {
+    let source = '"1${"2${"3"}4"}5"'
     let expected = e(
       template(
         string('1'),
-        template(string('2'), template(string('3')), string('4')),
+        template(string('2'), string('3'), string('4')),
         string('5'),
       ),
     )
     expect(ast(source)).toEqual(expected)
   })
 })
+
+function printTokens(tokens: Token[]) {
+  for (let token of tokens) {
+    console.log(token.toString())
+  }
+}

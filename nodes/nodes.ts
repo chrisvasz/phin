@@ -558,6 +558,16 @@ export class TemplateStringLiteral extends Node {
   }
 }
 
+export class DoubleQuoteStringLiteral extends Node {
+  _type = 'TemplateStringLiteral' as const
+  constructor(public readonly parts: Array<StringLiteral | Expr>) {
+    super()
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitTemplateStringLiteral(this)
+  }
+}
+
 export class BooleanLiteral extends Node {
   _type = 'BooleanLiteral' as const
   constructor(public readonly value: boolean) {

@@ -46,39 +46,45 @@ describe('print double-quoted strings', () => {
   })
 })
 
-describe('parse template strings', () => {
-  test('``', () => {
-    let source = '``'
+describe('print template strings', () => {
+  test('""', () => {
+    let source = '""'
     let expected = '"";'
     expect(print(source)).toEqual(expected)
   })
 
-  test('`hello`', () => {
-    let source = '`hello`'
+  test('"hello"', () => {
+    let source = '"hello"'
     let expected = '"hello";'
     expect(print(source)).toEqual(expected)
   })
 
-  test('`{name}`', () => {
-    let source = '`{name}`'
+  test('"$name"', () => {
+    let source = '"$name"'
     let expected = '("" . $name);'
     expect(print(source)).toEqual(expected)
   })
 
-  test('`{name()}`', () => {
-    let source = '`{name()}`'
+  test('"${name}"', () => {
+    let source = '"${name}"'
+    let expected = '("" . $name);'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('"${name()}"', () => {
+    let source = '"${name()}"'
     let expected = '("" . $name());'
     expect(print(source)).toEqual(expected)
   })
 
-  test('`hello {name}?`', () => {
-    let source = '`hello {name}?`'
+  test('"hello ${name}?"', () => {
+    let source = '"hello ${name}?"'
     let expected = '("hello " . $name . "?");'
     expect(print(source)).toEqual(expected)
   })
 
-  test('`1{`2{`3`}4`}5`', () => {
-    let source = '`1{`2{`3`}4`}5`'
+  test('"1${"2${"3"}4"}5"', () => {
+    let source = '"1${"2${"3"}4"}5"'
     let expected = '("1" . ("2" . "3" . "4") . "5");'
     expect(print(source)).toEqual(expected)
   })

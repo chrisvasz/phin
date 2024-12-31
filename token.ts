@@ -28,10 +28,6 @@ export enum TokenType {
   PIPE,
   PLUS_DOT, // string concat
 
-  // template strings
-  BACKTICK,
-  TEMPLATE_PART,
-
   // math operators
   MINUS,
   PLUS,
@@ -78,8 +74,10 @@ export enum TokenType {
 
   // Literals
   IDENTIFIER,
-  STRING,
   NUMBER,
+  DOUBLE_QUOTE,
+  STRING,
+  STRING_PART,
 
   // Keywords
   ABSTRACT,

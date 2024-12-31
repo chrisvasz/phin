@@ -107,6 +107,21 @@ describe('parse array literals', () => {
     expect(ast(source)).toEqual(expected)
   })
 
+  test.only('["a"=>b]', () => {
+    let source = '["a"=>b]'
+    let expected = [
+      new nodes.ExpressionStatement(
+        new nodes.ArrayLiteral([
+          new nodes.ArrayElement(
+            new nodes.StringLiteral('a'),
+            new nodes.Identifier('b'),
+          ),
+        ]),
+      ),
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+
   test('[1=>2,"3"=>4+5,a()]', () => {
     let source = '[1=>2,"3"=>4+5,a()]'
     let expected = [

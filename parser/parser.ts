@@ -9,7 +9,6 @@ const {
   AMPERSAND,
   ARROW,
   AS,
-  BACKTICK,
   BANG_EQUAL_EQUAL,
   BANG_EQUAL,
   BANG,
@@ -22,6 +21,7 @@ const {
   CONST,
   DEFAULT,
   DOT,
+  DOUBLE_QUOTE,
   ECHO,
   ELSE,
   EOF,
@@ -85,9 +85,9 @@ const {
   STAR_EQUAL,
   STAR,
   STATIC,
+  STRING_PART,
   STRING,
   SUPER,
-  TEMPLATE_PART,
   THIS,
   THROW,
   TRUE,
@@ -813,7 +813,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(NULL)) return new nodes.NullLiteral()
     if (match(NUMBER)) return numberLiteral()
     if (match(STRING)) return stringLiteral()
-    if (match(BACKTICK)) return templateStringLiteral()
+    if (match(DOUBLE_QUOTE)) return doubleQuoteString()
     if (match(TRUE)) return new nodes.BooleanLiteral(true)
     if (match(FALSE)) return new nodes.BooleanLiteral(false)
     if (match(LEFT_PAREN)) return grouping()
@@ -832,19 +832,37 @@ export default function parse(tokens: Token[]): Stmt[] {
     return new nodes.StringLiteral(previous().literal)
   }
 
-  function templateStringLiteral(): nodes.TemplateStringLiteral {
-    if (match(BACKTICK)) return new nodes.TemplateStringLiteral([])
+  function doubleQuoteString():
+    | nodes.TemplateStringLiteral
+    | nodes.StringLiteral {
+    return doubleQuoteStringLiteral() ?? doubleQuoteStringTemplate()
+  }
+
+  function doubleQuoteStringLiteral(): nodes.StringLiteral | null {
+    if (match(DOUBLE_QUOTE)) return new nodes.StringLiteral('')
+    if (check(STRING_PART) && checkNext(DOUBLE_QUOTE)) {
+      match(STRING_PART)
+      let result = stringLiteral()
+      consume('Expect " to end string', DOUBLE_QUOTE)
+      return result
+    }
+    return null
+  }
+
+  function doubleQuoteStringTemplate(): nodes.TemplateStringLiteral {
     let parts: Array<nodes.StringLiteral | nodes.Expr> = []
     while (!isAtEnd()) {
-      if (match(TEMPLATE_PART)) {
+      if (match(STRING_PART)) {
         parts.push(stringLiteral())
+      } else if (match(IDENTIFIER)) {
+        parts.push(identifier())
       } else if (match(LEFT_BRACE)) {
         parts.push(expression())
-        consume('Expect "}" after expression in template string', RIGHT_BRACE)
+        consume('Expect "}" after expression in string', RIGHT_BRACE)
       }
-      if (check(BACKTICK)) break
+      if (check(DOUBLE_QUOTE)) break
     }
-    consume('Expect ` to end template string', BACKTICK)
+    consume('Expect " to end string', DOUBLE_QUOTE)
     return new nodes.TemplateStringLiteral(parts)
   }
 
@@ -878,15 +896,24 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function arrayKey(): nodes.NumberLiteral | nodes.StringLiteral | null {
-    if (check(NUMBER, STRING) && checkNext(ARROW)) {
+    if (check(NUMBER, STRING, DOUBLE_QUOTE) && checkNext(ARROW)) {
       try {
         if (match(NUMBER)) return numberLiteral()
         if (match(STRING)) return stringLiteral()
+        if (match(DOUBLE_QUOTE)) return arrayKeyDoubleQuoteString()
       } finally {
         match(ARROW)
       }
     }
     return null
+  }
+
+  function arrayKeyDoubleQuoteString(): nodes.StringLiteral {
+    console.log('arrayKeyDoubleQuoteString')
+    let message = 'Only simple strings allowed as array keys'
+    let string = consume(message, STRING_PART)
+    consume(message, DOUBLE_QUOTE)
+    return new nodes.StringLiteral(string.literal)
   }
 
   function typeAnnotation(): Type {

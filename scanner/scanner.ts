@@ -5,7 +5,6 @@ const {
   AMPERSAND,
   ARROW,
   AS,
-  BACKTICK,
   BANG_EQUAL_EQUAL,
   BANG_EQUAL,
   BANG,
@@ -18,6 +17,7 @@ const {
   CONST,
   DEFAULT,
   DOT,
+  DOUBLE_QUOTE,
   ECHO,
   ELSE,
   ELVIS,
@@ -82,9 +82,9 @@ const {
   STAR_STAR,
   STAR,
   STATIC,
+  STRING_PART,
   STRING,
   SUPER,
-  TEMPLATE_PART,
   THIS,
   THROW,
   TRUE,
@@ -164,14 +164,41 @@ export default function scan(source: string): Token[] {
   chars[code('&')] = () => addToken(match('&') ? LOGICAL_AND : AMPERSAND)
   chars[code('%')] = percent
   chars[code('"')] = doubleQuoteString
-  chars[code('`')] = templateString
   chars[code('/')] = slash
   chars[code(' ')] = () => {}
   chars[code('\r')] = () => {}
   chars[code('\t')] = () => {}
   chars[code('\n')] = eol
 
-  return scanTokens()
+  return consolidateSimpleDoubleQuoteStrings(scanTokens())
+
+  // Turn patterns like
+  //  [DOUBLE_QUOTE, STRING_PART, DOUBLE_QUOTE]
+  // into
+  //  [STRING]
+  function consolidateSimpleDoubleQuoteStrings(tokens: Token[]): Token[] {
+    let result: Token[] = []
+    for (let i = 0; i < tokens.length; ++i) {
+      let token = tokens[i]
+      let next = tokens[i + 1]
+      if (token.type === DOUBLE_QUOTE) {
+        if (next?.type === DOUBLE_QUOTE) {
+          result.push(new Token(STRING, '', '', token.line))
+          i += 1
+          continue
+        } else if (next?.type === STRING_PART) {
+          let following = tokens[i + 2]
+          if (following?.type === DOUBLE_QUOTE) {
+            result.push(new Token(STRING, next.lexeme, next.literal, next.line))
+            i += 2
+            continue
+          }
+        }
+      }
+      result.push(token)
+    }
+    return result
+  }
 
   function scanTokens() {
     while (!isAtEnd()) {
@@ -196,8 +223,11 @@ export default function scan(source: string): Token[] {
     return source.charAt(current++)
   }
 
-  function addToken(type: TokenType, literal?: any) {
-    const text = source.substring(start, current)
+  function addToken(
+    type: TokenType,
+    literal?: any,
+    text: string = source.substring(start, current),
+  ) {
     tokens.push(new Token(type, text, literal, line))
   }
 
@@ -287,10 +317,19 @@ export default function scan(source: string): Token[] {
   }
 
   function doubleQuoteString() {
+    addToken(DOUBLE_QUOTE)
+    start = current
     while (!isAtEnd()) {
-      if (peek() === '\n') line++
-      if (peek() === '"' && previous() !== '\\') break
-      advance()
+      doubleQuoteStringPart()
+      if (peek() === '"') break
+      if (peek() === '$') {
+        if (peekNext() === '{') {
+          doubleQuoteStringExpression()
+        } else if (isAlpha(peekNext())) {
+          doubleQuoteStringIdentifier()
+        }
+      }
+      start = current
     }
     if (peek() !== '"') {
       console.error('Unterminated string on line ' + line)
@@ -298,45 +337,37 @@ export default function scan(source: string): Token[] {
       return
     }
     advance() // consume the closing "
-    const value = source.substring(start + 1, current - 1)
-    addToken(STRING, value)
+    addToken(DOUBLE_QUOTE)
   }
 
-  function templateString() {
-    addToken(BACKTICK)
-    start = current
-    while (!isAtEnd()) {
-      templatePart()
-      if (peek() === '`') break
-      if (peek() === '{') templateExpression()
-      else advance()
-      start = current
-    }
-    if (peek() !== '`') {
-      console.error('Unterminated string on line ' + line)
-      hasError = true
-      return
-    }
-    advance() // consume the closing `
-    addToken(BACKTICK)
-  }
-
-  function templatePart() {
+  function doubleQuoteStringPart() {
     while (!isAtEnd()) {
       if (peek() === '\n') line++
-      if (peek() === '`' || peek() === '{') break
+      if (peek() === '"') break
+      if (peek() === '$') {
+        if (peekNext() === '{') break
+        if (isAlpha(peekNext())) break
+      }
       advance()
     }
     if (start !== current) {
-      addToken(TEMPLATE_PART, source.substring(start, current))
+      addToken(STRING_PART, source.substring(start, current))
       start = current
     }
   }
 
-  function templateExpression() {
+  function doubleQuoteStringIdentifier() {
+    advance() // consume the $
+    start = current
+    identifier()
+  }
+
+  function doubleQuoteStringExpression() {
+    advance() // consume the $
+    start = current
     while (!isAtEnd()) {
       scanToken()
-      if (previousToken().type === RIGHT_BRACE) break
+      if (prevTokens(RIGHT_BRACE)) break
     }
     if (previous() !== '}') {
       console.error('Unterminated template expression on line ' + line)
@@ -401,8 +432,13 @@ export default function scan(source: string): Token[] {
     addToken(type)
   }
 
-  function previousToken(): Token {
-    return tokens[tokens.length - 1] ?? EOF
+  function prevTokens(...checks: TokenType[]) {
+    for (let i = 0; i < checks.length; ++i) {
+      let check = checks[i]
+      let token = tokens[tokens.length - i - 1] ?? EOF
+      if (check !== token.type) return false
+    }
+    return true
   }
 
   function previous() {
@@ -462,5 +498,11 @@ export default function scan(source: string): Token[] {
 
   function isAlphaNumeric(c: string) {
     return isAlpha(c) || isDigit(c)
+  }
+}
+
+function printTokens(tokens: Token[]) {
+  for (let token of tokens) {
+    console.log(token.toString())
   }
 }
