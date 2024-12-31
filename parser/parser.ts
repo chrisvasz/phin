@@ -269,9 +269,13 @@ export default function parse(tokens: Token[]): Stmt[] {
     let visibility = classVisibility()
     let isStatic = match(STATIC)
     if (match(FUN)) return classMethod(isFinal, visibility, isStatic)
-    if (match(VAR)) return classProperty(isFinal, visibility, isStatic)
     if (matchIdentifier('init')) return classInitializer()
     if (match(CONST)) return classConst(isFinal, visibility, isStatic)
+    if (match(VAR, VAL)) {
+      // TODO val must have a type annotation according to PHP
+      let isReadonly = previous().type === VAL
+      return classProperty(isFinal, visibility, isStatic, isReadonly)
+    }
     throw error(peek(), 'Expect class member')
   }
 
@@ -328,6 +332,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     isFinal: boolean,
     visibility: nodes.Visibility,
     isStatic: boolean,
+    isReadonly: boolean,
   ): nodes.ClassProperty {
     let name = consume('Expect variable name', IDENTIFIER).lexeme
     let type = match(COLON) ? typeAnnotation() : null
@@ -337,7 +342,7 @@ export default function parse(tokens: Token[]): Stmt[] {
       isFinal,
       visibility,
       isStatic,
-      false, // TODO
+      isReadonly,
       name,
       type,
       initializer,

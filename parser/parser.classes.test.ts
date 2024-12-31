@@ -314,7 +314,25 @@ describe('parse class params/constructor', () => {
 })
 
 describe('parse class properties', () => {
-  test.todo('parse class properties')
+  test('class A { var b; }', () => {
+    let source = 'class A { var b; }'
+    let expected = [
+      classDeclaration('A', {
+        members: [classProperty('b')],
+      }),
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+
+  test('class A { val b; }', () => {
+    let source = 'class A { val b; }'
+    let expected = [
+      classDeclaration('A', {
+        members: [classProperty('b', { isReadonly: true })],
+      }),
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
 })
 
 describe('parse class iterates', () => {
