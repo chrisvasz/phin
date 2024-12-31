@@ -3,10 +3,11 @@ import { expect, test, describe } from 'bun:test'
 import scan from '../scanner'
 import parse from '../parser'
 import { PhpPrinter } from './print'
+import { Kind } from './environment'
 
 function print(src: string) {
-  let result = new PhpPrinter().print(parse(scan(src)))
-  return result.trim()
+  let printer = new PhpPrinter(() => Kind.Variable)
+  return printer.print(parse(scan(src))).trim()
 }
 
 describe('print variables', () => {
@@ -33,4 +34,14 @@ describe('print variables', () => {
     let expected = '/** @var int $a */\n$a = 1 + 2;'
     expect(print(source)).toEqual(expected)
   })
+})
+
+describe('print destructuring var declaration', () => {
+  test('var [a, b] = c;', () => {
+    let source = 'var [a, b] = c;'
+    let expected = '[$a, $b] = $c;'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test.todo('destructuring assignment in a foreach loop')
 })

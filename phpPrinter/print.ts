@@ -518,12 +518,18 @@ export class PhpPrinter
   }
 
   visitVarDeclaration(node: nodes.VarDeclaration): string {
-    this.environment.add(node.name, Kind.Variable)
-    let type = node.type
-      ? `/** @var ${node.type.accept(this)} $${node.name} */\n`
-      : ''
+    let name = node.name
+    let type = ''
+    if (typeof name === 'string') {
+      this.environment.add(name, Kind.Variable)
+      type = this.typeAnnotationViaComment(node.type, name)
+      name = `$${name}`
+    } else {
+      name.forEach((n) => this.environment.add(n, Kind.Variable))
+      name = `[${name.map((n) => `$${n}`).join(', ')}]`
+    }
     let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''
-    return `${type}$${node.name}${init};`
+    return `${type}${name}${init};`
   }
 
   visitWhile(node: nodes.While): string {
@@ -533,5 +539,10 @@ export class PhpPrinter
   typeAnnotation(type: Type | null): string {
     if (!type) return ''
     return `: ${type.simplify().accept(this)}`
+  }
+
+  typeAnnotationViaComment(type: Type | null, name: string): string {
+    if (!type) return ''
+    return `/** @var ${type.accept(this)} $${name} */\n`
   }
 }

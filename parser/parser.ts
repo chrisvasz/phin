@@ -120,6 +120,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(CLASS)) return classDeclaration()
     if (match(FUN)) return functionDeclaration()
     if (match(VAR)) return varDeclaration()
+    // TODO valDeclaration()
     if (match(ABSTRACT)) {
       consume('Expect "class" after "abstract"', CLASS)
       return classDeclaration(true)
@@ -424,16 +425,27 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function varDeclaration(): nodes.VarDeclaration {
-    let result = varWithType()
+    let name = varDeclarationName()
+    let type = match(COLON) ? typeAnnotation() : null
     let initializer = match(EQUAL) ? expression() : null
     terminator()
-    return new nodes.VarDeclaration(result.name, result.type, initializer)
+    return new nodes.VarDeclaration(name, type, initializer)
   }
 
-  function varWithType(): nodes.VarDeclaration {
-    let name = consume('Expect variable name', IDENTIFIER).lexeme
-    let type = match(COLON) ? typeAnnotation() : null
-    return new nodes.VarDeclaration(name, type, null)
+  function varDeclarationName(): string | string[] {
+    if (match(IDENTIFIER)) return previous().lexeme
+    if (match(LEFT_BRACKET)) {
+      // TODO support type annotations, empty slots, aliases, keyed arrays, etc
+      let identifiers: string[] = []
+      while (!check(RIGHT_BRACKET) && !isAtEnd()) {
+        let name = consume('Expect variable name', IDENTIFIER).lexeme
+        identifiers.push(name)
+        match(COMMA)
+      }
+      consume('Expect "]" after variable names', RIGHT_BRACKET)
+      return identifiers
+    }
+    throw error(peek(), 'Expect variable name')
   }
 
   function statement(): Stmt {

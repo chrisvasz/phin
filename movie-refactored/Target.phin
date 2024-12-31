@@ -65,11 +65,9 @@ class Controller {
     ];
     var rentals = [];
     var priceFactory = new PriceFactory();
+    // foreach (rows as [name, priceCode, daysRented]) { // TODO
     foreach (rows as row) {
-      // var [name, priceCode, daysRented] = row; // TODO
-      var name = row[0];
-      var priceCode = row[1];
-      var daysRented = row[2];
+      var [name, priceCode, daysRented] = row;
       var movie = new Movie(name, priceFactory.from(priceCode));
       var rental = new Rental(movie, daysRented);
       array_push(rentals, rental);
