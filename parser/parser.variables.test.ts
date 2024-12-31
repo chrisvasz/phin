@@ -291,4 +291,6 @@ describe('variable declarations', () => {
     ]
     expect(ast(source)).toEqual(expected)
   })
+
+  test.todo('val declarations')
 })

@@ -79,6 +79,16 @@ describe('print class params & constructor', () => {
     `)
     expect(print(source)).toEqual(expected)
   })
+
+  test('class A(val a) {}', () => {
+    let source = 'class A(val a) {}'
+    let expected = trimMargin(`
+      class A {
+        function __construct(public readonly $a) {}
+      }
+    `)
+    expect(print(source)).toEqual(expected)
+  })
 })
 
 describe('print class initializers', () => {

@@ -204,14 +204,16 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (check(IDENTIFIER)) return functionParam()
     let isFinal = match(FINAL)
     let visibility = classVisibility()
-    consume('Expect var before class promoted property', VAR)
+    consume('Expect var or val before class promoted property', VAR, VAL)
+    let isReadonly = previous().type === VAL
     let name = consume('Expect class param name', IDENTIFIER).lexeme
     let type = match(COLON) ? typeAnnotation() : null
     let initializer = match(EQUAL) ? expression() : null
     return new nodes.ClassProperty(
       isFinal,
       visibility,
-      false, // TODO
+      false,
+      isReadonly,
       name,
       type,
       initializer,
@@ -335,6 +337,7 @@ export default function parse(tokens: Token[]): Stmt[] {
       isFinal,
       visibility,
       isStatic,
+      false, // TODO
       name,
       type,
       initializer,

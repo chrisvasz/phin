@@ -74,13 +74,14 @@ function classProperty(
     isFinal,
     visibility,
     false, // TODO
+    isReadonly,
     name,
     type,
     initializer,
   )
 }
 
-describe('class declarations', () => {
+describe('parse class declarations', () => {
   test('class A {}', () => {
     let source = 'class A {}'
     let expected = [classDeclaration('A')]
@@ -176,7 +177,7 @@ describe('class declarations', () => {
   test.todo('readonly class A {}', () => {})
 })
 
-describe('class params/constructor', () => {
+describe('parse class params/constructor', () => {
   test('class A(b) {}', () => {
     let source = 'class A(b) {}'
     let expected = [
@@ -192,6 +193,16 @@ describe('class params/constructor', () => {
     let expected = [
       classDeclaration('A', {
         params: [classProperty('b')],
+      }),
+    ]
+    expect(ast(source)).toEqual(expected)
+  })
+
+  test('class A(val b) {}', () => {
+    let source = 'class A(val b) {}'
+    let expected = [
+      classDeclaration('A', {
+        params: [classProperty('b', { isReadonly: true })],
       }),
     ]
     expect(ast(source)).toEqual(expected)
@@ -302,7 +313,11 @@ describe('class params/constructor', () => {
   })
 })
 
-describe('class iterates', () => {
+describe('parse class properties', () => {
+  test.todo('parse class properties')
+})
+
+describe('parse class iterates', () => {
   test('class A iterates a {}', () => {
     let source = 'class A iterates a {}'
     let expected = [

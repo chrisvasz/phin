@@ -189,9 +189,10 @@ export class PhpPrinter
   visitClassProperty(node: nodes.ClassProperty): string {
     // TODO abstract, static, docblock
     let final = node.isFinal ? 'final ' : ''
+    let readonly = node.isReadonly ? 'readonly ' : ''
     let visibility = `${node.visibility ?? 'public'} `
     let type = node.type ? `${node.type.accept(this)} ` : ''
-    return `${final}${visibility}${type}$${node.name};`
+    return `${final}${visibility}${readonly}${type}$${node.name};`
   }
 
   visitClassDeclaration(node: nodes.ClassDeclaration): string {

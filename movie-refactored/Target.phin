@@ -31,21 +31,21 @@ class Childrens extends Price {
   }
 }
 
-class Movie(var title: string, var price: Price) {}
+class Movie(val title: string, val price: Price) {}
 
-class Rental(-var movie: Movie, -var daysRented: int) {
+class Rental(-val movie: Movie, -val daysRented: int) {
   var title = movie.title;
   fun points(): int => movie.price.points(daysRented);
   fun amount(): float => movie.price.amount(daysRented);
 }
 
 // TODO array<Rental>
-class Rentals(-var rentals: array) iterates rentals {
+class Rentals(-val rentals: array) iterates rentals {
   // fun points(): int => rentals#map(fun(r)) => r.points())#sum(); // TODO
   // fun amount(): float => rentals#map(fun(r) => r.amount())#sum(); // TODO
 }
 
-class Customer(var name: string, -var rentals: Rentals) {
+class Customer(val name: string, -val rentals: Rentals) {
   fun statement(): string {
     var result = "Rental Record for $name\n";
     foreach (rentals as rental) {
