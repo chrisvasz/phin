@@ -99,6 +99,8 @@ const {
 
 class ParseError extends Error {}
 
+// TODO named arguments
+
 export default function parse(tokens: Token[]): Stmt[] {
   let current = 0
   return parse()
@@ -594,6 +596,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     return result
   }
 
+  // TODO make me right associative
   function ternary(): Expr {
     let result = nullCoalesce()
     while (match(QUESTION)) {

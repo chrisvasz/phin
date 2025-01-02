@@ -170,35 +170,7 @@ export default function scan(source: string): Token[] {
   chars[code('\t')] = () => {}
   chars[code('\n')] = eol
 
-  return consolidateSimpleDoubleQuoteStrings(scanTokens())
-
-  // Turn patterns like
-  //  [DOUBLE_QUOTE, STRING_PART, DOUBLE_QUOTE]
-  // into
-  //  [STRING]
-  function consolidateSimpleDoubleQuoteStrings(tokens: Token[]): Token[] {
-    let result: Token[] = []
-    for (let i = 0; i < tokens.length; ++i) {
-      let token = tokens[i]
-      let next = tokens[i + 1]
-      if (token.type === DOUBLE_QUOTE) {
-        if (next?.type === DOUBLE_QUOTE) {
-          result.push(new Token(STRING, '', '', token.line))
-          i += 1
-          continue
-        } else if (next?.type === STRING_PART) {
-          let following = tokens[i + 2]
-          if (following?.type === DOUBLE_QUOTE) {
-            result.push(new Token(STRING, next.lexeme, next.literal, next.line))
-            i += 2
-            continue
-          }
-        }
-      }
-      result.push(token)
-    }
-    return result
-  }
+  return scanTokens()
 
   function scanTokens() {
     while (!isAtEnd()) {
@@ -317,6 +289,21 @@ export default function scan(source: string): Token[] {
   }
 
   function doubleQuoteString() {
+    let result = doubleQuoteStringParts()
+    if (prevTokens(DOUBLE_QUOTE, DOUBLE_QUOTE)) {
+      tokens.pop()
+      tokens.pop()
+      tokens.push(new Token(STRING, '', '', line))
+    } else if (prevTokens(DOUBLE_QUOTE, STRING_PART, DOUBLE_QUOTE)) {
+      tokens.pop()
+      let string = tokens.pop()!
+      tokens.pop()
+      tokens.push(new Token(STRING, string.lexeme, string.literal, line))
+    }
+    return result
+  }
+
+  function doubleQuoteStringParts() {
     addToken(DOUBLE_QUOTE)
     start = current
     while (!isAtEnd()) {
