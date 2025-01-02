@@ -107,7 +107,7 @@ describe('parse array literals', () => {
     expect(ast(source)).toEqual(expected)
   })
 
-  test.only('["a"=>b]', () => {
+  test('["a"=>b]', () => {
     let source = '["a"=>b]'
     let expected = [
       new nodes.ExpressionStatement(

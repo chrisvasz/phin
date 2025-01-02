@@ -187,7 +187,7 @@ export default function scan(source: string): Token[] {
     if (chars[code(c)]) return chars[code(c)]()
     if (isDigit(c)) return number()
     if (isAlpha(c)) return identifier()
-    console.error('Unexpected character on line ' + line)
+    console.error('Scanner error: unexpected character on line ' + line)
     hasError = true
   }
 

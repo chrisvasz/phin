@@ -36,9 +36,8 @@ describe('if statements', () => {
     expect(ast(source)).toEqual(expected)
   })
 
-  test('if (true) 2; else 3', () => {
-    // TODO don't require that ;
-    let source = 'if (true) 2; else 3'
+  test('if (true) 2 else 3', () => {
+    let source = 'if (true) 2 else 3'
     let expected = [
       new nodes.If(
         new nodes.BooleanLiteral(true),
@@ -49,8 +48,8 @@ describe('if statements', () => {
     expect(ast(source)).toEqual(expected)
   })
 
-  test('if (true) 2; else {5;}', () => {
-    let source = 'if (true) 2; else {5;}'
+  test('if (true) 2 else {5;}', () => {
+    let source = 'if (true) 2 else {5;}'
     let expected = [
       new nodes.If(
         new nodes.BooleanLiteral(true),
@@ -63,8 +62,8 @@ describe('if statements', () => {
     expect(ast(source)).toEqual(expected)
   })
 
-  test('if (true) 2; else if (false) 5;', () => {
-    let source = 'if (true) 2; else if (false) 5;'
+  test('if (true) 2 else if (false) 5;', () => {
+    let source = 'if (true) 2 else if (false) 5;'
     let expected = [
       new nodes.If(
         new nodes.BooleanLiteral(true),

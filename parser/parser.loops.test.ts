@@ -9,7 +9,7 @@ function ast(source: string) {
   return parse(scan(source))
 }
 
-describe('while', () => {
+describe('parse while', () => {
   test('while (true) 2', () => {
     let source = 'while (true) 2'
     let expected = [
@@ -50,7 +50,7 @@ describe('while', () => {
   })
 })
 
-describe('for', () => {
+describe('parse for', () => {
   test('for (;;) 2', () => {
     let source = 'for (;;) 2'
     let expected = [

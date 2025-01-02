@@ -136,7 +136,7 @@ export class Block extends Node {
 export class VarDeclaration extends Node {
   _type = 'VarDeclaration' as const
   constructor(
-    public readonly name: string | string[],
+    public readonly name: string | string[], // TODO no good -- need a Destructuring node
     public readonly type: Type | null,
     public readonly initializer: Expr | null,
   ) {
@@ -419,7 +419,7 @@ export class ClassConst extends Node {
     public readonly isStatic: boolean,
     public readonly name: string,
     public readonly type: Type | null,
-    public readonly initializer: Expr, // TODO must be compile-time constant
+    public readonly initializer: Expr, // TODO must be compile-time constant. this and others
   ) {
     super()
   }

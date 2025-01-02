@@ -49,7 +49,7 @@ describe('print array literals', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test.only('[1=>2,"3"=>4+5,a()]', () => {
+  test('[1=>2,"3"=>4+5,a()]', () => {
     let source = '[1=>2,"3"=>4+5,a()]'
     let expected = '[1 => 2, "3" => 4 + 5, $a()];'
     printTokens(scan(source))

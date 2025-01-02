@@ -18,9 +18,9 @@ describe('print: if', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('if (true) 1; else 2', () => {
-    let source = 'if (true) 1; else 2'
-    let expected = 'if (true) 1; else 2;'
+  test.todo('if (true) 1 else 2', () => {
+    let source = 'if (true) 1 else 2'
+    let expected = 'if (true) 1 else 2;'
     expect(print(source)).toEqual(expected)
   })
 

@@ -100,6 +100,8 @@ const {
 class ParseError extends Error {}
 
 // TODO named arguments
+// TODO global thing: int;
+// TODO static thing: int = abc();
 
 export default function parse(tokens: Token[]): Stmt[] {
   let current = 0
@@ -107,22 +109,22 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function parse(): Stmt[] {
     const statements: Stmt[] = []
+    semicolons()
     while (!isAtEnd()) {
-      if (!match(SEMICOLON)) {
-        const next = declaration()
-        if (next) statements.push(next)
-      }
+      const next = declaration()
+      if (next) statements.push(next)
+      semicolons()
     }
     return statements
   }
 
   function declaration(): Stmt | null {
-    if (match(TRY)) return tryDeclaration()
-    if (match(THROW)) return throwDeclaration()
-    if (match(CLASS)) return classDeclaration()
+    if (match(TRY)) return tryDeclaration() // TODO move into statement()
+    if (match(THROW)) return throwDeclaration() // TODO move into statement()
     if (match(FUN)) return functionDeclaration()
     if (match(VAR)) return varDeclaration()
     // TODO valDeclaration()
+    if (match(CLASS)) return classDeclaration()
     if (match(ABSTRACT)) {
       consume('Expect "class" after "abstract"', CLASS)
       return classDeclaration(true)
@@ -261,7 +263,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     let members: nodes.ClassMember[] = []
     while (!check(RIGHT_BRACE) && !isAtEnd()) {
       members.push(classMember())
-      match(SEMICOLON) // support trailing semicolon
+      semicolons()
     }
     return members
   }
@@ -297,7 +299,6 @@ export default function parse(tokens: Token[]): Stmt[] {
     consume('Expect "(" after method name', LEFT_PAREN)
     let params = functionParams()
     let returnType = match(COLON) ? typeAnnotation() : null
-    terminator()
     return new nodes.ClassAbstractMethod(
       visibility,
       isStatic,
@@ -340,7 +341,6 @@ export default function parse(tokens: Token[]): Stmt[] {
     let name = consume('Expect variable name', IDENTIFIER).lexeme
     let type = match(COLON) ? typeAnnotation() : null
     let initializer = match(EQUAL) ? expression() : null
-    terminator()
     return new nodes.ClassProperty(
       isFinal,
       visibility,
@@ -430,7 +430,6 @@ export default function parse(tokens: Token[]): Stmt[] {
     let name = varDeclarationName()
     let type = match(COLON) ? typeAnnotation() : null
     let initializer = match(EQUAL) ? expression() : null
-    terminator()
     return new nodes.VarDeclaration(name, type, initializer)
   }
 
@@ -494,8 +493,9 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function forInitializer(): Node | null {
     if (match(SEMICOLON)) return null
-    if (match(VAR)) return varDeclaration()
-    return expressionStatement()
+    let result = match(VAR) ? varDeclaration() : expression()
+    consume('Expect ";" after loop initializer', SEMICOLON)
+    return result
   }
 
   function forCondition(): Expr | null {
@@ -520,15 +520,11 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function echoStatement(): nodes.Echo {
-    let result = expression()
-    terminator()
-    return new nodes.Echo(result)
+    return new nodes.Echo(expression())
   }
 
   function returnStatement(): nodes.Return {
-    let result = expression()
-    terminator()
-    return new nodes.Return(result)
+    return new nodes.Return(expression())
   }
 
   function whileStatement(): nodes.While {
@@ -544,6 +540,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     while (!check(RIGHT_BRACE) && !isAtEnd()) {
       const next = declaration()
       if (next) statements.push(next)
+      semicolons()
     }
     consume('Expect "}" after block', RIGHT_BRACE)
     return new nodes.Block(statements)
@@ -551,7 +548,6 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function expressionStatement(): nodes.ExpressionStatement {
     let result = expression()
-    terminator()
     return new nodes.ExpressionStatement(result)
   }
 
@@ -920,19 +916,20 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function arrayKey(): nodes.NumberLiteral | nodes.StringLiteral | null {
     if (check(NUMBER, STRING, DOUBLE_QUOTE) && checkNext(ARROW)) {
-      try {
-        if (match(NUMBER)) return numberLiteral()
-        if (match(STRING)) return stringLiteral()
-        if (match(DOUBLE_QUOTE)) return arrayKeyDoubleQuoteString()
-      } finally {
-        match(ARROW)
-      }
+      let result = match(NUMBER)
+        ? numberLiteral()
+        : match(STRING)
+          ? stringLiteral()
+          : match(DOUBLE_QUOTE)
+            ? arrayKeyDoubleQuoteString()
+            : null
+      match(ARROW)
+      return result
     }
     return null
   }
 
   function arrayKeyDoubleQuoteString(): nodes.StringLiteral {
-    console.log('arrayKeyDoubleQuoteString')
     let message = 'Only simple strings allowed as array keys'
     let string = consume(message, STRING_PART)
     consume(message, DOUBLE_QUOTE)
@@ -1032,8 +1029,8 @@ export default function parse(tokens: Token[]): Stmt[] {
     throw error(peek(), message)
   }
 
-  function terminator() {
-    consume('Expect terminator', SEMICOLON, EOF)
+  function semicolons() {
+    while (match(SEMICOLON)) {}
   }
 
   function error(token: Token, message: string): Error {
