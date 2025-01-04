@@ -1,8 +1,8 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import scan from '../scanner'
+import scan from '../../scanner'
 import parse from '../parser'
-import * as nodes from '../nodes'
+import { b } from '../parser.builder'
 
 function ast(source: string) {
   return parse(scan(source))
@@ -11,7 +11,7 @@ function ast(source: string) {
 describe('echo statements', () => {
   test('echo "hello"', () => {
     let source = 'echo "hello"'
-    let expected = [new nodes.Echo(new nodes.StringLiteral('hello'))]
+    let expected = b.program(b.echo(b.stringLiteral('hello')))
     expect(ast(source)).toEqual(expected)
   })
 })
@@ -19,18 +19,18 @@ describe('echo statements', () => {
 describe('blocks', () => {
   test(';;;', () => {
     let source = ';;;'
-    let expected: [] = []
+    let expected = b.program()
     expect(ast(source)).toEqual(expected)
   })
 
   test('{ 1; 2; }', () => {
     let source = '{ 1; 2; }'
-    let expected = [
-      new nodes.Block([
-        new nodes.ExpressionStatement(new nodes.NumberLiteral('1')),
-        new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
-      ]),
-    ]
+    let expected = b.program(
+      b.block(
+        b.expressionStatement(b.numberLiteral('1')),
+        b.expressionStatement(b.numberLiteral('2')),
+      ),
+    )
     expect(ast(source)).toEqual(expected)
   })
 })

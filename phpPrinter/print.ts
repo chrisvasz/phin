@@ -1,4 +1,4 @@
-import * as nodes from '../nodes'
+import * as nodes from '../parser/nodes'
 import * as types from '../types'
 import { Type } from '../types'
 import { Environment, globalEnvironment, Kind } from './environment'
@@ -464,6 +464,11 @@ export class PhpPrinter
   visitPrefix(node: nodes.Prefix): string {
     throw new Error('Method not implemented.')
   }
+
+  visitProgram(node: nodes.Program): string {
+    return node.statements.map((s) => s.accept(this)).join('\n') + '\n'
+  }
+
   visitReturn(node: nodes.Return): string {
     let value = node.value ? ' ' + node.value.accept(this) : ''
     return `return${value};`
@@ -520,14 +525,9 @@ export class PhpPrinter
   visitVarDeclaration(node: nodes.VarDeclaration): string {
     let name = node.name
     let type = ''
-    if (typeof name === 'string') {
-      this.environment.add(name, Kind.Variable)
-      type = this.typeAnnotationViaComment(node.type, name)
-      name = `$${name}`
-    } else {
-      name.forEach((n) => this.environment.add(n, Kind.Variable))
-      name = `[${name.map((n) => `$${n}`).join(', ')}]`
-    }
+    this.environment.add(name, Kind.Variable)
+    type = this.typeAnnotationViaComment(node.type, name)
+    name = `$${name}`
     let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''
     return `${type}${name}${init};`
   }

@@ -1,3 +1,4 @@
+import { Environment } from './environment'
 import { Type } from '../types'
 
 export abstract class Node {
@@ -94,6 +95,7 @@ export interface Visitor<T> {
   visitParam(node: Param): T
   visitPostfix(node: Postfix): T
   visitPrefix(node: Prefix): T
+  visitProgram(node: Program): T
   visitReturn(node: Return): T
   visitScopeResolution(node: ScopeResolution): T
   visitStringLiteral(node: StringLiteral): T
@@ -107,6 +109,19 @@ export interface Visitor<T> {
   visitUnary(node: Unary): T
   visitVarDeclaration(node: VarDeclaration): T
   visitWhile(node: While): T
+}
+
+export class Program extends Node {
+  _type = 'Program' as const
+  constructor(
+    public readonly statements: Array<Node>,
+    public readonly environment: Environment,
+  ) {
+    super()
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitProgram(this)
+  }
 }
 
 export class If extends Node {
@@ -125,7 +140,7 @@ export class If extends Node {
 
 export class Block extends Node {
   _type = 'Block' as const
-  constructor(public readonly statements: Node[]) {
+  constructor(public readonly statements: Array<Node>) {
     super()
   }
   accept<T>(visitor: Visitor<T>): T {
@@ -136,7 +151,7 @@ export class Block extends Node {
 export class VarDeclaration extends Node {
   _type = 'VarDeclaration' as const
   constructor(
-    public readonly name: string | string[], // TODO no good -- need a Destructuring node
+    public readonly name: string,
     public readonly type: Type | null,
     public readonly initializer: Expr | null,
   ) {
@@ -227,9 +242,10 @@ export class FunctionDeclaration extends Node {
   _type = 'FunctionDeclaration' as const
   constructor(
     public readonly name: string,
-    public readonly params: Param[],
+    public readonly params: Array<Param>,
     public readonly returnType: Type | null,
     public readonly body: Block | Expr,
+    public readonly environment: Environment,
   ) {
     super()
   }
@@ -278,7 +294,7 @@ export class Try extends Node {
   _type = 'Try' as const
   constructor(
     public readonly tryBlock: Block,
-    public readonly catches: Catch[],
+    public readonly catches: Array<Catch>,
     public readonly finallyBlock: null | Block,
   ) {
     super()
@@ -297,7 +313,7 @@ export class Catch extends Node {
   _type = 'Catch' as const
   constructor(
     public readonly variable: string,
-    public readonly types: string[],
+    public readonly types: Array<string>,
     public readonly body: Block,
   ) {
     super()
@@ -323,7 +339,7 @@ export class ThrowStatement extends Node {
 function classProperties(this: ClassDeclaration) {
   return this.members.filter(
     (m) => m instanceof ClassProperty,
-  ) as ClassProperty[]
+  ) as Array<ClassProperty>
 }
 
 export class ClassDeclaration extends Node {
@@ -333,9 +349,9 @@ export class ClassDeclaration extends Node {
     public readonly constructorVisibility: Visibility,
     public readonly params: Array<Param | ClassProperty>,
     public readonly superclass: ClassSuperclass | null,
-    public readonly interfaces: string[],
+    public readonly interfaces: Array<string>,
     public readonly iterates: Identifier | null,
-    public readonly members: ClassMember[],
+    public readonly members: Array<ClassMember>,
     public readonly isAbstract: boolean = false,
   ) {
     super()
@@ -350,7 +366,7 @@ export class ClassSuperclass extends Node {
   _type = 'ClassSuperclass' as const
   constructor(
     public readonly name: string,
-    public readonly args: Expr[],
+    public readonly args: Array<Expr>,
   ) {
     super()
   }
@@ -384,7 +400,7 @@ export class ClassMethod extends Node {
     public readonly visibility: Visibility,
     public readonly isStatic: boolean,
     public readonly name: string,
-    public readonly params: Param[],
+    public readonly params: Array<Param>,
     public readonly returnType: Type | null,
     public readonly body: Block | Expr,
   ) {
@@ -401,7 +417,7 @@ export class ClassAbstractMethod extends Node {
     public readonly visibility: Visibility,
     public readonly isStatic: boolean,
     public readonly name: string,
-    public readonly params: Param[],
+    public readonly params: Array<Param>,
     public readonly returnType: Type | null,
   ) {
     super()
@@ -456,7 +472,7 @@ export class Call extends Node {
   _type = 'Call' as const
   constructor(
     public readonly callee: Expr,
-    public readonly args: Expr[],
+    public readonly args: Array<Expr>,
   ) {
     super()
   }
@@ -588,7 +604,7 @@ export class NullLiteral extends Node {
 
 export class ArrayLiteral extends Node {
   _type = 'ArrayLiteral' as const
-  constructor(public readonly elements: ArrayElement[]) {
+  constructor(public readonly elements: Array<ArrayElement>) {
     super()
   }
   accept<T>(visitor: Visitor<T>): T {
@@ -674,7 +690,7 @@ export class Identifier extends Node {
 export class FunctionExpression extends Node {
   _type = 'FunctionExpression' as const
   constructor(
-    public readonly params: Param[],
+    public readonly params: Array<Param>,
     public readonly returnType: Type | null,
     public readonly body: Expr | Block,
   ) {
@@ -709,7 +725,7 @@ export class Match extends Node {
   _type = 'Match' as const
   constructor(
     public readonly subject: Expr,
-    public readonly arms: MatchArm[],
+    public readonly arms: Array<MatchArm>,
     public readonly defaultArm: Expr | null,
   ) {
     super()
@@ -722,7 +738,7 @@ export class Match extends Node {
 export class MatchArm extends Node {
   _type = 'MatchArm' as const
   constructor(
-    public readonly patterns: Expr[],
+    public readonly patterns: Array<Expr>,
     public readonly body: Expr,
   ) {
     super()

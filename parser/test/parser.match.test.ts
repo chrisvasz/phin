@@ -1,8 +1,9 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import scan from '../scanner'
+import scan from '../../scanner'
 import parse from '../parser'
 import * as nodes from '../nodes'
+import { b } from '../parser.builder'
 
 function ast(source: string) {
   return parse(scan(source))
@@ -11,17 +12,17 @@ function ast(source: string) {
 describe('parse match expressions', () => {
   test('match (1) {}', () => {
     let source = 'match (1) {}'
-    let expected = [
+    let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Match(new nodes.NumberLiteral('1'), [], null),
       ),
-    ]
+    )
     expect(ast(source)).toEqual(expected)
   })
 
   test('match (1) { 1 => 2 }', () => {
     let source = 'match (1) { 1 => 2 }'
-    let expected = [
+    let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Match(
           new nodes.NumberLiteral('1'),
@@ -34,13 +35,13 @@ describe('parse match expressions', () => {
           null,
         ),
       ),
-    ]
+    )
     expect(ast(source)).toEqual(expected)
   })
 
   test('match (1) { 1, 2 => 3 }', () => {
     let source = 'match (1) { 1, 2 => 3 }'
-    let expected = [
+    let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Match(
           new nodes.NumberLiteral('1'),
@@ -53,13 +54,13 @@ describe('parse match expressions', () => {
           null,
         ),
       ),
-    ]
+    )
     expect(ast(source)).toEqual(expected)
   })
 
   test('match (1) { 1, 2 => 3, 4, 5 => 6 }', () => {
     let source = 'match (1) { 1, 2 => 3, 4, 5 => 6 }'
-    let expected = [
+    let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Match(
           new nodes.NumberLiteral('1'),
@@ -76,13 +77,13 @@ describe('parse match expressions', () => {
           null,
         ),
       ),
-    ]
+    )
     expect(ast(source)).toEqual(expected)
   })
 
   test('match (1) { 1, => 2, 3, => 4, }', () => {
     let source = 'match (1) { 1, => 2, 3, => 4, }'
-    let expected = [
+    let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Match(
           new nodes.NumberLiteral('1'),
@@ -99,13 +100,13 @@ describe('parse match expressions', () => {
           null,
         ),
       ),
-    ]
+    )
     expect(ast(source)).toEqual(expected)
   })
 
   test('match (1) { default => 2 }', () => {
     let source = 'match (1) { default => 2 }'
-    let expected = [
+    let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Match(
           new nodes.NumberLiteral('1'),
@@ -113,13 +114,13 @@ describe('parse match expressions', () => {
           new nodes.NumberLiteral('2'),
         ),
       ),
-    ]
+    )
     expect(ast(source)).toEqual(expected)
   })
 
   test('match (1) { 1 => 2, default => 3, }', () => {
     let source = 'match (1) { 1 => 2, default => 3, }'
-    let expected = [
+    let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Match(
           new nodes.NumberLiteral('1'),
@@ -132,13 +133,13 @@ describe('parse match expressions', () => {
           new nodes.NumberLiteral('3'),
         ),
       ),
-    ]
+    )
     expect(ast(source)).toEqual(expected)
   })
 
   test('match(true) { 1 >= 2 => "worked" }', () => {
     let source = 'match(true) { 1 >= 2 => "worked" }'
-    let expected = [
+    let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Match(
           new nodes.BooleanLiteral(true),
@@ -157,13 +158,13 @@ describe('parse match expressions', () => {
           null,
         ),
       ),
-    ]
+    )
     expect(ast(source)).toEqual(expected)
   })
 
   test('match(true) { default => throw a }', () => {
     let source = 'match(true) { default => throw a }'
-    let expected = [
+    let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Match(
           new nodes.BooleanLiteral(true),
@@ -171,13 +172,13 @@ describe('parse match expressions', () => {
           new nodes.ThrowExpression(new nodes.Identifier('a')),
         ),
       ),
-    ]
+    )
     expect(ast(source)).toEqual(expected)
   })
 
   test('match(1) { 1 => match(2) { 2 => 2 } }', () => {
     let source = 'match(1) { 1 => match(2) { 2 => 2 } }'
-    let expected = [
+    let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Match(
           new nodes.NumberLiteral('1'),
@@ -199,7 +200,7 @@ describe('parse match expressions', () => {
           null,
         ),
       ),
-    ]
+    )
     expect(ast(source)).toEqual(expected)
   })
 })
@@ -207,7 +208,7 @@ describe('parse match expressions', () => {
 describe('parse match expressions: precedence', () => {
   test('higher than assignment', () => {
     let source = 'a = match(true) {}'
-    let expected = [
+    let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Assign(
           new nodes.Identifier('a'),
@@ -215,20 +216,20 @@ describe('parse match expressions: precedence', () => {
           new nodes.Match(new nodes.BooleanLiteral(true), [], null),
         ),
       ),
-    ]
+    )
     expect(ast(source)).toEqual(expected)
   })
 
   test('higher than !', () => {
     let source = '!match(true) {}'
-    let expected = [
+    let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Unary(
           '!',
           new nodes.Match(new nodes.BooleanLiteral(true), [], null),
         ),
       ),
-    ]
+    )
     expect(ast(source)).toEqual(expected)
   })
 })

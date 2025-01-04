@@ -2,8 +2,8 @@
 import { expect, test, describe } from 'bun:test'
 import scan from '../scanner'
 import parse from '../parser'
-import * as nodes from '../nodes'
-import { Expr } from '../nodes'
+import * as nodes from '../parser/nodes'
+import { Expr } from '../parser/nodes'
 import { PhpPrinter } from './print'
 import { Kind } from './environment'
 

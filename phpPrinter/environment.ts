@@ -1,5 +1,6 @@
-import { Node } from '../nodes'
-import * as Nodes from '../nodes'
+// TODO drop me
+import { Node } from '../parser/nodes'
+import * as Nodes from '../parser/nodes'
 
 export enum Kind {
   Variable = 1,

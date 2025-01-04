@@ -1,8 +1,11 @@
 import { Token, TokenType } from '../token'
-import { Node, Expr, Stmt } from '../nodes'
-import * as nodes from '../nodes'
+import { Node, Expr, Stmt } from './nodes'
+import * as nodes from './nodes'
 import * as types from '../types'
 import { Type } from '../types'
+import { Environment, EnvironmentKind } from './environment'
+
+const emptyArray: readonly [] = []
 
 const {
   ABSTRACT,
@@ -102,20 +105,37 @@ class ParseError extends Error {}
 // TODO named arguments
 // TODO global thing: int;
 // TODO static thing: int = abc();
+// TODO val thing: int = 123;
 
-export default function parse(tokens: Token[]): Stmt[] {
+export function defaultResolveUnknownIdentifier(name: string): EnvironmentKind {
+  throw new ParseError(`Unknown identifier: ${name}`)
+}
+
+export default function parse(
+  tokens: Token[],
+  {
+    enclosingEnvironment = null,
+    buildEnvironment = false,
+  }: {
+    enclosingEnvironment?: Environment | null
+    buildEnvironment?: boolean
+  } = {},
+): nodes.Program {
   let current = 0
+  let currentEnvironment = enclosingEnvironment
   return parse()
 
-  function parse(): Stmt[] {
-    const statements: Stmt[] = []
-    semicolons()
-    while (!isAtEnd()) {
-      const next = declaration()
-      if (next) statements.push(next)
+  function parse(): nodes.Program {
+    return makeEnvironment((env) => {
+      const statements: Stmt[] = []
       semicolons()
-    }
-    return statements
+      while (!isAtEnd()) {
+        const next = declaration()
+        if (next) statements.push(next)
+        semicolons()
+      }
+      return new nodes.Program(statements, env ?? new Environment(null))
+    })
   }
 
   function declaration(): Stmt | null {
@@ -123,7 +143,6 @@ export default function parse(tokens: Token[]): Stmt[] {
     if (match(THROW)) return throwDeclaration() // TODO move into statement()
     if (match(FUN)) return functionDeclaration()
     if (match(VAR)) return varDeclaration()
-    // TODO valDeclaration()
     if (match(CLASS)) return classDeclaration()
     if (match(ABSTRACT)) {
       consume('Expect "class" after "abstract"', CLASS)
@@ -175,9 +194,9 @@ export default function parse(tokens: Token[]): Stmt[] {
   ): nodes.ClassDeclaration {
     let name = consume('Expect class name', IDENTIFIER).lexeme
     let constructorVisibility = classVisibility()
-    let params = match(LEFT_PAREN) ? classParams() : []
+    let params = match(LEFT_PAREN) ? classParams() : emptyArray
     let superclass = match(EXTENDS) ? classSuperclass() : null
-    let interfaces = match(IMPLEMENTS) ? classInterfaces() : []
+    let interfaces = match(IMPLEMENTS) ? classInterfaces() : emptyArray
     let iterates = classIterates()
     consume('Expect "{" before class body', LEFT_BRACE)
     let members = classMembers()
@@ -194,8 +213,8 @@ export default function parse(tokens: Token[]): Stmt[] {
     )
   }
 
-  function classParams(): Array<nodes.Param | nodes.ClassProperty> {
-    if (match(RIGHT_PAREN)) return []
+  function classParams(): ReadonlyArray<nodes.Param | nodes.ClassProperty> {
+    if (match(RIGHT_PAREN)) return emptyArray
     let params = [classParam()]
     while (match(COMMA)) {
       if (check(RIGHT_PAREN)) break // support trailing commas
@@ -227,12 +246,12 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function classSuperclass(): nodes.ClassSuperclass {
     let name = consume('Expect superclass name', IDENTIFIER).lexeme
-    let args = match(LEFT_PAREN) ? classSuperclassArgs() : []
+    let args = match(LEFT_PAREN) ? classSuperclassArgs() : emptyArray
     return new nodes.ClassSuperclass(name, args)
   }
 
-  function classSuperclassArgs(): Expr[] {
-    if (match(RIGHT_PAREN)) return []
+  function classSuperclassArgs(): ReadonlyArray<Expr> {
+    if (match(RIGHT_PAREN)) return emptyArray
     let args = [expression()]
     while (match(COMMA)) {
       if (check(RIGHT_PAREN)) break // support trailing commas
@@ -379,14 +398,18 @@ export default function parse(tokens: Token[]): Stmt[] {
   function functionDeclaration(): nodes.FunctionDeclaration {
     let name = consume('Expect function name', IDENTIFIER).lexeme
     consume('Expect "(" after function name', LEFT_PAREN)
-    let params = functionParams()
-    let returnType = match(COLON) ? typeAnnotation() : null
-    return new nodes.FunctionDeclaration(
-      name,
-      params,
-      returnType,
-      functionBody(),
-    )
+    currentEnvironment?.add(name, EnvironmentKind.Function) // TODO not gonna work, this is reused for classMethods
+    return makeEnvironment((env) => {
+      let params = functionParams()
+      let returnType = match(COLON) ? typeAnnotation() : null
+      return new nodes.FunctionDeclaration(
+        name,
+        params,
+        returnType,
+        functionBody(),
+        env ?? new Environment(null),
+      )
+    })
   }
 
   function functionExpression(): nodes.FunctionExpression {
@@ -413,6 +436,7 @@ export default function parse(tokens: Token[]): Stmt[] {
     let name = consume('Expect parameter name', IDENTIFIER).lexeme
     let type = match(COLON) ? typeAnnotation() : null
     let initializer = match(EQUAL) ? expression() : null
+    currentEnvironment?.add(name, EnvironmentKind.Variable)
     return new nodes.Param(name, type, initializer)
   }
 
@@ -427,26 +451,11 @@ export default function parse(tokens: Token[]): Stmt[] {
   }
 
   function varDeclaration(): nodes.VarDeclaration {
-    let name = varDeclarationName()
+    let name = consume('Expect variable name', IDENTIFIER).lexeme
     let type = match(COLON) ? typeAnnotation() : null
     let initializer = match(EQUAL) ? expression() : null
+    currentEnvironment?.add(name, EnvironmentKind.Variable)
     return new nodes.VarDeclaration(name, type, initializer)
-  }
-
-  function varDeclarationName(): string | string[] {
-    if (match(IDENTIFIER)) return previous().lexeme
-    if (match(LEFT_BRACKET)) {
-      // TODO support type annotations, empty slots, aliases, keyed arrays, etc
-      let identifiers: string[] = []
-      while (!check(RIGHT_BRACKET) && !isAtEnd()) {
-        let name = consume('Expect variable name', IDENTIFIER).lexeme
-        identifiers.push(name)
-        match(COMMA)
-      }
-      consume('Expect "]" after variable names', RIGHT_BRACKET)
-      return identifiers
-    }
-    throw error(peek(), 'Expect variable name')
   }
 
   function statement(): Stmt {
@@ -1070,5 +1079,14 @@ export default function parse(tokens: Token[]): Stmt[] {
 
   function previous(): Token {
     return tokens[current - 1]
+  }
+
+  function makeEnvironment<T>(fn: (env: Environment | null) => T): T {
+    if (!buildEnvironment) return fn(null)
+    let enclosing = currentEnvironment
+    currentEnvironment = new Environment(enclosing)
+    let result = fn(currentEnvironment)
+    currentEnvironment = enclosing
+    return result
   }
 }

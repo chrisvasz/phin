@@ -1,10 +1,10 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import scan from '../scanner'
+import scan from '../../scanner'
 import parse from '../parser'
 import * as nodes from '../nodes'
 import { Expr } from '../nodes'
-import { TokenType } from '../token'
+import { b as builder } from '../parser.builder'
 
 function ast(source: string) {
   return parse(scan(source))
@@ -13,8 +13,8 @@ function ast(source: string) {
 // https://www.php.net/manual/en/language.operators.precedence.php
 // TODO bitwise operators << >> & ^ | ~
 
-function expressions(ex: Expr) {
-  return [new nodes.ExpressionStatement(ex)]
+function expressions(...ex: Expr[]) {
+  return builder.program(...ex.map((e) => builder.expressionStatement(e)))
 }
 
 const unary = (operator: string, right: Expr) =>
@@ -325,10 +325,7 @@ describe('new/clone', () => {
 describe('terminators', () => {
   test('a;b', () => {
     let source = 'a;b'
-    let expected = [
-      new nodes.ExpressionStatement(a),
-      new nodes.ExpressionStatement(b),
-    ]
+    let expected = expressions(a, b)
     expect(ast(source)).toEqual(expected)
   })
 })

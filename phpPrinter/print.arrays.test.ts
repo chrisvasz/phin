@@ -2,7 +2,6 @@
 import { expect, test, describe } from 'bun:test'
 import scan from '../scanner'
 import parse from '../parser'
-import * as nodes from '../nodes'
 import { Kind } from './environment'
 import { PhpPrinter } from './print'
 import { Token } from '../token'
