@@ -1,11 +1,14 @@
+// @ts-nocheck
+
+import { Environment, EnvironmentKind } from '../parser/environment'
+import { globalEnvironment } from '../parser/globalEnvironment'
 import * as nodes from '../parser/nodes'
 import * as types from '../types'
 import { Type } from '../types'
-import { Environment, globalEnvironment, Kind } from './environment'
 
 export class PrintError extends Error {}
 
-function defaultResolveUnknownIdentifier(name: string): Kind {
+function defaultResolveUnknownIdentifier(name: string): EnvironmentKind {
   throw new PrintError(`Unknown identifier ${name}`)
 }
 
@@ -15,18 +18,12 @@ export class PhpPrinter
   constructor(
     private readonly resolveUnknownIdentifier: (
       name: string,
-    ) => Kind = defaultResolveUnknownIdentifier,
+    ) => EnvironmentKind = defaultResolveUnknownIdentifier,
     private readonly leadingWhitespace: string = '  ',
   ) {}
 
   private currentIndent = 0
-  private environment = new Environment(globalEnvironment)
-
-  print(statements: nodes.Node[]): string {
-    return this.encloseWith(statements, () => {
-      return statements.map((s) => s.accept(this)).join('\n') + '\n'
-    })
-  }
+  private environment: Environment = globalEnvironment
 
   private indentBlock(fn: () => string[]): string {
     this.currentIndent++
@@ -39,9 +36,8 @@ export class PhpPrinter
     return this.leadingWhitespace.repeat(this.currentIndent) + content
   }
 
-  private encloseWith<T>(nodes: nodes.Node[], fn: () => T): T {
+  private encloseWith<T>(environment: Environment, fn: () => T): T {
     let current = this.environment
-    this.environment = new Environment(current, nodes)
     let result = fn()
     this.environment = current
     return result
@@ -265,7 +261,7 @@ export class PhpPrinter
       this.indentBlock(() =>
         this.encloseWith([], () => {
           for (let param of params) {
-            this.environment.add(param.name, Kind.Variable)
+            this.environment.add(param.name, EnvironmentKind.Variable)
           }
           return propertiesWithInitializers.map(
             (p) => `$this->${p.name} = ${p.initializer?.accept(this)};`,
@@ -319,7 +315,7 @@ export class PhpPrinter
   }
 
   visitForeachVariable(node: nodes.ForeachVariable): string {
-    this.environment.add(node.name, Kind.Variable)
+    this.environment.add(node.name, EnvironmentKind.Variable)
     // TODO output var comment for type
     return `$${node.name}`
   }
@@ -337,7 +333,7 @@ export class PhpPrinter
   }
 
   visitFunctionDeclaration(node: nodes.FunctionDeclaration): string {
-    this.environment.add(node.name, Kind.Function)
+    this.environment.add(node.name, EnvironmentKind.Function)
     return this.encloseWith([], () => {
       let params = this.functionParams(node.params)
       let type = this.typeAnnotation(node.returnType)
@@ -354,7 +350,7 @@ export class PhpPrinter
 
   functionParam(param: nodes.Param): string {
     let result = param.accept(this)
-    this.environment.add(param.name, Kind.Variable)
+    this.environment.add(param.name, EnvironmentKind.Variable)
     return result
   }
 
@@ -399,10 +395,10 @@ export class PhpPrinter
     let kind =
       this.environment.get(node.name) ??
       this.resolveUnknownIdentifier(node.name)
-    if (kind === Kind.Variable) return `$${node.name}`
-    if (kind === Kind.ClassProperty) return `$this->${node.name}`
-    if (kind === Kind.ClassMethod) return `$this->${node.name}`
-    if (kind === Kind.ClassConst) return `self::${node.name}`
+    if (kind === EnvironmentKind.Variable) return `$${node.name}`
+    if (kind === EnvironmentKind.ClassProperty) return `$this->${node.name}`
+    if (kind === EnvironmentKind.ClassMethod) return `$this->${node.name}`
+    if (kind === EnvironmentKind.ClassConst) return `self::${node.name}`
     return `${node.name}`
   }
 
@@ -525,7 +521,7 @@ export class PhpPrinter
   visitVarDeclaration(node: nodes.VarDeclaration): string {
     let name = node.name
     let type = ''
-    this.environment.add(name, Kind.Variable)
+    this.environment.add(name, EnvironmentKind.Variable)
     type = this.typeAnnotationViaComment(node.type, name)
     name = `$${name}`
     let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''

@@ -3,11 +3,7 @@ import VoidVisitor from './VoidVisitor'
 import * as nodes from './nodes'
 import { globalEnvironment } from './globalEnvironment'
 
-/**
- * Establishes the environment for a program by visiting all nodes and adding
- * declarations to the environment. TODO
- */
-export default class EnvironmentVisitor extends VoidVisitor {
+export default class FindUndeclaredIdentifiersVisitor extends VoidVisitor {
   environment: Environment = new Environment(globalEnvironment)
 
   constructor() {
@@ -20,18 +16,8 @@ export default class EnvironmentVisitor extends VoidVisitor {
   }
 
   override visitClassDeclaration(node: nodes.ClassDeclaration): void {
-    // per php semantics, add all class members to the environment immediately
-    let env = node.environment
-    for (let member of node.members) {
-      if (member instanceof nodes.ClassMethod) {
-        env.add(member.name, EnvironmentKind.ClassMethod)
-      } else if (member instanceof nodes.ClassProperty) {
-        env.add(member.name, EnvironmentKind.ClassProperty)
-      } else if (member instanceof nodes.ClassConst) {
-        env.add(member.name, EnvironmentKind.ClassConst)
-      }
-    }
-    this.wrap(env, () => super.visitClassDeclaration(node))
+    this.environment.add(node.name, EnvironmentKind.Class)
+    super.visitClassDeclaration(node)
   }
 
   override visitClassMethod(node: nodes.ClassMethod): void {
@@ -63,16 +49,15 @@ export default class EnvironmentVisitor extends VoidVisitor {
 
   override visitProgram(node: nodes.Program): void {
     // per php semantics, add all class and function declarations to the environment immediately
-    // TODO could do this part during parsing
-    // TODO can't do var declarations during parsing because they aren't hoisted
     let env = node.environment
-    for (let s of node.statements) {
-      if (s instanceof nodes.FunctionDeclaration) {
-        env.add(s.name, EnvironmentKind.Function)
-      } else if (s instanceof nodes.ClassDeclaration) {
-        env.add(s.name, EnvironmentKind.Class)
-      }
-    }
+    let fns = node.statements.filter(
+      (s) => s instanceof nodes.FunctionDeclaration,
+    )
+    fns.forEach((fn) => env.add(fn.name, EnvironmentKind.Function))
+    let classes = node.statements.filter(
+      (s) => s instanceof nodes.ClassDeclaration,
+    )
+    classes.forEach((cls) => env.add(cls.name, EnvironmentKind.Class))
     this.wrap(env, () => super.visitProgram(node))
   }
 

@@ -3,9 +3,14 @@ import { Node, Expr, Stmt } from './nodes'
 import * as nodes from './nodes'
 import * as types from '../types'
 import { Type } from '../types'
-import { Environment, EnvironmentKind } from './environment'
+import {
+  ClassEnvironment,
+  Environment,
+  EnvironmentKind,
+  HoistedEnvironment,
+} from './environment'
 
-const emptyArray: readonly [] = []
+const emptyArray: [] = []
 
 const {
   ABSTRACT,
@@ -122,20 +127,21 @@ export default function parse(
   } = {},
 ): nodes.Program {
   let current = 0
-  let currentEnvironment = enclosingEnvironment
+  let hoistedEnvironment = new HoistedEnvironment(enclosingEnvironment)
   return parse()
 
   function parse(): nodes.Program {
-    return makeEnvironment((env) => {
-      const statements: Stmt[] = []
+    const statements: Stmt[] = []
+    semicolons()
+    while (!isAtEnd()) {
+      const next = declaration()
+      if (next) statements.push(next)
       semicolons()
-      while (!isAtEnd()) {
-        const next = declaration()
-        if (next) statements.push(next)
-        semicolons()
-      }
-      return new nodes.Program(statements, env ?? new Environment(null))
-    })
+    }
+    return new nodes.Program(
+      statements,
+      buildEnvironment ? hoistedEnvironment : new HoistedEnvironment(null),
+    )
   }
 
   function declaration(): Stmt | null {
@@ -192,14 +198,16 @@ export default function parse(
   function classDeclaration(
     isAbstract: boolean = false,
   ): nodes.ClassDeclaration {
+    let env = new ClassEnvironment(hoistedEnvironment)
     let name = consume('Expect class name', IDENTIFIER).lexeme
+    hoistedEnvironment.add(name, EnvironmentKind.Class)
     let constructorVisibility = classVisibility()
-    let params = match(LEFT_PAREN) ? classParams() : emptyArray
+    let params = match(LEFT_PAREN) ? classParams(env) : emptyArray
     let superclass = match(EXTENDS) ? classSuperclass() : null
     let interfaces = match(IMPLEMENTS) ? classInterfaces() : emptyArray
     let iterates = classIterates()
     consume('Expect "{" before class body', LEFT_BRACE)
-    let members = classMembers()
+    let members = classMembers(env)
     consume('Expect "}" after class body', RIGHT_BRACE)
     return new nodes.ClassDeclaration(
       name,
@@ -210,21 +218,26 @@ export default function parse(
       iterates,
       members,
       isAbstract,
+      buildEnvironment ? env : new ClassEnvironment(null),
     )
   }
 
-  function classParams(): ReadonlyArray<nodes.Param | nodes.ClassProperty> {
+  function classParams(
+    env: ClassEnvironment,
+  ): Array<nodes.Param | nodes.ClassProperty> {
     if (match(RIGHT_PAREN)) return emptyArray
-    let params = [classParam()]
+    let params = [classParam(env)]
     while (match(COMMA)) {
       if (check(RIGHT_PAREN)) break // support trailing commas
-      params.push(classParam())
+      params.push(classParam(env))
     }
     consume('Expect ")" after class params', RIGHT_PAREN)
     return params
   }
 
-  function classParam(): nodes.Param | nodes.ClassProperty {
+  function classParam(
+    env: ClassEnvironment,
+  ): nodes.Param | nodes.ClassProperty {
     if (check(IDENTIFIER)) return functionParam()
     let isFinal = match(FINAL)
     let visibility = classVisibility()
@@ -233,6 +246,7 @@ export default function parse(
     let name = consume('Expect class param name', IDENTIFIER).lexeme
     let type = match(COLON) ? typeAnnotation() : null
     let initializer = match(EQUAL) ? expression() : null
+    env.add(name, EnvironmentKind.ClassProperty)
     return new nodes.ClassProperty(
       isFinal,
       visibility,
@@ -250,7 +264,7 @@ export default function parse(
     return new nodes.ClassSuperclass(name, args)
   }
 
-  function classSuperclassArgs(): ReadonlyArray<Expr> {
+  function classSuperclassArgs(): Array<Expr> {
     if (match(RIGHT_PAREN)) return emptyArray
     let args = [expression()]
     while (match(COMMA)) {
@@ -278,39 +292,42 @@ export default function parse(
     return null
   }
 
-  function classMembers(): nodes.ClassMember[] {
+  function classMembers(env: ClassEnvironment): nodes.ClassMember[] {
     let members: nodes.ClassMember[] = []
     while (!check(RIGHT_BRACE) && !isAtEnd()) {
-      members.push(classMember())
+      members.push(classMember(env))
       semicolons()
     }
     return members
   }
 
-  function classMember(): nodes.ClassMember {
-    if (match(ABSTRACT)) return abstractClassMember()
+  function classMember(env: ClassEnvironment): nodes.ClassMember {
+    if (match(ABSTRACT)) return abstractClassMember(env)
     let isFinal = match(FINAL)
     let visibility = classVisibility()
     let isStatic = match(STATIC)
-    if (match(FUN)) return classMethod(isFinal, visibility, isStatic)
+    if (match(FUN)) return classMethod(env, isFinal, visibility, isStatic)
     if (matchIdentifier('init')) return classInitializer()
-    if (match(CONST)) return classConst(isFinal, visibility, isStatic)
+    if (match(CONST)) return classConst(env, isFinal, visibility, isStatic)
     if (match(VAR, VAL)) {
       // TODO val must have a type annotation according to PHP
       let isReadonly = previous().type === VAL
-      return classProperty(isFinal, visibility, isStatic, isReadonly)
+      return classProperty(env, isFinal, visibility, isStatic, isReadonly)
     }
     throw error(peek(), 'Expect class member')
   }
 
-  function abstractClassMember(): nodes.ClassAbstractMethod {
+  function abstractClassMember(
+    env: ClassEnvironment,
+  ): nodes.ClassAbstractMethod {
     let visibility = classVisibility()
     let isStatic = match(STATIC)
     consume('Expect class method declaration', FUN)
-    return abstractClassMethod(visibility, isStatic)
+    return abstractClassMethod(env, visibility, isStatic)
   }
 
   function abstractClassMethod(
+    env: ClassEnvironment,
     visibility: nodes.Visibility,
     isStatic: boolean,
   ): nodes.ClassAbstractMethod {
@@ -318,6 +335,7 @@ export default function parse(
     consume('Expect "(" after method name', LEFT_PAREN)
     let params = functionParams()
     let returnType = match(COLON) ? typeAnnotation() : null
+    env.add(name, EnvironmentKind.ClassMethod)
     return new nodes.ClassAbstractMethod(
       visibility,
       isStatic,
@@ -335,23 +353,29 @@ export default function parse(
   }
 
   function classMethod(
+    env: ClassEnvironment,
     isFinal: boolean,
     visibility: nodes.Visibility,
     isStatic: boolean,
   ): nodes.ClassMethod {
-    let fn = functionDeclaration()
+    let name = consume('Expect function name', IDENTIFIER).lexeme
+    consume('Expect "(" after function name', LEFT_PAREN)
+    let params = functionParams()
+    let returnType = match(COLON) ? typeAnnotation() : null
+    env.add(name, EnvironmentKind.ClassMethod)
     return new nodes.ClassMethod(
       isFinal,
       visibility,
       isStatic,
-      fn.name,
-      fn.params,
-      fn.returnType,
-      fn.body,
+      name,
+      params,
+      returnType,
+      functionBody(),
     )
   }
 
   function classProperty(
+    env: ClassEnvironment,
     isFinal: boolean,
     visibility: nodes.Visibility,
     isStatic: boolean,
@@ -360,6 +384,7 @@ export default function parse(
     let name = consume('Expect variable name', IDENTIFIER).lexeme
     let type = match(COLON) ? typeAnnotation() : null
     let initializer = match(EQUAL) ? expression() : null
+    env.add(name, EnvironmentKind.ClassProperty)
     return new nodes.ClassProperty(
       isFinal,
       visibility,
@@ -372,6 +397,7 @@ export default function parse(
   }
 
   function classConst(
+    env: ClassEnvironment,
     isFinal: boolean,
     visibility: nodes.Visibility,
     isStatic: boolean,
@@ -380,6 +406,7 @@ export default function parse(
     let type = match(COLON) ? typeAnnotation() : null
     consume('Expect "=" after class constant name', EQUAL)
     let initializer = expression()
+    env.add(name, EnvironmentKind.ClassConst)
     return new nodes.ClassConst(
       isFinal,
       visibility,
@@ -398,18 +425,15 @@ export default function parse(
   function functionDeclaration(): nodes.FunctionDeclaration {
     let name = consume('Expect function name', IDENTIFIER).lexeme
     consume('Expect "(" after function name', LEFT_PAREN)
-    currentEnvironment?.add(name, EnvironmentKind.Function) // TODO not gonna work, this is reused for classMethods
-    return makeEnvironment((env) => {
-      let params = functionParams()
-      let returnType = match(COLON) ? typeAnnotation() : null
-      return new nodes.FunctionDeclaration(
-        name,
-        params,
-        returnType,
-        functionBody(),
-        env ?? new Environment(null),
-      )
-    })
+    hoistedEnvironment.add(name, EnvironmentKind.Function)
+    let params = functionParams()
+    let returnType = match(COLON) ? typeAnnotation() : null
+    return new nodes.FunctionDeclaration(
+      name,
+      params,
+      returnType,
+      functionBody(),
+    )
   }
 
   function functionExpression(): nodes.FunctionExpression {
@@ -436,7 +460,6 @@ export default function parse(
     let name = consume('Expect parameter name', IDENTIFIER).lexeme
     let type = match(COLON) ? typeAnnotation() : null
     let initializer = match(EQUAL) ? expression() : null
-    currentEnvironment?.add(name, EnvironmentKind.Variable)
     return new nodes.Param(name, type, initializer)
   }
 
@@ -454,7 +477,6 @@ export default function parse(
     let name = consume('Expect variable name', IDENTIFIER).lexeme
     let type = match(COLON) ? typeAnnotation() : null
     let initializer = match(EQUAL) ? expression() : null
-    currentEnvironment?.add(name, EnvironmentKind.Variable)
     return new nodes.VarDeclaration(name, type, initializer)
   }
 
@@ -1079,14 +1101,5 @@ export default function parse(
 
   function previous(): Token {
     return tokens[current - 1]
-  }
-
-  function makeEnvironment<T>(fn: (env: Environment | null) => T): T {
-    if (!buildEnvironment) return fn(null)
-    let enclosing = currentEnvironment
-    currentEnvironment = new Environment(enclosing)
-    let result = fn(currentEnvironment)
-    currentEnvironment = enclosing
-    return result
   }
 }

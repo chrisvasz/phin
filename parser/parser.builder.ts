@@ -1,10 +1,7 @@
 // @ts-ignore
 import * as nodes from './nodes'
 import * as types from '../types'
-import { Environment } from './environment'
-import EnvironmentVisitor from './EnvironmentVisitor'
-
-const emptyEnvironment = new Environment(null)
+import { ClassEnvironment, HoistedEnvironment } from './environment'
 
 export const b = (function () {
   return {
@@ -13,7 +10,9 @@ export const b = (function () {
     binary,
     call,
     class: classDeclaration,
+    classConst,
     classInitializer: (block: nodes.Block) => new nodes.ClassInitializer(block),
+    classMethod,
     classProperty,
     classSuperclass,
     echo: (expression: nodes.Expr) => new nodes.Echo(expression),
@@ -34,7 +33,7 @@ export const b = (function () {
   }
 
   function program(...statements: nodes.Stmt[]) {
-    return new nodes.Program(statements, emptyEnvironment)
+    return new nodes.Program(statements, new HoistedEnvironment(null))
   }
 
   function block(...statements: nodes.Stmt[]) {
@@ -67,26 +66,47 @@ export const b = (function () {
       params = [],
       returnType = null,
       body = block(),
-      env = emptyEnvironment,
     }: {
       params?: nodes.Param[]
       returnType?: types.Type | null
       body?: nodes.Block | nodes.Expr
-      env?: Environment
     } = {},
   ): Name extends string
     ? nodes.FunctionDeclaration
     : nodes.FunctionExpression {
     if (typeof name === 'string') {
-      // @ts-expect-error
-      return new nodes.FunctionDeclaration(name, params, returnType, body, env)
+      return new nodes.FunctionDeclaration(
+        name,
+        params,
+        returnType,
+        body,
+      ) as any
     }
-    // @ts-expect-error
-    return new nodes.FunctionExpression(
-      params,
-      returnType,
-      body,
-      // environment, // TODO
+    return new nodes.FunctionExpression(params, returnType, body) as any
+  }
+
+  function classConst(
+    name: string,
+    initializer: nodes.Expr,
+    {
+      isFinal = false,
+      visibility = null,
+      isStatic = false,
+      type = null,
+    }: {
+      isFinal?: boolean
+      visibility?: nodes.Visibility
+      isStatic?: boolean
+      type?: types.Type | null
+    } = {},
+  ) {
+    return new nodes.ClassConst(
+      isFinal,
+      visibility,
+      isStatic,
+      name,
+      type,
+      initializer,
     )
   }
 
@@ -100,6 +120,7 @@ export const b = (function () {
       iterates = null,
       members = [],
       isAbstract = false,
+      env = new ClassEnvironment(null),
     }: {
       params?: Array<nodes.Param | nodes.ClassProperty>
       constructorVisibility?: nodes.Visibility
@@ -108,6 +129,7 @@ export const b = (function () {
       iterates?: nodes.Identifier | null
       members?: nodes.ClassMember[]
       isAbstract?: boolean
+      env?: ClassEnvironment
     } = {},
   ): nodes.ClassDeclaration {
     return new nodes.ClassDeclaration(
@@ -119,6 +141,36 @@ export const b = (function () {
       iterates,
       members,
       isAbstract,
+      env,
+    )
+  }
+
+  function classMethod(
+    name: string,
+    {
+      isFinal = false,
+      visibility = null,
+      isStatic = false,
+      params = [],
+      returnType = null,
+      body = block(),
+    }: {
+      isFinal?: boolean
+      visibility?: nodes.Visibility
+      isStatic?: boolean
+      params?: Array<nodes.Param>
+      returnType?: types.Type | null
+      body?: nodes.Block | nodes.Expr
+    } = {},
+  ) {
+    return new nodes.ClassMethod(
+      isFinal,
+      visibility,
+      isStatic,
+      name,
+      params,
+      returnType,
+      body,
     )
   }
 

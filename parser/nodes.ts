@@ -1,4 +1,8 @@
-import { Environment } from './environment'
+import {
+  ClassEnvironment,
+  Environment,
+  HoistedEnvironment,
+} from './environment'
 import { Type } from '../types'
 
 export abstract class Node {
@@ -115,7 +119,7 @@ export class Program extends Node {
   _type = 'Program' as const
   constructor(
     public readonly statements: Array<Node>,
-    public readonly environment: Environment,
+    public readonly environment: HoistedEnvironment,
   ) {
     super()
   }
@@ -245,7 +249,6 @@ export class FunctionDeclaration extends Node {
     public readonly params: Array<Param>,
     public readonly returnType: Type | null,
     public readonly body: Block | Expr,
-    public readonly environment: Environment,
   ) {
     super()
   }
@@ -353,6 +356,7 @@ export class ClassDeclaration extends Node {
     public readonly iterates: Identifier | null,
     public readonly members: Array<ClassMember>,
     public readonly isAbstract: boolean = false,
+    public readonly environment: ClassEnvironment,
   ) {
     super()
   }

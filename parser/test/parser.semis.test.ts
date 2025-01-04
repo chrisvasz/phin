@@ -82,19 +82,13 @@ describe('parse optional semis between declarations', () => {
 
   test('class A{}class B{}', () => {
     let source = 'class A{}class B{}'
-    let expected = b.program(
-      new nodes.ClassDeclaration('A', null, [], null, [], null, [], false),
-      new nodes.ClassDeclaration('B', null, [], null, [], null, [], false),
-    )
+    let expected = b.program(b.class('A'), b.class('B'))
     expect(ast(source)).toEqual(expected)
   })
 
   test('class A{};;;class B{}', () => {
     let source = 'class A{};;;class B{}'
-    let expected = b.program(
-      new nodes.ClassDeclaration('A', null, [], null, [], null, [], false),
-      new nodes.ClassDeclaration('B', null, [], null, [], null, [], false),
-    )
+    let expected = b.program(b.class('A'), b.class('B'))
     expect(ast(source)).toEqual(expected)
   })
 })
