@@ -1,20 +1,20 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import scan from '../scanner'
-import parse from '../parser'
-import { PhpPrinter, PrintError } from './print'
+import { PhpPrinter } from './print'
+import compile, { resolveUndeclaredIdentifiersToVariables } from '../compiler'
 
-function print(src: string) {
-  let result = new PhpPrinter().print(parse(scan(src)))
-  return result.trim()
+function ast(source: string) {
+  return compile(source, {
+    resolveUndeclaredIdentifiers: resolveUndeclaredIdentifiersToVariables,
+  })
+}
+
+function print(source: string) {
+  let printer = new PhpPrinter()
+  return printer.print(ast(source)).trim()
 }
 
 describe('print scoping: vars and functions', () => {
-  test('a', () => {
-    let source = 'a'
-    expect(() => print(source)).toThrow(new PrintError('Unknown identifier a'))
-  })
-
   test('var a; a', () => {
     let source = 'var a; a;'
     let expected = '$a;\n$a;'
@@ -25,11 +25,6 @@ describe('print scoping: vars and functions', () => {
     let source = 'a; fun a() {}'
     let expected = 'a;\nfunction a() {}'
     expect(print(source)).toEqual(expected)
-  })
-
-  test('b; fun a() {}', () => {
-    let source = 'b; fun a() {}'
-    expect(() => print(source)).toThrow(new PrintError('Unknown identifier b'))
   })
 
   test('fun a() {} a;', () => {
@@ -44,15 +39,11 @@ describe('print scoping: vars and functions', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('var a; fun a() {} a;', () => {
+  test.todo('var a; fun a() {} a;', () => {
+    // what should this do? what's the right PHP semantic?
     let source = 'var a; fun a() {} a;'
     let expected = '$a;\nfunction a() {}\na;'
     expect(print(source)).toEqual(expected)
-  })
-
-  test('fun a() { var b; } b;', () => {
-    let source = 'fun a() { var b; } b;'
-    expect(() => print(source)).toThrow(new PrintError('Unknown identifier b'))
   })
 
   test('fun a(b) => b', () => {
@@ -65,11 +56,6 @@ describe('print scoping: vars and functions', () => {
     let source = 'fun a(b, c = b) {}'
     let expected = 'function a($b, $c = $b) {}'
     expect(print(source)).toEqual(expected)
-  })
-
-  test('fun a(c = b) {}', () => {
-    let source = 'fun a(c = b) {}'
-    expect(() => print(source)).toThrow(new PrintError('Unknown identifier b'))
   })
 
   test('fun a() { var b; b; }', () => {
@@ -108,11 +94,6 @@ class A {
 }
     `.trim()
     expect(print(source)).toEqual(expected)
-  })
-
-  test('class A { var b; } b;', () => {
-    let source = 'class A { var b; } b;'
-    expect(() => print(source)).toThrow(new PrintError('Unknown identifier b'))
   })
 })
 

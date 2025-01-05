@@ -1,16 +1,20 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import scan from '../scanner'
-import parse from '../parser'
 import { PhpPrinter } from './print'
-import { Kind } from './environment'
+import compile, { resolveUndeclaredIdentifiersToFunctions } from '../compiler'
 
-function print(src: string) {
-  let result = new PhpPrinter(() => Kind.Function).print(parse(scan(src)))
-  return result.trim()
+function ast(source: string) {
+  return compile(source, {
+    resolveUndeclaredIdentifiers: resolveUndeclaredIdentifiersToFunctions,
+  })
 }
 
-describe('function declarations', () => {
+function print(source: string) {
+  let printer = new PhpPrinter()
+  return printer.print(ast(source)).trim()
+}
+
+describe('print function declarations', () => {
   test('fun foo() {}', () => {
     let source = 'fun foo() {}'
     let expected = 'function foo() {}'
@@ -88,7 +92,7 @@ function foo() {
   test.todo('does not overwrite existing docblock')
 })
 
-describe('function expressions', () => {
+describe('print function expressions', () => {
   test('var a = fun() {}', () => {
     let source = 'var a = fun() {}'
     let expected = '$a = function () {};'
@@ -108,7 +112,7 @@ $a = function ($a) {
   test.todo('var a = fun(a: array<int>) {}')
 })
 
-describe('function calls', () => {
+describe('print function calls', () => {
   test('foo()', () => {
     let source = 'foo()'
     let expected = 'foo();'

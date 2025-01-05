@@ -8,7 +8,8 @@ import {
   EnvironmentKind,
   HoistedEnvironment,
 } from '../environment'
-import * as nodes from '../nodes'
+import * as nodes from '../../nodes'
+import ParseError from '../ParseError'
 
 function ast(source: string) {
   return parse(scan(source), { buildEnvironment: true })

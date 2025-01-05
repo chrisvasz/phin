@@ -1,14 +1,18 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import scan from '../scanner'
-import parse from '../parser'
-import { Kind } from './environment'
 import { PhpPrinter } from './print'
 import { Token } from '../token'
+import compile, { resolveUndeclaredIdentifiersToVariables } from '../compiler'
+
+function ast(source: string) {
+  return compile(source, {
+    resolveUndeclaredIdentifiers: resolveUndeclaredIdentifiersToVariables,
+  })
+}
 
 function print(source: string) {
-  let printer = new PhpPrinter(() => Kind.Variable)
-  return printer.print(parse(scan(source))).trim()
+  let printer = new PhpPrinter()
+  return printer.print(ast(source)).trim()
 }
 
 describe('print array literals', () => {
@@ -51,7 +55,6 @@ describe('print array literals', () => {
   test('[1=>2,"3"=>4+5,a()]', () => {
     let source = '[1=>2,"3"=>4+5,a()]'
     let expected = '[1 => 2, "3" => 4 + 5, $a()];'
-    printTokens(scan(source))
     expect(print(source)).toEqual(expected)
   })
 })

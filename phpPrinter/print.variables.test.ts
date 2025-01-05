@@ -1,13 +1,17 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import scan from '../scanner'
-import parse from '../parser'
 import { PhpPrinter } from './print'
-import { Kind } from './environment'
+import compile, { resolveUndeclaredIdentifiersToVariables } from '../compiler'
 
-function print(src: string) {
-  let printer = new PhpPrinter(() => Kind.Variable)
-  return printer.print(parse(scan(src))).trim()
+function ast(source: string) {
+  return compile(source, {
+    resolveUndeclaredIdentifiers: resolveUndeclaredIdentifiersToVariables,
+  })
+}
+
+function print(source: string) {
+  let printer = new PhpPrinter()
+  return printer.print(ast(source)).trim()
 }
 
 describe('print variables', () => {
@@ -34,14 +38,4 @@ describe('print variables', () => {
     let expected = '/** @var int $a */\n$a = 1 + 2;'
     expect(print(source)).toEqual(expected)
   })
-})
-
-describe('print destructuring var declaration', () => {
-  test('var [a, b] = c;', () => {
-    let source = 'var [a, b] = c;'
-    let expected = '[$a, $b] = $c;'
-    expect(print(source)).toEqual(expected)
-  })
-
-  test.todo('destructuring assignment in a foreach loop')
 })

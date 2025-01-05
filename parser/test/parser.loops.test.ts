@@ -2,7 +2,7 @@
 import { expect, test, describe } from 'bun:test'
 import scan from '../../scanner'
 import parse from '../parser'
-import * as nodes from '../nodes'
+import * as nodes from '../../nodes'
 import * as types from '../../types'
 import { b } from '../parser.builder'
 

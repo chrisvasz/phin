@@ -1,12 +1,6 @@
 <?php
-$name = "chris\"";
-echo $name . "\n";
-
-
-$a = [
-    "hello$name" => "chris",
-];
-
-print_r($a);
-
+$a = 5;
+function a() {}
+echo a();
 // so match is...
+

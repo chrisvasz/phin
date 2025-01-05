@@ -1,9 +1,9 @@
 import {
   ClassEnvironment,
-  Environment,
+  EnvironmentKind,
   HoistedEnvironment,
-} from './environment'
-import { Type } from '../types'
+} from './parser/environment'
+import { Type } from './types'
 
 export abstract class Node {
   abstract _type: string
@@ -683,11 +683,15 @@ export class Postfix extends Node {
 
 export class Identifier extends Node {
   _type = 'Identifier' as const
+  kind: EnvironmentKind | null = null
   constructor(public readonly name: string) {
     super()
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitIdentifier(this)
+  }
+  bind(kind: EnvironmentKind) {
+    this.kind = kind
   }
 }
 

@@ -1,4 +1,4 @@
-import * as n from './nodes'
+import * as n from '../nodes'
 
 /**
  * A visitor that visits all nodes in the AST and returns void.

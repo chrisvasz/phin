@@ -1,24 +1,18 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import scan from '../scanner'
-import parse from '../parser'
-import * as nodes from '../parser/nodes'
-import { Expr } from '../parser/nodes'
 import { PhpPrinter } from './print'
-import { Kind } from './environment'
+import compile, { resolveUndeclaredIdentifiersToVariables } from '../compiler'
 
-function print(source: string) {
-  let printer = new PhpPrinter(() => Kind.Variable)
-  return printer.print(parse(scan(source))).trim()
+function ast(source: string) {
+  return compile(source, {
+    resolveUndeclaredIdentifiers: resolveUndeclaredIdentifiersToVariables,
+  })
 }
 
-const e = (expression: Expr) => [new nodes.ExpressionStatement(expression)]
-const string = (value: string) => new nodes.StringLiteral(value)
-const identifier = (name: string) => new nodes.Identifier(name)
-const binary = (left: Expr, operator: string, right: Expr) =>
-  new nodes.Binary(left, operator, right)
-const template = (...parts: Array<nodes.StringLiteral | nodes.Expr>) =>
-  new nodes.TemplateStringLiteral(parts)
+function print(source: string) {
+  let printer = new PhpPrinter()
+  return printer.print(ast(source)).trim()
+}
 
 describe('print double-quoted strings', () => {
   test('""', () => {

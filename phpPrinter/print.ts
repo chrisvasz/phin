@@ -1,29 +1,19 @@
-// @ts-nocheck
-
-import { Environment, EnvironmentKind } from '../parser/environment'
-import { globalEnvironment } from '../parser/globalEnvironment'
-import * as nodes from '../parser/nodes'
+import { EnvironmentKind } from '../parser/environment'
+import * as nodes from '../nodes'
 import * as types from '../types'
 import { Type } from '../types'
 
 export class PrintError extends Error {}
 
-function defaultResolveUnknownIdentifier(name: string): EnvironmentKind {
-  throw new PrintError(`Unknown identifier ${name}`)
-}
-
 export class PhpPrinter
   implements nodes.Visitor<string>, types.Visitor<string>
 {
-  constructor(
-    private readonly resolveUnknownIdentifier: (
-      name: string,
-    ) => EnvironmentKind = defaultResolveUnknownIdentifier,
-    private readonly leadingWhitespace: string = '  ',
-  ) {}
-
   private currentIndent = 0
-  private environment: Environment = globalEnvironment
+  constructor(private readonly leadingWhitespace: string = '  ') {}
+
+  print(node: nodes.Program): string {
+    return node.accept(this)
+  }
 
   private indentBlock(fn: () => string[]): string {
     this.currentIndent++
@@ -34,13 +24,6 @@ export class PhpPrinter
 
   private indent(content: string): string {
     return this.leadingWhitespace.repeat(this.currentIndent) + content
-  }
-
-  private encloseWith<T>(environment: Environment, fn: () => T): T {
-    let current = this.environment
-    let result = fn()
-    this.environment = current
-    return result
   }
 
   /////////////////////////////
@@ -160,16 +143,13 @@ export class PhpPrinter
   }
 
   visitClassMethod(node: nodes.ClassMethod): string {
-    // TODO fill out encloseWith
-    return this.encloseWith([], () => {
-      // TODO visibility, final, abstract, static
-      let params = this.functionParams(node.params)
-      let type = this.typeAnnotation(node.returnType)
-      let body = this.functionBody(node.body)
-      let result = `function ${node.name}(${params})${type} ${body}`
-      let docblock = this.functionDocblock(node.params, node.returnType)
-      return `${docblock}${result}`
-    })
+    // TODO visibility, final, abstract, static
+    let params = this.functionParams(node.params)
+    let type = this.typeAnnotation(node.returnType)
+    let body = this.functionBody(node.body)
+    let result = `function ${node.name}(${params})${type} ${body}`
+    let docblock = this.functionDocblock(node.params, node.returnType)
+    return `${docblock}${result}`
   }
 
   classMethodBody(body: nodes.ClassMethod['body']) {
@@ -192,29 +172,26 @@ export class PhpPrinter
   }
 
   visitClassDeclaration(node: nodes.ClassDeclaration): string {
-    return this.encloseWith([...node.params, ...node.members], () => {
-      let declaration = [
-        node.isAbstract ? 'abstract' : '',
-        'class',
-        node.name,
-        this.classExtends(node),
-        this.classImplements(node),
-        '{',
-      ]
-        .filter(Boolean)
-        .join(' ')
-      let body = this.indentBlock(() => {
-        let constructor = this.classConstructor(node)
-        if (node.members.length === 0 && !constructor && !node.iterates)
-          return []
-        let members = node.members.map((m) => m.accept(this))
-        if (node.iterates) members.unshift(this.classGetIterator(node))
-        if (constructor) members.unshift(constructor)
-        return members
-      })
-      if (body === '') return declaration + '}'
-      return [declaration, body, this.indent('}')].join('\n')
+    let declaration = [
+      node.isAbstract ? 'abstract' : '',
+      'class',
+      node.name,
+      this.classExtends(node),
+      this.classImplements(node),
+      '{',
+    ]
+      .filter(Boolean)
+      .join(' ')
+    let body = this.indentBlock(() => {
+      let constructor = this.classConstructor(node)
+      if (node.members.length === 0 && !constructor && !node.iterates) return []
+      let members = node.members.map((m) => m.accept(this))
+      if (node.iterates) members.unshift(this.classGetIterator(node))
+      if (constructor) members.unshift(constructor)
+      return members
     })
+    if (body === '') return declaration + '}'
+    return [declaration, body, this.indent('}')].join('\n')
   }
 
   classExtends(node: nodes.ClassDeclaration): string {
@@ -259,14 +236,9 @@ export class PhpPrinter
       declaration +
       '\n' +
       this.indentBlock(() =>
-        this.encloseWith([], () => {
-          for (let param of params) {
-            this.environment.add(param.name, EnvironmentKind.Variable)
-          }
-          return propertiesWithInitializers.map(
-            (p) => `$this->${p.name} = ${p.initializer?.accept(this)};`,
-          )
-        }),
+        propertiesWithInitializers.map(
+          (p) => `$this->${p.name} = ${p.initializer?.accept(this)};`,
+        ),
       ) +
       '\n' +
       this.indent('}')
@@ -315,7 +287,6 @@ export class PhpPrinter
   }
 
   visitForeachVariable(node: nodes.ForeachVariable): string {
-    this.environment.add(node.name, EnvironmentKind.Variable)
     // TODO output var comment for type
     return `$${node.name}`
   }
@@ -333,15 +304,12 @@ export class PhpPrinter
   }
 
   visitFunctionDeclaration(node: nodes.FunctionDeclaration): string {
-    this.environment.add(node.name, EnvironmentKind.Function)
-    return this.encloseWith([], () => {
-      let params = this.functionParams(node.params)
-      let type = this.typeAnnotation(node.returnType)
-      let body = this.functionBody(node.body)
-      let result = `function ${node.name}(${params})${type} ${body}`
-      let docblock = this.functionDocblock(node.params, node.returnType)
-      return `${docblock}${result}`
-    })
+    let params = this.functionParams(node.params)
+    let type = this.typeAnnotation(node.returnType)
+    let body = this.functionBody(node.body)
+    let result = `function ${node.name}(${params})${type} ${body}`
+    let docblock = this.functionDocblock(node.params, node.returnType)
+    return `${docblock}${result}`
   }
 
   functionParams(params: nodes.Param[]): string {
@@ -349,9 +317,7 @@ export class PhpPrinter
   }
 
   functionParam(param: nodes.Param): string {
-    let result = param.accept(this)
-    this.environment.add(param.name, EnvironmentKind.Variable)
-    return result
+    return param.accept(this)
   }
 
   functionBody(body: nodes.FunctionDeclaration['body']) {
@@ -392,9 +358,7 @@ export class PhpPrinter
   }
 
   visitIdentifier(node: nodes.Identifier): string {
-    let kind =
-      this.environment.get(node.name) ??
-      this.resolveUnknownIdentifier(node.name)
+    let kind = node.kind!
     if (kind === EnvironmentKind.Variable) return `$${node.name}`
     if (kind === EnvironmentKind.ClassProperty) return `$this->${node.name}`
     if (kind === EnvironmentKind.ClassMethod) return `$this->${node.name}`
@@ -521,7 +485,6 @@ export class PhpPrinter
   visitVarDeclaration(node: nodes.VarDeclaration): string {
     let name = node.name
     let type = ''
-    this.environment.add(name, EnvironmentKind.Variable)
     type = this.typeAnnotationViaComment(node.type, name)
     name = `$${name}`
     let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''

@@ -1,13 +1,17 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import scan from '../scanner'
-import parse from '../parser'
 import { PhpPrinter } from './print'
-import { Kind } from './environment'
+import compile, { resolveUndeclaredIdentifiersToVariables } from '../compiler'
 
-function print(src: string) {
-  let result = new PhpPrinter(() => Kind.Variable).print(parse(scan(src)))
-  return result.trim()
+function ast(source: string) {
+  return compile(source, {
+    resolveUndeclaredIdentifiers: resolveUndeclaredIdentifiersToVariables,
+  })
+}
+
+function print(source: string) {
+  let printer = new PhpPrinter()
+  return printer.print(ast(source)).trim()
 }
 
 describe('print new', () => {

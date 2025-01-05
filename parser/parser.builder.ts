@@ -1,5 +1,5 @@
 // @ts-ignore
-import * as nodes from './nodes'
+import * as nodes from '../nodes'
 import * as types from '../types'
 import { ClassEnvironment, HoistedEnvironment } from './environment'
 

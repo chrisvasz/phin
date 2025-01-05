@@ -7,13 +7,11 @@ export enum EnvironmentKind {
   ClassConst,
 }
 
-export interface Environment_<T extends EnvironmentKind = EnvironmentKind> {
+export interface Environment<T extends EnvironmentKind = EnvironmentKind> {
   has(name: string): boolean
   get(name: string): EnvironmentKind | null
   add(value: string, kind: T): void
 }
-
-// TODO environment types: builtin, hoisted, class, local
 
 type HoistedEnvironmentKind = EnvironmentKind.Function | EnvironmentKind.Class
 type ClassEnvironmentKind =
@@ -21,13 +19,10 @@ type ClassEnvironmentKind =
   | EnvironmentKind.ClassMethod
   | EnvironmentKind.ClassConst
 
-export class HoistedEnvironment
-  implements Environment_<HoistedEnvironmentKind>
-{
+export class HoistedEnvironment implements Environment<HoistedEnvironmentKind> {
   private readonly values = new Map<string, HoistedEnvironmentKind>()
-
   constructor(
-    private readonly enclosing: Environment_ | null,
+    private readonly enclosing: Environment | null,
     initial?: { [key: string]: HoistedEnvironmentKind },
   ) {
     if (initial) {
@@ -36,25 +31,21 @@ export class HoistedEnvironment
       }
     }
   }
-
   has(name: string): boolean {
     return this.get(name) !== null
   }
-
   get(name: string): EnvironmentKind | null {
     return this.values.get(name) ?? this.enclosing?.get(name) ?? null
   }
-
   add(value: string, kind: HoistedEnvironmentKind) {
     this.values.set(value, kind)
   }
 }
 
-export class ClassEnvironment implements Environment_<ClassEnvironmentKind> {
+export class ClassEnvironment implements Environment<ClassEnvironmentKind> {
   private readonly values = new Map<string, ClassEnvironmentKind>()
-
   constructor(
-    private readonly enclosing: Environment_ | null,
+    private readonly enclosing: Environment | null,
     initial?: { [key: string]: ClassEnvironmentKind },
   ) {
     if (initial) {
@@ -63,27 +54,22 @@ export class ClassEnvironment implements Environment_<ClassEnvironmentKind> {
       }
     }
   }
-
   has(name: string): boolean {
     return this.get(name) !== null
   }
-
   get(name: string): EnvironmentKind | null {
     return this.values.get(name) ?? this.enclosing?.get(name) ?? null
   }
-
   add(value: string, kind: ClassEnvironmentKind) {
     this.values.set(value, kind)
   }
 }
 
-// TODO performance
-export class Environment {
-  private readonly values = new Map<string, EnvironmentKind>()
-
+export class LocalEnvironment implements Environment<EnvironmentKind.Variable> {
+  private readonly values = new Map<string, EnvironmentKind.Variable>()
   constructor(
-    public readonly enclosing: Environment | null,
-    initial?: { [key: string]: EnvironmentKind },
+    private readonly enclosing: Environment | null,
+    initial?: { [key: string]: EnvironmentKind.Variable },
   ) {
     if (initial) {
       for (let key of Object.keys(initial)) {
@@ -91,23 +77,13 @@ export class Environment {
       }
     }
   }
-
-  // In PHP, functions do not inherit variables from the parent scope
-  private getNonVariable(name: string): EnvironmentKind | null {
-    let local = this.values.get(name)
-    if (local && local !== EnvironmentKind.Variable) return local
-    return this.enclosing?.getNonVariable(name) ?? null
-  }
-
   has(name: string): boolean {
     return this.get(name) !== null
   }
-
   get(name: string): EnvironmentKind | null {
-    return this.values.get(name) ?? this.enclosing?.getNonVariable(name) ?? null
+    return this.values.get(name) ?? this.enclosing?.get(name) ?? null
   }
-
-  add(value: string, kind: EnvironmentKind) {
+  add(value: string, kind: EnvironmentKind.Variable) {
     this.values.set(value, kind)
   }
 }

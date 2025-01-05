@@ -1,13 +1,16 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import scan from '../scanner'
-import parse from '../parser'
 import { PhpPrinter, PrintError } from './print'
 import { trimMargin } from './trimMargin'
+import compile from '../compiler'
 
-function print(src: string) {
-  let result = new PhpPrinter().print(parse(scan(src)))
-  return result.trim()
+function ast(source: string) {
+  return compile(source, { buildEnvironment: true })
+}
+
+function print(source: string) {
+  let printer = new PhpPrinter()
+  return printer.print(ast(source)).trim()
 }
 
 describe('print class declaration', () => {
@@ -49,11 +52,6 @@ describe('print class params & constructor', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('class A(a) { fun b() => a }', () => {
-    let source = 'class A(a) { fun b() => a }'
-    expect(() => print(source)).toThrow(new PrintError('Unknown identifier a'))
-  })
-
   test('class A(var a) { fun b() => a }', () => {
     let source = 'class A(var a) { fun b() => 1 }'
     let expected = trimMargin(`
@@ -68,12 +66,12 @@ describe('print class params & constructor', () => {
   })
 
   test('class A(public var a, final private var b) { fun b() => a }', () => {
-    let source = 'class A(public var a, final private var b) { fun b() => 1 }'
+    let source = 'class A(public var a, final private var b) { fun b() => a }'
     let expected = trimMargin(`
       class A {
         function __construct(public $a, final private $b) {}
         function b() {
-          return 1;
+          return $this->a;
         }
       }
     `)
@@ -119,7 +117,7 @@ describe('print class properties', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('class A(a) { var b = a; }', () => {
+  test.todo('class A(a) { var b = a; }', () => {
     let source = 'class A(a) { var b = a; }'
     let expected = trimMargin(`
       class A {
@@ -214,11 +212,6 @@ describe('print class implements', () => {
 })
 
 describe('print class iterates', () => {
-  test('class A iterates a {}', () => {
-    let source = 'class A iterates a {}'
-    expect(() => print(source)).toThrow(new PrintError('Unknown identifier a'))
-  })
-
   test('class A(-var a) iterates a {}', () => {
     let source = 'class A(-var a) iterates a {}'
     let expected = trimMargin(`

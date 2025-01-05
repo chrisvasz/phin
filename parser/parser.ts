@@ -1,6 +1,6 @@
 import { Token, TokenType } from '../token'
-import { Node, Expr, Stmt } from './nodes'
-import * as nodes from './nodes'
+import { Node, Expr, Stmt } from '../nodes'
+import * as nodes from '../nodes'
 import * as types from '../types'
 import { Type } from '../types'
 import {
@@ -9,6 +9,7 @@ import {
   EnvironmentKind,
   HoistedEnvironment,
 } from './environment'
+import BindIdentifiersVisitor from '../compiler/BindIdentifiersVisitor'
 
 const emptyArray: [] = []
 
@@ -126,16 +127,15 @@ export default function parse(
     buildEnvironment?: boolean
   } = {},
 ): nodes.Program {
-  let current = 0
+  let tokensIndex = 0
   let hoistedEnvironment = new HoistedEnvironment(enclosingEnvironment)
-  return parse()
+  return program()
 
-  function parse(): nodes.Program {
+  function program(): nodes.Program {
     const statements: Stmt[] = []
     semicolons()
     while (!isAtEnd()) {
-      const next = declaration()
-      if (next) statements.push(next)
+      statements.push(declaration())
       semicolons()
     }
     return new nodes.Program(
@@ -144,7 +144,7 @@ export default function parse(
     )
   }
 
-  function declaration(): Stmt | null {
+  function declaration(): Stmt {
     if (match(TRY)) return tryDeclaration() // TODO move into statement()
     if (match(THROW)) return throwDeclaration() // TODO move into statement()
     if (match(FUN)) return functionDeclaration()
@@ -157,7 +157,7 @@ export default function parse(
     return statement()
   }
 
-  function tryDeclaration(): nodes.Try | null {
+  function tryDeclaration(): nodes.Try {
     consume('Expect "{" before try body', LEFT_BRACE)
     return new nodes.Try(block(), tryCatches(), tryFinally())
   }
@@ -1082,7 +1082,7 @@ export default function parse(
 
   function advance(): Token {
     let result = peek()
-    if (!isAtEnd()) current++
+    if (!isAtEnd()) tokensIndex++
     return result
   }
 
@@ -1091,15 +1091,15 @@ export default function parse(
   }
 
   function peek(): Token {
-    return tokens[current]
+    return tokens[tokensIndex]
   }
 
   function peekNext(): Token {
     if (isAtEnd()) return peek()
-    return tokens[current + 1]
+    return tokens[tokensIndex + 1]
   }
 
   function previous(): Token {
-    return tokens[current - 1]
+    return tokens[tokensIndex - 1]
   }
 }
