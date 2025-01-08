@@ -1,12 +1,10 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
 import { PhpPrinter } from './print'
-import compile, { resolveUndeclaredIdentifiersToVariables } from '../compiler'
+import compile from '../compiler'
 
 function ast(source: string) {
-  return compile(source, {
-    resolveUndeclaredIdentifiers: resolveUndeclaredIdentifiersToVariables,
-  })
+  return compile(source)
 }
 
 function print(source: string) {
@@ -15,9 +13,9 @@ function print(source: string) {
 }
 
 describe('print foreach', () => {
-  test('foreach (a as b) {}', () => {
-    let source = 'foreach (a as b) {}'
-    let expected = 'foreach ($a as $b) {}'
+  test('var a; foreach (a as b) { b; }', () => {
+    let source = 'var a; foreach (a as b) { b; }'
+    let expected = '$a;\nforeach ($a as $b) {\n  $b;\n}'
     expect(print(source)).toEqual(expected)
   })
 })

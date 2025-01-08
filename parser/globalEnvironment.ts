@@ -1,6 +1,6 @@
 import { EnvironmentKind, HoistedEnvironment } from './environment'
 
-export const builtinEnvironment = new HoistedEnvironment(null)
+export const builtinEnvironment = new HoistedEnvironment()
 builtinEnvironment.add('array_push', EnvironmentKind.Function)
 builtinEnvironment.add('array', EnvironmentKind.Function)
 builtinEnvironment.add('ArrayIterator', EnvironmentKind.Class)

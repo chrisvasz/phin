@@ -33,7 +33,7 @@ export const b = (function () {
   }
 
   function program(...statements: nodes.Stmt[]) {
-    return new nodes.Program(statements, new HoistedEnvironment(null))
+    return new nodes.Program(statements, new HoistedEnvironment())
   }
 
   function block(...statements: nodes.Stmt[]) {
@@ -120,7 +120,7 @@ export const b = (function () {
       iterates = null,
       members = [],
       isAbstract = false,
-      env = new ClassEnvironment(null),
+      env = new ClassEnvironment(),
     }: {
       params?: Array<nodes.Param | nodes.ClassProperty>
       constructorVisibility?: nodes.Visibility

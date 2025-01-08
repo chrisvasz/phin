@@ -697,6 +697,7 @@ export class Identifier extends Node {
 
 export class FunctionExpression extends Node {
   _type = 'FunctionExpression' as const
+  public readonly closureVariables: Array<string> = []
   constructor(
     public readonly params: Array<Param>,
     public readonly returnType: Type | null,
@@ -706,6 +707,9 @@ export class FunctionExpression extends Node {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitFunctionExpression(this)
+  }
+  addClosureVariable(id: string) {
+    this.closureVariables.push(id)
   }
 }
 

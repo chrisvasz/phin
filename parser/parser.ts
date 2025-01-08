@@ -128,7 +128,7 @@ export default function parse(
   } = {},
 ): nodes.Program {
   let tokensIndex = 0
-  let hoistedEnvironment = new HoistedEnvironment(enclosingEnvironment)
+  let hoistedEnvironment = new HoistedEnvironment()
   return program()
 
   function program(): nodes.Program {
@@ -140,7 +140,7 @@ export default function parse(
     }
     return new nodes.Program(
       statements,
-      buildEnvironment ? hoistedEnvironment : new HoistedEnvironment(null),
+      buildEnvironment ? hoistedEnvironment : new HoistedEnvironment(),
     )
   }
 
@@ -198,7 +198,7 @@ export default function parse(
   function classDeclaration(
     isAbstract: boolean = false,
   ): nodes.ClassDeclaration {
-    let env = new ClassEnvironment(hoistedEnvironment)
+    let env = new ClassEnvironment()
     let name = consume('Expect class name', IDENTIFIER).lexeme
     hoistedEnvironment.add(name, EnvironmentKind.Class)
     let constructorVisibility = classVisibility()
@@ -218,7 +218,7 @@ export default function parse(
       iterates,
       members,
       isAbstract,
-      buildEnvironment ? env : new ClassEnvironment(null),
+      buildEnvironment ? env : new ClassEnvironment(),
     )
   }
 

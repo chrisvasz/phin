@@ -3,15 +3,9 @@ import { expect, test, describe } from 'bun:test'
 import { PhpPrinter } from './print'
 import compile, { resolveUndeclaredIdentifiersToVariables } from '../compiler'
 
-function ast(source: string) {
-  return compile(source, {
-    resolveUndeclaredIdentifiers: resolveUndeclaredIdentifiersToVariables,
-  })
-}
-
 function print(source: string) {
   let printer = new PhpPrinter()
-  return printer.print(ast(source)).trim()
+  return printer.print(compile(source)).trim()
 }
 
 describe('print scoping: vars and functions', () => {

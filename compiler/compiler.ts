@@ -2,7 +2,7 @@ import parse from '../parser'
 import { Program } from '../nodes'
 import scan from '../scanner'
 import BindIdentifiersVisitor, {
-  defaultResolveUndeclaredIdentifiers,
+  defaultResolveUndeclaredIdentifier,
 } from './BindIdentifiersVisitor'
 import { EnvironmentKind } from '../parser/environment'
 
@@ -17,14 +17,14 @@ export function resolveUndeclaredIdentifiersToFunctions() {
 export default function compile(
   source: string,
   {
-    resolveUndeclaredIdentifiers = defaultResolveUndeclaredIdentifiers,
+    resolveUndeclaredIdentifiers = defaultResolveUndeclaredIdentifier,
     buildEnvironment = true,
   }: {
-    resolveUndeclaredIdentifiers?: typeof defaultResolveUndeclaredIdentifiers
+    resolveUndeclaredIdentifiers?: typeof defaultResolveUndeclaredIdentifier
     buildEnvironment?: boolean
   } = {},
 ): Program {
   let ast = parse(scan(source), { buildEnvironment })
-  new BindIdentifiersVisitor(resolveUndeclaredIdentifiers).visitProgram(ast)
+  new BindIdentifiersVisitor(resolveUndeclaredIdentifiers).visit(ast)
   return ast
 }

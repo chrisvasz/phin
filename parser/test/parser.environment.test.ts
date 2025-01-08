@@ -21,7 +21,7 @@ const { Variable, Function, Class, ClassConst, ClassMethod, ClassProperty } =
 describe('environment: hoisting', () => {
   test('fun a() { fun b() {} }', () => {
     let source = 'fun a() { fun b() {} }'
-    let globals = new HoistedEnvironment(null)
+    let globals = new HoistedEnvironment()
     globals.add('a', Function)
     globals.add('b', Function)
     let expected = new nodes.Program(
@@ -33,14 +33,14 @@ describe('environment: hoisting', () => {
 
   test('class A {} class B {}', () => {
     let source = 'class A {} class B {} fun c() {}'
-    let globals = new HoistedEnvironment(null)
+    let globals = new HoistedEnvironment()
     globals.add('A', Class)
     globals.add('B', Class)
     globals.add('c', Function)
     let expected = new nodes.Program(
       [
-        b.class('A', { env: new ClassEnvironment(globals) }),
-        b.class('B', { env: new ClassEnvironment(globals) }),
+        b.class('A', { env: new ClassEnvironment() }),
+        b.class('B', { env: new ClassEnvironment() }),
         b.fun('c'),
       ],
       globals,
@@ -52,9 +52,9 @@ describe('environment: hoisting', () => {
 describe('environment: classes', () => {
   test('class A {}', () => {
     let source = 'class A {}'
-    let globals = new HoistedEnvironment(null, { A: Class })
+    let globals = new HoistedEnvironment({ A: Class })
     let expected = new nodes.Program(
-      [b.class('A', { env: new ClassEnvironment(globals) })],
+      [b.class('A', { env: new ClassEnvironment() })],
       globals,
     )
     expect(ast(source)).toEqual(expected)
@@ -62,11 +62,11 @@ describe('environment: classes', () => {
 
   test('class A { var b; }', () => {
     let source = 'class A { var b; }'
-    let globals = new HoistedEnvironment(null, { A: Class })
+    let globals = new HoistedEnvironment({ A: Class })
     let expected = new nodes.Program(
       [
         b.class('A', {
-          env: new ClassEnvironment(globals, { b: ClassProperty }),
+          env: new ClassEnvironment({ b: ClassProperty }),
           members: [b.classProperty('b')],
         }),
       ],
@@ -77,11 +77,11 @@ describe('environment: classes', () => {
 
   test('class A(var b) {}', () => {
     let source = 'class A(var b) {}'
-    let globals = new HoistedEnvironment(null, { A: Class })
+    let globals = new HoistedEnvironment({ A: Class })
     let expected = new nodes.Program(
       [
         b.class('A', {
-          env: new ClassEnvironment(globals, { b: ClassProperty }),
+          env: new ClassEnvironment({ b: ClassProperty }),
           params: [b.classProperty('b')],
         }),
       ],
@@ -92,11 +92,11 @@ describe('environment: classes', () => {
 
   test('class A { fun b() {} }', () => {
     let source = 'class A { fun b() {} }'
-    let globals = new HoistedEnvironment(null, { A: Class })
+    let globals = new HoistedEnvironment({ A: Class })
     let expected = new nodes.Program(
       [
         b.class('A', {
-          env: new ClassEnvironment(globals, { b: ClassMethod }),
+          env: new ClassEnvironment({ b: ClassMethod }),
           members: [b.classMethod('b')],
         }),
       ],
@@ -107,11 +107,11 @@ describe('environment: classes', () => {
 
   test('class A { const b = 3 }', () => {
     let source = 'class A { const b = 3 }'
-    let globals = new HoistedEnvironment(null, { A: Class })
+    let globals = new HoistedEnvironment({ A: Class })
     let expected = new nodes.Program(
       [
         b.class('A', {
-          env: new ClassEnvironment(globals, { b: ClassConst }),
+          env: new ClassEnvironment({ b: ClassConst }),
           members: [b.classConst('b', b.numberLiteral(3))],
         }),
       ],

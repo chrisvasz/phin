@@ -298,8 +298,9 @@ export class PhpPrinter
   visitFunctionExpression(node: nodes.FunctionExpression): string {
     let params = node.params.map((p) => p.accept(this)).join(', ')
     let type = this.typeAnnotation(node.returnType)
+    let use = this.functionUse(node.closureVariables)
     let body = this.functionBody(node.body)
-    let result = `function (${params})${type} ${body}`
+    let result = `function (${params})${type}${use} ${body}`
     return `${result}`
   }
 
@@ -328,6 +329,11 @@ export class PhpPrinter
       this.indentBlock(() => [`return ${result};`]),
       this.indent('}'),
     ].join('\n')
+  }
+
+  functionUse(closureVariables: nodes.FunctionExpression['closureVariables']) {
+    if (!closureVariables.length) return ''
+    return ` use (${closureVariables.map((v) => '$' + v).join(', ')})`
   }
 
   functionDocblock(params: nodes.Param[], returnType: Type | null): string {
@@ -360,6 +366,7 @@ export class PhpPrinter
   visitIdentifier(node: nodes.Identifier): string {
     let kind = node.kind!
     if (kind === EnvironmentKind.Variable) return `$${node.name}`
+    if (kind === EnvironmentKind.ClosureVariable) return `$${node.name}`
     if (kind === EnvironmentKind.ClassProperty) return `$this->${node.name}`
     if (kind === EnvironmentKind.ClassMethod) return `$this->${node.name}`
     if (kind === EnvironmentKind.ClassConst) return `self::${node.name}`

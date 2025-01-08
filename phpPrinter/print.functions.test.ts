@@ -2,6 +2,7 @@
 import { expect, test, describe } from 'bun:test'
 import { PhpPrinter } from './print'
 import compile, { resolveUndeclaredIdentifiersToFunctions } from '../compiler'
+import { trimMargin } from './trimMargin'
 
 function ast(source: string) {
   return compile(source, {
@@ -110,6 +111,29 @@ $a = function ($a) {
   })
 
   test.todo('var a = fun(a: array<int>) {}')
+})
+
+describe('print function expressions with bodies', () => {
+  test('var a = fun() { return 1; }', () => {
+    let source = 'var a = fun() { return 1; }'
+    let expected = trimMargin(`
+      $a = function () {
+        return 1;
+      };
+    `)
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('var a; var b = fun() { return a; }', () => {
+    let source = 'var a; var b = fun() { return a; }'
+    let expected = trimMargin(`
+      $a;
+      $b = function () use ($a) {
+        return $a;
+      };
+    `)
+    expect(print(source)).toEqual(expected)
+  })
 })
 
 describe('print function calls', () => {

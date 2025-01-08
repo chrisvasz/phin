@@ -1,7 +1,6 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
 import * as nodes from '../nodes'
-import { b } from '../parser/parser.builder'
 import BindIdentifiersVisitor from './BindIdentifiersVisitor'
 import ParseError from '../parser/ParseError'
 import parse from '../parser/parser'
@@ -37,7 +36,7 @@ describe('hoisting', () => {
     let source = 'b;'
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
-    expect(() => visitor.visitProgram(program)).toThrow(
+    expect(() => visitor.visit(program)).toThrow(
       new ParseError('Undeclared identifier: b'),
     )
   })
@@ -46,7 +45,7 @@ describe('hoisting', () => {
     let source = 'a; fun a() {}'
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
-    expect(() => visitor.visitProgram(program)).not.toThrow()
+    expect(() => visitor.visit(program)).not.toThrow()
     checkIdentifierType(program, 'a', EnvironmentKind.Function)
   })
 
@@ -54,7 +53,7 @@ describe('hoisting', () => {
     let source = 'A; class A {}'
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
-    expect(() => visitor.visitProgram(program)).not.toThrow()
+    expect(() => visitor.visit(program)).not.toThrow()
     checkIdentifierType(program, 'A', EnvironmentKind.Class)
   })
 })
@@ -64,7 +63,7 @@ describe('var at global scope', () => {
     let source = 'a; var a;'
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
-    expect(() => visitor.visitProgram(program)).toThrow(
+    expect(() => visitor.visit(program)).toThrow(
       new ParseError('Undeclared identifier: a'),
     )
   })
@@ -73,7 +72,7 @@ describe('var at global scope', () => {
     let source = 'var a; a;'
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
-    expect(() => visitor.visitProgram(program)).not.toThrow()
+    expect(() => visitor.visit(program)).not.toThrow()
     checkIdentifierType(program, 'a', EnvironmentKind.Variable)
   })
 })
@@ -83,7 +82,7 @@ describe('var in function scope', () => {
     let source = 'fun a() { a; }'
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
-    expect(() => visitor.visitProgram(program)).not.toThrow()
+    expect(() => visitor.visit(program)).not.toThrow()
     checkIdentifierType(program, 'a', EnvironmentKind.Function)
   })
 
@@ -91,7 +90,7 @@ describe('var in function scope', () => {
     let source = 'fun a() { b; var b; }'
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
-    expect(() => visitor.visitProgram(program)).toThrow(
+    expect(() => visitor.visit(program)).toThrow(
       new ParseError('Undeclared identifier: b'),
     )
   })
@@ -100,7 +99,7 @@ describe('var in function scope', () => {
     let source = 'fun a() { var b; b; }'
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
-    expect(() => visitor.visitProgram(program)).not.toThrow()
+    expect(() => visitor.visit(program)).not.toThrow()
     checkIdentifierType(program, 'b', EnvironmentKind.Variable)
   })
 
@@ -108,7 +107,7 @@ describe('var in function scope', () => {
     let source = 'fun a() { { var b; } b; }'
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
-    expect(() => visitor.visitProgram(program)).not.toThrow()
+    expect(() => visitor.visit(program)).not.toThrow()
     checkIdentifierType(program, 'b', EnvironmentKind.Variable)
   })
 
@@ -116,7 +115,7 @@ describe('var in function scope', () => {
     let source = 'fun a() { { var b; } } b;'
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
-    expect(() => visitor.visitProgram(program)).toThrow(
+    expect(() => visitor.visit(program)).toThrow(
       new ParseError('Undeclared identifier: b'),
     )
   })
@@ -125,7 +124,7 @@ describe('var in function scope', () => {
     let source = 'fun a(b) { b; }'
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
-    expect(() => visitor.visitProgram(program)).not.toThrow()
+    expect(() => visitor.visit(program)).not.toThrow()
     checkIdentifierType(program, 'b', EnvironmentKind.Variable)
   })
 })
@@ -135,7 +134,7 @@ describe('classes', () => {
     let source = 'class A(a) { fun b() => a }'
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
-    expect(() => visitor.visitProgram(program)).toThrow(
+    expect(() => visitor.visit(program)).toThrow(
       new ParseError('Undeclared identifier: a'),
     )
   })
@@ -144,7 +143,7 @@ describe('classes', () => {
     let source = 'class A(var a) { fun b() => a }'
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
-    expect(() => visitor.visitProgram(program)).not.toThrow()
+    expect(() => visitor.visit(program)).not.toThrow()
     checkIdentifierType(program, 'a', EnvironmentKind.ClassProperty)
   })
 
@@ -152,7 +151,7 @@ describe('classes', () => {
     let source = 'class A { const B = 1; fun a() => B }'
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
-    expect(() => visitor.visitProgram(program)).not.toThrow()
+    expect(() => visitor.visit(program)).not.toThrow()
     checkIdentifierType(program, 'B', EnvironmentKind.ClassConst)
   })
 })

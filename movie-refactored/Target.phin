@@ -1,3 +1,5 @@
+// TODO come up with an example case for function expression with a body needing a use clause
+
 abstract class Price {
   fun points(daysRented: int): int => 1
   abstract fun amount(daysRented: int): float
