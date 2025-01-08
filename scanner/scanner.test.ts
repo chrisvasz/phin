@@ -439,55 +439,54 @@ describe('scan tokens', () => {
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
+})
 
-  test('keywords', () => {
-    const list = {
-      abstract: ABSTRACT,
-      as: AS,
-      catch: CATCH,
-      class: CLASS,
-      clone: CLONE,
-      const: CONST,
-      default: DEFAULT,
-      echo: ECHO,
-      else: ELSE,
-      extends: EXTENDS,
-      false: FALSE,
-      final: FINAL,
-      finally: FINALLY,
-      fun: FUN,
-      foreach: FOREACH,
-      for: FOR,
-      if: IF,
-      instanceof: INSTANCEOF,
-      implements: IMPLEMENTS,
-      match: MATCH,
-      new: NEW,
-      null: NULL,
-      readonly: READONLY,
-      return: RETURN,
-      private: PRIVATE,
-      protected: PROTECTED,
-      public: PUBLIC,
-      static: STATIC,
-      super: SUPER,
-      this: THIS,
-      throw: THROW,
-      true: TRUE,
-      try: TRY,
-      val: VAL,
-      var: VAR,
-      while: WHILE,
-    }
-    const source = Object.keys(list)
-    const tokens = Object.values(list).map(
-      (type, i) => new Token(type, source[i], undefined, 1),
-    )
-    tokens.push(eof())
-    let expected = tokens
-    let actual = scan(source.join(' '))
-    expect(actual).toEqual(expected)
-  })
+describe('keywords', () => {
+  const list = {
+    abstract: ABSTRACT,
+    as: AS,
+    catch: CATCH,
+    class: CLASS,
+    clone: CLONE,
+    const: CONST,
+    default: DEFAULT,
+    echo: ECHO,
+    else: ELSE,
+    extends: EXTENDS,
+    false: FALSE,
+    final: FINAL,
+    finally: FINALLY,
+    fun: FUN,
+    foreach: FOREACH,
+    for: FOR,
+    if: IF,
+    instanceof: INSTANCEOF,
+    implements: IMPLEMENTS,
+    match: MATCH,
+    new: NEW,
+    null: NULL,
+    readonly: READONLY,
+    return: RETURN,
+    private: PRIVATE,
+    protected: PROTECTED,
+    public: PUBLIC,
+    static: STATIC,
+    super: SUPER,
+    this: THIS,
+    throw: THROW,
+    true: TRUE,
+    try: TRY,
+    val: VAL,
+    var: VAR,
+    while: WHILE,
+  }
+  for (let [word, type] of Object.entries(list)) {
+    test(word, () => {
+      let expected = [new Token(type, word, undefined, 1), eof()]
+      let actual = scan(word)
+      expect(actual).toEqual(expected)
+    })
+  }
 })
 
 describe('scan number literals', () => {

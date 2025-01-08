@@ -94,44 +94,44 @@ const {
   WHILE,
 } = TokenType
 
-const keywords = new Map<string, TokenType>([
-  ['abstract', ABSTRACT],
-  ['as', AS],
-  ['catch', CATCH],
-  ['class', CLASS],
-  ['clone', CLONE],
-  ['const', CONST],
-  ['default', DEFAULT],
-  ['echo', ECHO],
-  ['else', ELSE],
-  ['extends', EXTENDS],
-  ['false', FALSE],
-  ['final', FINAL],
-  ['finally', FINALLY],
-  ['for', FOR],
-  ['foreach', FOREACH],
-  ['fun', FUN],
-  ['if', IF],
-  ['instanceof', INSTANCEOF],
-  ['implements', IMPLEMENTS],
-  ['match', MATCH],
-  ['new', NEW],
-  ['null', NULL],
-  ['private', PRIVATE],
-  ['protected', PROTECTED],
-  ['public', PUBLIC],
-  ['readonly', READONLY],
-  ['return', RETURN],
-  ['static', STATIC],
-  ['super', SUPER],
-  ['this', THIS],
-  ['throw', THROW],
-  ['true', TRUE],
-  ['try', TRY],
-  ['val', VAL],
-  ['var', VAR],
-  ['while', WHILE],
-])
+const keywords: { [key: string]: TokenType } = {
+  abstract: ABSTRACT,
+  as: AS,
+  catch: CATCH,
+  class: CLASS,
+  clone: CLONE,
+  const: CONST,
+  default: DEFAULT,
+  echo: ECHO,
+  else: ELSE,
+  extends: EXTENDS,
+  false: FALSE,
+  final: FINAL,
+  finally: FINALLY,
+  for: FOR,
+  foreach: FOREACH,
+  fun: FUN,
+  if: IF,
+  instanceof: INSTANCEOF,
+  implements: IMPLEMENTS,
+  match: MATCH,
+  new: NEW,
+  null: NULL,
+  private: PRIVATE,
+  protected: PROTECTED,
+  public: PUBLIC,
+  readonly: READONLY,
+  return: RETURN,
+  static: STATIC,
+  super: SUPER,
+  this: THIS,
+  throw: THROW,
+  true: TRUE,
+  try: TRY,
+  val: VAL,
+  var: VAR,
+  while: WHILE,
+}
 
 export default function scan(source: string): Token[] {
   const tokens: Token[] = []
@@ -415,7 +415,7 @@ export default function scan(source: string): Token[] {
   function identifier() {
     while (isAlphaNumeric(peek())) advance()
     const text = source.substring(start, current)
-    const type = keywords.get(text) || IDENTIFIER
+    const type = keywords[text] ?? IDENTIFIER
     addToken(type)
   }
 
