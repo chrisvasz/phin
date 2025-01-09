@@ -43,7 +43,7 @@ const c = identifier('c')
 const d = identifier('d')
 const e = identifier('e')
 
-describe('binary', () => {
+describe('parse binary', () => {
   const binaryOperators = [
     testRightAssociative('**'),
     testLeftAssociative('instanceof'), // TODO !instanceof
@@ -121,7 +121,7 @@ describe('binary', () => {
   }
 })
 
-describe('unary', () => {
+describe('parse unary', () => {
   // all prefix versions
   const unaryOperators = ['+', '-', '++', '--', '!']
   for (let op of unaryOperators) {
@@ -155,7 +155,7 @@ describe('unary', () => {
   }
 })
 
-describe('postfix', () => {
+describe('parse postfix', () => {
   test('a++', () => {
     let source = 'a++'
     let expected = expressions(new nodes.Postfix(a, '++'))
@@ -179,7 +179,7 @@ describe('postfix', () => {
   test.todo('precedence')
 })
 
-describe('ternary', () => {
+describe('parse ternary', () => {
   test('a ? b : c', () => {
     let source = 'a ? b : c'
     let expected = expressions(ternary(a, b, c))
@@ -211,7 +211,7 @@ describe('ternary', () => {
   })
 })
 
-describe('assign', () => {
+describe('parse assign', () => {
   const operators = [
     '=',
     '+=',
@@ -294,7 +294,7 @@ describe('assign', () => {
   }
 })
 
-describe('::', () => {
+describe('parse ::', () => {
   test('Movie::REGULAR', () => {
     let source = 'Movie::REGULAR'
     let expected = expressions(
@@ -306,7 +306,7 @@ describe('::', () => {
   test.todo('associativity')
 })
 
-describe('new/clone', () => {
+describe('parse new/clone', () => {
   test('new a', () => {
     let source = 'new a'
     let expected = expressions(new_(a))
@@ -322,22 +322,61 @@ describe('new/clone', () => {
   test.todo('precedence')
 })
 
-describe('terminators', () => {
-  test('a;b', () => {
-    let source = 'a;b'
-    let expected = expressions(a, b)
-    expect(ast(source)).toEqual(expected)
-  })
-})
-
-test('grouping', () => {
+test('parse grouping', () => {
   let source = '(a)'
   let expected = expressions(new nodes.Grouping(a))
   expect(ast(source)).toEqual(expected)
 })
 
-// TODO pull these from parser.classes.test.ts
+describe('parse dot operator', () => {
+  test('a.b', () => {
+    let source = 'a.b'
+    let expected = expressions(get(a, 'b'))
+    expect(ast(source)).toEqual(expected)
+  })
+})
+
+describe('parse ?. operator', () => {
+  test('a?.b', () => {
+    let source = 'a?.b'
+    let expected = expressions(new nodes.OptionalGet(a, 'b'))
+    expect(ast(source)).toEqual(expected)
+  })
+})
+
+describe('parse | operator', () => {
+  test('a|b', () => {
+    let source = 'a|b'
+    let expected = expressions(builder.pipeline(a, b))
+    expect(ast(source)).toEqual(expected)
+  })
+
+  test('a | b()', () => {
+    let source = 'a | b()'
+    let expected = expressions(builder.pipeline(a, builder.call(b)))
+    expect(ast(source)).toEqual(expected)
+  })
+
+  test('a | b(fun() => 1)', () => {
+    let source = 'a | b(fun() => 1)'
+    let expected = expressions(
+      builder.pipeline(
+        a,
+        builder.call(
+          b,
+          builder.fun(null, { body: builder.numberLiteral('1') }),
+        ),
+      ),
+    )
+    expect(ast(source)).toEqual(expected)
+  })
+
+  test('precedence: lower than .', () => {
+    let source = 'a.b | c.d'
+    let expected = expressions(builder.pipeline(get(a, 'b'), get(c, 'd')))
+    expect(ast(source)).toEqual(expected)
+  })
+})
+
 test.todo('call operator')
-test.todo('dot operator')
-test.todo('?. operator')
 test.todo('array access operator')

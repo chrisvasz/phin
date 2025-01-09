@@ -166,6 +166,11 @@ export default class VoidVisitor implements n.Visitor<void> {
     node.initializer?.accept(this)
   }
 
+  visitPipeline(node: n.Pipeline): void {
+    node.left.accept(this)
+    node.right.accept(this)
+  }
+
   visitPostfix(node: n.Postfix): void {
     node.left.accept(this)
   }

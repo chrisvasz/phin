@@ -1,5 +1,3 @@
-// TODO come up with an example case for function expression with a body needing a use clause
-
 abstract class Price {
   fun points(daysRented: int): int => 1
   abstract fun amount(daysRented: int): float
@@ -51,10 +49,9 @@ class Rental(-val movie: Movie, -val daysRented: int) {
   fun amount(): float => movie.price.amount(daysRented)
 }
 
-// TODO array<Rental>
-class Rentals(-val rentals: array) iterates rentals {
-  // fun points(): int => rentals#map(fun(r)) => r.points())#sum() // TODO
-  // fun amount(): float => rentals#map(fun(r) => r.amount())#sum() // TODO
+class Rentals(-val rentals: array<Rental>) iterates rentals {
+  fun points(): int => rentals | map(fun(r) => r.points()) | sum
+  fun amount(): float => rentals | map(fun(r) => r.amount()) | sum
 }
 
 class Customer(val name: string, -val rentals: Rentals) {
@@ -69,21 +66,16 @@ class Customer(val name: string, -val rentals: Rentals) {
   }
 }
 
-class Controller {
-  fun __invoke() {
-    var rows = [
-      ["Prognosis Negative", PriceFactory::NEW_RELEASE, 3],
-      ["Sack Lunch", PriceFactory::CHILDRENS, 1],
-      ["The Pain and the Yearning", PriceFactory::REGULAR, 1],
-    ]
-    var rentals = []
-    var priceFactory = new PriceFactory()
-    foreach (rows as [name, priceCode, daysRented]) {
-      var movie = new Movie(name, priceFactory.from(priceCode))
-      var rental = new Rental(movie, daysRented)
-      array_push(rentals, rental)
-    }
-    var customer = new Customer("Susan Ross", new Rentals(rentals))
-    echo customer.statement()
-  }
-}
+var rows = [
+  ["Prognosis Negative", PriceFactory::NEW_RELEASE, 3],
+  ["Sack Lunch", PriceFactory::CHILDRENS, 1],
+  ["The Pain and the Yearning", PriceFactory::REGULAR, 1],
+]
+var priceFactory = new PriceFactory()
+var rentals = new Rentals(rows | map(fun(row) {
+  var [name, priceCode, daysRented] = row
+  var movie = new Movie(name, priceFactory.from(priceCode))
+  return new Rental(movie, daysRented)
+}))
+var customer = new Customer("Susan Ross", rentals)
+echo customer.statement()

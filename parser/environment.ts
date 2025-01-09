@@ -6,6 +6,7 @@ export enum EnvironmentKind {
   ClassProperty,
   ClassMethod,
   ClassConst,
+  PhinRuntimeFunction,
 }
 
 export interface Environment<T extends EnvironmentKind = EnvironmentKind> {
@@ -14,7 +15,10 @@ export interface Environment<T extends EnvironmentKind = EnvironmentKind> {
   add(value: string, kind?: T): void
 }
 
-type HoistedEnvironmentKind = EnvironmentKind.Function | EnvironmentKind.Class
+type HoistedEnvironmentKind =
+  | EnvironmentKind.Function
+  | EnvironmentKind.Class
+  | EnvironmentKind.PhinRuntimeFunction
 type ClassEnvironmentKind =
   | EnvironmentKind.ClassProperty
   | EnvironmentKind.ClassMethod

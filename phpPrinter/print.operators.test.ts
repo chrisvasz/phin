@@ -2,6 +2,7 @@
 import { expect, test, describe } from 'bun:test'
 import { PhpPrinter } from './print'
 import compile, { resolveUndeclaredIdentifiersToVariables } from '../compiler'
+import { trimMargin } from './trimMargin'
 
 function ast(source: string) {
   return compile(source, {
@@ -102,6 +103,30 @@ describe('print ::', () => {
   test('A::b', () => {
     let source = 'A::b'
     let expected = '$A::b;'
+    expect(print(source)).toEqual(expected)
+  })
+})
+
+describe('print |', () => {
+  test('a | b', () => {
+    let source = 'a | b'
+    let expected = '$b($a);'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('a | b | c', () => {
+    let source = 'a | b | c'
+    let expected = '$c($b($a));'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('a | map(fun(r) => r + 1) | filter() | sum', () => {
+    let source = 'a | map(fun(r) => r + 1) | filter() | sum'
+    let expected = trimMargin(`
+      $sum($filter()($map(function ($r) {
+        return $r + 1;
+      })($a)));
+    `)
     expect(print(source)).toEqual(expected)
   })
 })

@@ -87,6 +87,30 @@ describe('print class params & constructor', () => {
     `)
     expect(print(source)).toEqual(expected)
   })
+
+  test('class A(var a: array) {}', () => {
+    let source = 'class A(var a: array) {}'
+    let expected = trimMargin(`
+      class A {
+        function __construct(public array $a) {}
+      }
+    `)
+    expect(print(source)).toEqual(expected)
+  })
+
+  test.only('class A(var a: array<int>) {}', () => {
+    let source = 'class A(var a: array<int>) {}'
+    let expected = trimMargin(`
+      class A {
+        /**
+         * @param array<int> $a
+         */
+        function __construct(public array $a) {}
+      }
+    `)
+    console.log(print(source))
+    expect(print(source)).toEqual(expected)
+  })
 })
 
 describe('print class initializers', () => {

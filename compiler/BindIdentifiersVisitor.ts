@@ -69,17 +69,10 @@ export default class BindIdentifiersVisitor extends VoidVisitor {
     this.env.wrap(env, () => super.visitFunctionDeclaration(node))
   }
 
-  override visitFunctionExpression(node: n.FunctionExpression): void {
-    if (!(node.body instanceof n.Block)) {
-      return super.visitFunctionExpression(node)
-    }
-    this.visitFunctionExpressionWithBlock(node)
-  }
-
   // TODO comment me
   // TODO what about doubly-embedded function expressions?
   // TODO will this break if we try to create a class var that is a function expression?
-  visitFunctionExpressionWithBlock(node: n.FunctionExpression): void {
+  override visitFunctionExpression(node: n.FunctionExpression): void {
     let env = new ClosureEnvironment(this.env.locals())
     node.params.forEach((p) => env.add(p.name))
     let prev = this.currentFunctionExpression

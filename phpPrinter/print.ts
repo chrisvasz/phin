@@ -2,6 +2,7 @@ import { EnvironmentKind } from '../parser/environment'
 import * as nodes from '../nodes'
 import * as types from '../types'
 import { Type } from '../types'
+import { runtime } from '../parser/globalEnvironment'
 
 export class PrintError extends Error {}
 
@@ -9,10 +10,16 @@ export class PhpPrinter
   implements nodes.Visitor<string>, types.Visitor<string>
 {
   private currentIndent = 0
+  private phinRuntimeFunctionsUsed = new Set<string>()
   constructor(private readonly leadingWhitespace: string = '  ') {}
 
   print(node: nodes.Program): string {
-    return node.accept(this)
+    this.phinRuntimeFunctionsUsed.clear()
+    let result = node.accept(this)
+    for (let name of this.phinRuntimeFunctionsUsed) {
+      result += runtime[name]?.().accept(this) ?? ''
+    }
+    return result
   }
 
   private indentBlock(fn: () => string[]): string {
@@ -167,7 +174,7 @@ export class PhpPrinter
     let final = node.isFinal ? 'final ' : ''
     let readonly = node.isReadonly ? 'readonly ' : ''
     let visibility = `${node.visibility ?? 'public'} `
-    let type = node.type ? `${node.type.accept(this)} ` : ''
+    let type = node.type ? `${node.type.simplify().accept(this)} ` : ''
     return `${final}${visibility}${readonly}${type}$${node.name};`
   }
 
@@ -231,18 +238,20 @@ export class PhpPrinter
     if (!params.length && !visibility && !propertiesWithInitializers.length)
       return ''
     let declaration = `${visibility}function __construct(${this.classParams(params)}) {`
-    if (!propertiesWithInitializers.length) return declaration + '}'
-    return (
-      declaration +
-      '\n' +
-      this.indentBlock(() =>
-        propertiesWithInitializers.map(
-          (p) => `$this->${p.name} = ${p.initializer?.accept(this)};`,
-        ),
-      ) +
-      '\n' +
-      this.indent('}')
-    )
+    let docblock = this.functionDocblock(params, null)
+    let body = '}'
+    if (propertiesWithInitializers.length) {
+      body =
+        '\n' +
+        this.indentBlock(() =>
+          propertiesWithInitializers.map(
+            (p) => `$this->${p.name} = ${p.initializer?.accept(this)};`,
+          ),
+        ) +
+        '\n' +
+        this.indent('}')
+    }
+    return docblock + this.indent(declaration) + body
   }
 
   classParams(params: Array<nodes.Param | nodes.ClassProperty>): string {
@@ -347,9 +356,14 @@ export class PhpPrinter
     return ` use (${closureVariables.map((v) => '$' + v).join(', ')})`
   }
 
-  functionDocblock(params: nodes.Param[], returnType: Type | null): string {
+  functionDocblock(
+    params: Array<{ name: string; type: Type | null }>,
+    returnType: Type | null,
+  ): string {
     if (returnType?.isExpressibleInPhp()) returnType = null
-    let nonExpressibleParams = params.filter((p) => !p.isExpressibleInPhp())
+    let nonExpressibleParams = params.filter(
+      (p) => p.type?.isExpressibleInPhp() === false,
+    )
     if (nonExpressibleParams.length === 0) return ''
     return (
       [
@@ -381,6 +395,9 @@ export class PhpPrinter
     if (kind === EnvironmentKind.ClassProperty) return `$this->${node.name}`
     if (kind === EnvironmentKind.ClassMethod) return `$this->${node.name}`
     if (kind === EnvironmentKind.ClassConst) return `self::${node.name}`
+    if (kind === EnvironmentKind.PhinRuntimeFunction) {
+      this.phinRuntimeFunctionsUsed.add(node.name)
+    }
     return `${node.name}`
   }
 
@@ -433,6 +450,12 @@ export class PhpPrinter
     let type = node.type ? `${node.type.simplify().accept(this)} ` : ''
     let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''
     return `${type}$${node.name}${init}`
+  }
+
+  visitPipeline(node: nodes.Pipeline): string {
+    let left = node.left.accept(this)
+    let right = node.right.accept(this)
+    return `${right}(${left})`
   }
 
   visitPostfix(node: nodes.Postfix): string {

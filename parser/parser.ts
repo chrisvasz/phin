@@ -837,9 +837,18 @@ export default function parse(
   }
 
   function newClone(): Expr {
-    if (match(NEW)) return new nodes.New(call())
-    if (match(CLONE)) return new nodes.Clone(call())
-    return call()
+    if (match(NEW)) return new nodes.New(pipeline())
+    if (match(CLONE)) return new nodes.Clone(pipeline())
+    return pipeline()
+  }
+
+  function pipeline(): Expr {
+    let result = call()
+    while (match(PIPE)) {
+      let right = call()
+      result = new nodes.Pipeline(result, right)
+    }
+    return result
   }
 
   function call(): Expr {

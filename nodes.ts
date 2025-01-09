@@ -51,6 +51,7 @@ export type Expr =
   | NullLiteral
   | NumberLiteral
   | OptionalGet
+  | Pipeline
   | Postfix
   | Prefix
   | ScopeResolution
@@ -100,6 +101,7 @@ export interface Visitor<T> {
   visitNumberLiteral(node: NumberLiteral): T
   visitOptionalGet(node: OptionalGet): T
   visitParam(node: Param): T
+  visitPipeline(node: Pipeline): T
   visitPostfix(node: Postfix): T
   visitPrefix(node: Prefix): T
   visitProgram(node: Program): T
@@ -549,6 +551,19 @@ export class OptionalGet extends Node {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitOptionalGet(this)
+  }
+}
+
+export class Pipeline extends Node {
+  _type = 'Pipeline' as const
+  constructor(
+    public readonly left: Expr,
+    public readonly right: Expr,
+  ) {
+    super()
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitPipeline(this)
   }
 }
 

@@ -20,10 +20,12 @@ export const b = (function () {
     foreach,
     foreachVariable,
     fun,
-    id,
+    get,
     grouping: (expression: nodes.Expr) => new nodes.Grouping(expression),
+    id,
     numberLiteral,
     param,
+    pipeline,
     program,
     return: (expression: nodes.Expr) => new nodes.Return(expression),
     stringLiteral: (value: string) => new nodes.StringLiteral(value),
@@ -39,6 +41,14 @@ export const b = (function () {
 
   function program(...statements: nodes.Stmt[]) {
     return new nodes.Program(statements, new HoistedEnvironment())
+  }
+
+  function pipeline(left: nodes.Expr, right: nodes.Expr) {
+    return new nodes.Pipeline(left, right)
+  }
+
+  function get(object: nodes.Expr, property: string) {
+    return new nodes.Get(object, property)
   }
 
   function block(...statements: nodes.Stmt[]) {
@@ -285,7 +295,7 @@ export const t = (function () {
     return new types.Identifier(name, generics)
   }
 
-  function array(type: types.Type) {
-    return id('array', type)
+  function array(...generics: types.Type[]) {
+    return id('array', ...generics)
   }
 })()

@@ -127,6 +127,14 @@ describe('var in function scope', () => {
     expect(() => visitor.visit(program)).not.toThrow()
     checkIdentifierType(program, 'b', EnvironmentKind.Variable)
   })
+
+  test('var a = fun(b) => b', () => {
+    let source = 'var a = fun(b) => b'
+    let program = ast(source)
+    let visitor = new BindIdentifiersVisitor()
+    expect(() => visitor.visit(program)).not.toThrow()
+    checkIdentifierType(program, 'b', EnvironmentKind.Variable)
+  })
 })
 
 describe('classes', () => {
