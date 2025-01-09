@@ -269,6 +269,17 @@ export class PhpPrinter
   // END CLASSES
   /////////////////////////////
 
+  visitDestructuring(node: nodes.Destructuring): string {
+    return `[${node.elements.map((e) => e?.accept(this)).join(', ')}]`
+  }
+
+  visitDestructuringElement(node: nodes.DestructuringElement): string {
+    // TODO print type somewhere
+    let key = node.key ? `'${node.key}' => ` : '' // TODO single quote or double quote?
+    let value = `$${node.value}`
+    return key + value
+  }
+
   visitEcho(node: nodes.Echo): string {
     return `echo ${node.expression.accept(this)};`
   }
@@ -496,6 +507,14 @@ export class PhpPrinter
     name = `$${name}`
     let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''
     return `${type}${name}${init};`
+  }
+
+  visitVarDestructuringDeclaration(
+    node: nodes.VarDestructuringDeclaration,
+  ): string {
+    let destructuring = node.destructuring.accept(this)
+    let init = node.initializer.accept(this)
+    return `${destructuring} = ${init};`
   }
 
   visitWhile(node: nodes.While): string {

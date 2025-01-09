@@ -32,6 +32,7 @@ export type Stmt =
   | ThrowStatement
   | Try
   | VarDeclaration
+  | VarDestructuringDeclaration
   | While
 export type Expr =
   | ArrayAccess
@@ -79,6 +80,8 @@ export interface Visitor<T> {
   visitClassProperty(node: ClassProperty): T
   visitClassSuperclass(node: ClassSuperclass): T
   visitClone(node: Clone): T
+  visitDestructuring(node: Destructuring): T
+  visitDestructuringElement(node: DestructuringElement): T
   visitEcho(node: Echo): T
   visitExpressionStatement(node: ExpressionStatement): T
   visitFor(node: For): T
@@ -112,6 +115,7 @@ export interface Visitor<T> {
   visitTry(node: Try): T
   visitUnary(node: Unary): T
   visitVarDeclaration(node: VarDeclaration): T
+  visitVarDestructuringDeclaration(node: VarDestructuringDeclaration): T
   visitWhile(node: While): T
 }
 
@@ -163,6 +167,43 @@ export class VarDeclaration extends Node {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitVarDeclaration(this)
+  }
+}
+
+export class VarDestructuringDeclaration extends Node {
+  _type = 'VarDestructuringDeclaration' as const
+  constructor(
+    public readonly destructuring: Destructuring,
+    public readonly initializer: Expr,
+  ) {
+    super()
+  }
+  override accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitVarDestructuringDeclaration(this)
+  }
+}
+
+export class Destructuring extends Node {
+  _type = 'Destructure' as const
+  constructor(public readonly elements: Array<DestructuringElement | null>) {
+    super()
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitDestructuring(this)
+  }
+}
+
+export class DestructuringElement extends Node {
+  _type = 'DestructuringElement' as const
+  constructor(
+    public readonly key: string | null,
+    public readonly value: string,
+    public readonly type: Type | null,
+  ) {
+    super()
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitDestructuringElement(this)
   }
 }
 
@@ -218,7 +259,7 @@ export class Foreach extends Node {
   _type = 'Foreach' as const
   constructor(
     public readonly key: ForeachVariable | null,
-    public readonly value: ForeachVariable,
+    public readonly value: ForeachVariable | Destructuring,
     public readonly iterable: Expr,
     public readonly body: Node,
   ) {

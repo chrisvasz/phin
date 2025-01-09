@@ -17,6 +17,8 @@ export const b = (function () {
     classSuperclass,
     echo: (expression: nodes.Expr) => new nodes.Echo(expression),
     expressionStatement,
+    foreach,
+    foreachVariable,
     fun,
     id,
     grouping: (expression: nodes.Expr) => new nodes.Grouping(expression),
@@ -26,6 +28,9 @@ export const b = (function () {
     return: (expression: nodes.Expr) => new nodes.Return(expression),
     stringLiteral: (value: string) => new nodes.StringLiteral(value),
     var: var_,
+    varDestructuring,
+    destructuring,
+    destructuringElement,
   }
 
   function arrayAccess(left: nodes.Expr, index: nodes.Expr) {
@@ -83,6 +88,19 @@ export const b = (function () {
       ) as any
     }
     return new nodes.FunctionExpression(params, returnType, body) as any
+  }
+
+  function foreach(
+    key: nodes.ForeachVariable | null,
+    value: nodes.ForeachVariable | nodes.Destructuring,
+    iterable: nodes.Expr,
+    body: nodes.Block,
+  ) {
+    return new nodes.Foreach(key, value, iterable, body)
+  }
+
+  function foreachVariable(name: string, type: types.Type | null = null) {
+    return new nodes.ForeachVariable(name, type)
   }
 
   function classConst(
@@ -220,6 +238,27 @@ export const b = (function () {
     initializer: nodes.Expr | null = null,
   ) {
     return new nodes.VarDeclaration(name, type, initializer)
+  }
+
+  function varDestructuring(
+    destructuring: nodes.Destructuring,
+    initializer: nodes.Expr,
+  ) {
+    return new nodes.VarDestructuringDeclaration(destructuring, initializer)
+  }
+
+  function destructuring(
+    ...elements: Array<nodes.DestructuringElement | null>
+  ) {
+    return new nodes.Destructuring(elements)
+  }
+
+  function destructuringElement(
+    key: string | null,
+    value: string,
+    type: types.Type | null = null,
+  ) {
+    return new nodes.DestructuringElement(key, value, type)
   }
 })()
 

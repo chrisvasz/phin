@@ -7,10 +7,14 @@ import * as n from '../nodes'
 import ParseError from '../parser/ParseError'
 import VoidVisitor from './VoidVisitor'
 import { EnvironmentKind } from '../parser/environment'
+import { builtinEnvironment } from '../parser/globalEnvironment'
 
 export function defaultResolveUndeclaredIdentifier(
   name: string,
 ): EnvironmentKind {
+  if (builtinEnvironment.has(name)) {
+    return builtinEnvironment.get(name)!
+  }
   throw new ParseError(`Undeclared identifier: ${name}`)
 }
 
@@ -46,8 +50,14 @@ export default class BindIdentifiersVisitor extends VoidVisitor {
 
   // TODO wrap class init blocks in env with class params
   // TODO catch clauses
-  // TODO for loops and foreach loops
-  // TODO destructuring assignments and foreach loops
+  // TODO for loops
+
+  override visitDestructuring(node: n.Destructuring): void {
+    super.visitDestructuring(node)
+    node.elements.forEach((element) => {
+      if (element) this.env.addLocal(element.value)
+    })
+  }
 
   override visitForeachVariable(node: n.ForeachVariable): void {
     this.env.addLocal(node.name)

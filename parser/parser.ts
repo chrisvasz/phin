@@ -9,7 +9,6 @@ import {
   EnvironmentKind,
   HoistedEnvironment,
 } from './environment'
-import BindIdentifiersVisitor from '../compiler/BindIdentifiersVisitor'
 
 const emptyArray: [] = []
 
@@ -148,7 +147,10 @@ export default function parse(
     if (match(TRY)) return tryDeclaration() // TODO move into statement()
     if (match(THROW)) return throwDeclaration() // TODO move into statement()
     if (match(FUN)) return functionDeclaration()
-    if (match(VAR)) return varDeclaration()
+    if (match(VAR)) {
+      if (match(LEFT_BRACKET)) return varDestructuringDeclaration()
+      return varDeclaration()
+    }
     if (match(CLASS)) return classDeclaration()
     if (match(ABSTRACT)) {
       consume('Expect "class" after "abstract"', CLASS)
@@ -480,6 +482,38 @@ export default function parse(
     return new nodes.VarDeclaration(name, type, initializer)
   }
 
+  function varDestructuringDeclaration(): nodes.VarDestructuringDeclaration {
+    let d = destructuring()
+    consume('Expect "=" after var destructuring', EQUAL)
+    let initializer = expression()
+    return new nodes.VarDestructuringDeclaration(d, initializer)
+  }
+
+  function destructuring(): nodes.Destructuring {
+    let result: Array<nodes.DestructuringElement | null> = []
+    while (!check(RIGHT_BRACKET) && !isAtEnd()) {
+      if (match(COMMA)) {
+        result.push(null)
+      } else {
+        result.push(destructuringElement())
+        match(COMMA)
+      }
+    }
+    consume('Expect "]" after destructuring', RIGHT_BRACKET)
+    return new nodes.Destructuring(result)
+  }
+
+  function destructuringElement(): nodes.DestructuringElement {
+    let key: string | null = null
+    if (match(STRING)) {
+      key = stringLiteral().value
+      consume('Expect "=>" after string key', ARROW)
+    }
+    let value = consume('Expect value name', IDENTIFIER).lexeme
+    let type = match(COLON) ? typeAnnotation() : null
+    return new nodes.DestructuringElement(key, value, type)
+  }
+
   function statement(): Stmt {
     if (match(FOREACH)) return foreachStatement()
     if (match(FOR)) return forStatement()
@@ -495,9 +529,9 @@ export default function parse(
     consume('Expect "(" after "foreach"', LEFT_PAREN)
     let iterable = expression()
     consume('Expect "as" after foreach iterable expression', AS)
-    let value = foreachVariable()
+    let value = match(LEFT_BRACKET) ? destructuring() : foreachVariable()
     let key: null | nodes.ForeachVariable = null
-    if (match(ARROW)) {
+    if (value instanceof nodes.ForeachVariable && match(ARROW)) {
       key = value
       value = foreachVariable()
     }

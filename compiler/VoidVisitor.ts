@@ -83,6 +83,12 @@ export default class VoidVisitor implements n.Visitor<void> {
     node.expression.accept(this)
   }
 
+  visitDestructuring(node: n.Destructuring): void {
+    node.elements.forEach((element) => element?.accept(this))
+  }
+
+  visitDestructuringElement(node: n.DestructuringElement): void {}
+
   visitEcho(node: n.Echo): void {
     node.expression.accept(this)
   }
@@ -218,6 +224,11 @@ export default class VoidVisitor implements n.Visitor<void> {
 
   visitVarDeclaration(node: n.VarDeclaration): void {
     node.initializer?.accept(this)
+  }
+
+  visitVarDestructuringDeclaration(node: n.VarDestructuringDeclaration): void {
+    node.destructuring.accept(this)
+    node.initializer.accept(this)
   }
 
   visitWhile(node: n.While): void {

@@ -256,3 +256,28 @@ describe('print abstract class', () => {
     expect(print(source)).toEqual(expected)
   })
 })
+
+test('complex class', () => {
+  let source = `
+    class Rental(-val movie: Movie, -val daysRented: int) {
+      val title: string = movie.title
+      fun points(): int => movie.price.points(daysRented)
+      fun amount(): float => movie.price.amount(daysRented)
+    }
+  `
+  let expected = trimMargin(`
+    class Rental {
+      function __construct(private readonly Movie $movie, private readonly int $daysRented) {
+        $this->title = $this->movie->title;
+      }
+      public readonly string $title;
+      function points(): int {
+        return $this->movie->price->points($this->daysRented);
+      }
+      function amount(): float {
+        return $this->movie->price->amount($this->daysRented);
+      }
+    }
+  `)
+  expect(print(source)).toEqual(expected)
+})

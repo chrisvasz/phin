@@ -1,5 +1,4 @@
-import parse from '../parser'
-import scan from '../scanner'
+import compile from '../compiler'
 import { PhpPrinter } from '../phpPrinter/print'
 
 // @ts-ignore
@@ -12,8 +11,7 @@ async function go() {
 
   let php = ''
   try {
-    let tokens = scan(src)
-    let ast = parse(tokens)
+    let ast = compile(src)
     php = new PhpPrinter().print(ast)
   } catch (e: any) {
     console.error(e)

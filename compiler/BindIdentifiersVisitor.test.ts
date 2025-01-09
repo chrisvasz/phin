@@ -22,8 +22,8 @@ function checkIdentifierType(
   let calls = 0
   let check = new (class extends VoidVisitor {
     override visitIdentifier(node: nodes.Identifier): void {
+      if (node.name !== name) return
       calls++
-      expect(node.name).toBe(name)
       expect(node.kind).toBe(kind)
     }
   })()
@@ -153,5 +153,23 @@ describe('classes', () => {
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
     checkIdentifierType(program, 'B', EnvironmentKind.ClassConst)
+  })
+})
+
+describe('destructuring', () => {
+  test('var a; var [b] = a; b;', () => {
+    let source = 'var a; var [b] = a; b;'
+    let program = ast(source)
+    let visitor = new BindIdentifiersVisitor()
+    expect(() => visitor.visit(program)).not.toThrow()
+    checkIdentifierType(program, 'b', EnvironmentKind.Variable)
+  })
+
+  test('var a; foreach (a as [b]) { b; }', () => {
+    let source = 'var a; foreach (a as [b]) { b; }'
+    let program = ast(source)
+    let visitor = new BindIdentifiersVisitor()
+    expect(() => visitor.visit(program)).not.toThrow()
+    checkIdentifierType(program, 'b', EnvironmentKind.Variable)
   })
 })

@@ -94,6 +94,8 @@ const {
   WHILE,
 } = TokenType
 
+// TODO from php.net: The following words cannot be used as constants, class names, or function names. They are, however, allowed as property, constant, and method names of classes, interfaces and traits, except that class may not be used as constant name.
+
 const keywords: { [key: string]: TokenType } = {
   abstract: ABSTRACT,
   as: AS,
