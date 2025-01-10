@@ -1,0 +1,49 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  font-family: Inter, sans-serif;
+  font-feature-settings:
+    'liga' 1,
+    'calt' 1; /* fix for Chrome */
+}
+@supports (font-variation-settings: normal) {
+  :root {
+    font-family: InterVariable, sans-serif;
+  }
+}
+
+body {
+  height: 100vh;
+  padding: 20px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  font: inherit;
+}
+
+main {
+  display: flex;
+  flex: 1;
+  gap: 12px;
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  article {
+    flex: 1;
+    outline: 2px solid gray;
+  }
+}
+
+textarea {
+  flex: 1;
+  resize: none;
+}

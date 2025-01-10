@@ -1,16 +1,24 @@
 abstract class Price {
+  // type annotations are optional and always in the same position: after the thing being annotated
+  // phin has a shorthand for defining a function or method that returns one expression
   fun points(daysRented: int): int => 1
+  // optional semicolons!
   abstract fun amount(daysRented: int): float
 }
 
+// familiar class inheritance
 class NewRelease extends Price {
+  // more examples of phin's shorthand function syntax
   fun points(daysRented: int): int => daysRented > 1 ? 2 : 1
   fun amount(daysRented: int): float => daysRented * 3
 }
 
 class Regular extends Price {
   fun amount(daysRented: int): float {
-    var result = 2
+    // in phin, variables must be declared using var syntax before it can be used
+    // an undeclared identifier is a compile-time error
+    // a type annotation is optional and becomes a @var comment in the compiled output
+    var result: int = 2
     if (daysRented > 2) {
       result += (daysRented - 2) * 1.5
     }
@@ -33,7 +41,9 @@ class PriceFactory {
   const NEW_RELEASE = 1
   const CHILDRENS = 2
 
+  // shorthand function syntax accepts any expression as the return, including this match expression
   fun from(priceCode: int): Price => match(priceCode) {
+    // implicit self:: for class constants from within the class!
     REGULAR => new Regular()
     NEW_RELEASE => new NewRelease()
     CHILDRENS => new Childrens()
@@ -41,20 +51,33 @@ class PriceFactory {
   }
 }
 
+// here are two public readonly constructor promoted properties
+// like php, the default visibility is public
+// `val` becomes a readonly property, `var` becomes a mutable property
+// if neither val nor var is present, the param is a constructor-only parameter
 class Movie(val title: string, val price: Price) {}
 
+// here, the - is shorthand for private
 class Rental(-val movie: Movie, -val daysRented: int) {
+  // dot syntax for member access!
+  // php's dot operator (string concatenation) is +. in phin
   val title: string = movie.title
+  // implicit this for class properties/methods when written from inside the class!
   fun points(): int => movie.price.points(daysRented)
   fun amount(): float => movie.price.amount(daysRented)
 }
 
+// phin auto-generates the appropriate docblock for complex types like generics
+// the `iterates` clause exposes an iterator over the `rentals` class property, enabling foreach over Rentals instances
 class Rentals(-val rentals: array<Rental>) iterates rentals {
   init {
+    // optional initializer block -- this gets copied into the constructor
     if (count(rentals) > 5) {
       throw new DomainException("Customer cannot rent more than 5 movies at once")
     }
   }
+  // pipeline operator! phin auto-generates map and sum helpers for this
+  // array pipeline operations read so much more nicely this way!
   fun points(): int => rentals | map(fun(r) => r.points()) | sum
   fun amount(): float => rentals | map(fun(r) => r.amount()) | sum
 }
@@ -63,6 +86,8 @@ class Customer(val name: string, -val rentals: Rentals) {
   fun statement(): string {
     var result = "Rental Record for $name\n"
     foreach (rentals as rental) {
+      // in php, only certain expressions are allowed in strings
+      // phin accepts any expression
       result +.= "\t${rental.title}\t${rental.amount()}\n"
     }
     result +.= "Amount owed is ${rentals.amount()}\n"
@@ -79,6 +104,9 @@ var rows = [
 var priceFactory = new PriceFactory()
 var rentals = new Rentals(rows | map(fun(row) {
   var [name, priceCode, daysRented] = row
+  // notice priceFactory comes from the surrounding scope
+  // php would require a use clause where the function expression is defined
+  // phin does not, and generates the use clause automatically!
   var movie = new Movie(name, priceFactory.from(priceCode))
   return new Rental(movie, daysRented)
 }))
