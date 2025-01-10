@@ -50,6 +50,11 @@ class Rental(-val movie: Movie, -val daysRented: int) {
 }
 
 class Rentals(-val rentals: array<Rental>) iterates rentals {
+  init {
+    if (count(rentals) > 5) {
+      throw new DomainException("Customer cannot rent more than 5 movies at once")
+    }
+  }
   fun points(): int => rentals | map(fun(r) => r.points()) | sum
   fun amount(): float => rentals | map(fun(r) => r.amount()) | sum
 }

@@ -280,6 +280,35 @@ describe('print class iterates', () => {
   })
 })
 
+describe('print class initializers', () => {
+  test('class A { init { echo "hello world"; } }', () => {
+    let source = 'class A { init { echo "hello world"; } }'
+    let expected = trimMargin(`
+      class A {
+        function __construct() {
+          echo "hello world";
+        }
+      }
+    `)
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('class A { init { echo "hello world"; } init { echo "hello world"; } }', () => {
+    let source =
+      'class A { init { echo "hello world"; } var b; init { echo "hello world"; } }'
+    let expected = trimMargin(`
+      class A {
+        function __construct() {
+          echo "hello world";
+          echo "hello world";
+        }
+        public $b;
+      }
+    `)
+    expect(print(source)).toEqual(expected)
+  })
+})
+
 describe('print abstract class', () => {
   test('abstract class A {}', () => {
     let source = 'abstract class A {}'

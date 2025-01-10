@@ -49,7 +49,7 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
     this.currentLine = null
   }
 
-  private i(fn: () => void) {
+  private indent(fn: () => void) {
     this.currentIndent++
     fn()
     this.currentIndent--
@@ -156,7 +156,7 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
       return this.append('}')
     }
     this.commit()
-    this.i(() => {
+    this.indent(() => {
       for (let s of node.statements) {
         s.accept(this)
       }
@@ -192,7 +192,7 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
   }
 
   visitClassInitializer(node: nodes.ClassInitializer): void {
-    throw new Error('Method not implemented.')
+    node.body.statements.forEach((s) => s.accept(this))
   }
 
   visitClassAbstractMethod(node: nodes.ClassAbstractMethod): void {
@@ -232,12 +232,14 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
     this.classExtends(node)
     this.classImplements(node)
     this.commit('{')
-    this.i(() => {
+    this.indent(() => {
       this.classConstructor(node)
       if (node.iterates) this.classGetIterator(node)
       for (let member of node.members) {
-        member.accept(this)
-        this.commit()
+        if (!(member instanceof nodes.ClassInitializer)) {
+          member.accept(this)
+          this.commit()
+        }
       }
     })
     this.commit('}')
@@ -280,9 +282,12 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
       .filter((p) => p instanceof nodes.ClassProperty)
       .filter((p) => p.initializer != null)
     let visibility = node.constructorVisibility ?? 'public'
+    let classInitializers = node.members.filter(
+      (m) => m instanceof nodes.ClassInitializer,
+    )
     if (node.params.length === 0)
       if (propsWithInitializers.length === 0)
-        if (visibility === 'public') return
+        if (visibility === 'public') if (classInitializers.length === 0) return
     this.functionDocblock(node.params, null)
     if (visibility !== 'public') {
       this.append(`${visibility} `)
@@ -290,16 +295,18 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
     this.append(`function __construct(`)
     this.classParams(node.params)
     this.append(') {')
-    if (propsWithInitializers.length === 0) {
-      return this.commit('}')
-    }
+    if (propsWithInitializers.length === 0)
+      if (classInitializers.length === 0) {
+        return this.commit('}')
+      }
     this.commit()
-    this.i(() => {
+    this.indent(() => {
       for (let prop of propsWithInitializers) {
         this.append(`$this->${prop.name} = `)
         prop.initializer!.accept(this)
         this.commit(';')
       }
+      classInitializers.forEach((i) => i.accept(this))
     })
     this.commit('}')
   }
@@ -417,7 +424,7 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
       return body.accept(this)
     }
     this.commit('{')
-    this.i(() => {
+    this.indent(() => {
       this.append(`return `)
       body.accept(this)
       this.commit(';')
@@ -509,7 +516,7 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
     if (node.arms.length === 0 && !node.defaultArm) {
       return this.append('}')
     }
-    this.i(() => {
+    this.indent(() => {
       this.commit()
       for (let arm of node.arms) {
         arm.accept(this)
@@ -633,11 +640,15 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
   }
 
   visitThrowStatement(node: nodes.ThrowStatement): void {
-    throw new Error('Method not implemented.')
+    this.append('throw ')
+    node.expression.accept(this)
+    this.commit(';')
   }
+
   visitTry(node: nodes.Try): void {
     throw new Error('Method not implemented.')
   }
+
   visitUnary(node: nodes.Unary): void {
     throw new Error('Method not implemented.')
   }

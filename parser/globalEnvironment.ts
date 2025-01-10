@@ -16,6 +16,7 @@ builtinEnvironment.add('array_map', EnvironmentKind.Function)
 builtinEnvironment.add('array_push', EnvironmentKind.Function)
 builtinEnvironment.add('array_sum', EnvironmentKind.Function)
 builtinEnvironment.add('array', EnvironmentKind.Function)
+builtinEnvironment.add('count', EnvironmentKind.Function)
 
 builtinEnvironment.add('ArrayIterator', EnvironmentKind.Class)
 builtinEnvironment.add('DomainException', EnvironmentKind.Class)
