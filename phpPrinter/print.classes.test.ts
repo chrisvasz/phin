@@ -16,7 +16,7 @@ function print(source: string) {
 describe('print class declaration', () => {
   test('class A {}', () => {
     let source = 'class A {}'
-    let expected = 'class A {}'
+    let expected = 'class A {\n}'
     expect(print(source)).toEqual(expected)
   })
 })
@@ -27,6 +27,16 @@ describe('print class params & constructor', () => {
     let expected = trimMargin(`
       class A {
         private function __construct() {}
+      }
+    `)
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('class A protected() {}', () => {
+    let source = 'class A protected() {}'
+    let expected = trimMargin(`
+      class A {
+        protected function __construct() {}
       }
     `)
     expect(print(source)).toEqual(expected)
@@ -98,7 +108,7 @@ describe('print class params & constructor', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test.only('class A(var a: array<int>) {}', () => {
+  test('class A(var a: array<int>) {}', () => {
     let source = 'class A(var a: array<int>) {}'
     let expected = trimMargin(`
       class A {
@@ -108,7 +118,6 @@ describe('print class params & constructor', () => {
         function __construct(public array $a) {}
       }
     `)
-    console.log(print(source))
     expect(print(source)).toEqual(expected)
   })
 })
@@ -222,15 +231,23 @@ describe('print this/super', () => {
 describe('print class implements', () => {
   test('class A implements B {}', () => {
     let source = 'class A implements B {}'
-    let expected = 'class A implements B {}'
+    let expected = 'class A implements B {\n}'
     expect(print(source)).toEqual(expected)
   })
 
   test('class A implements B, C {}', () => {
     let source = 'class A implements B, C {}'
     let expected = trimMargin(`
-      class A implements B, C {}
+      class A implements B, C {\n}
     `)
+    expect(print(source)).toEqual(expected)
+  })
+})
+
+describe('print class extends', () => {
+  test('class A extends B {}', () => {
+    let source = 'class A extends B {}'
+    let expected = 'class A extends B {\n}'
     expect(print(source)).toEqual(expected)
   })
 })
@@ -266,7 +283,7 @@ describe('print class iterates', () => {
 describe('print abstract class', () => {
   test('abstract class A {}', () => {
     let source = 'abstract class A {}'
-    let expected = 'abstract class A {}'
+    let expected = 'abstract class A {\n}'
     expect(print(source)).toEqual(expected)
   })
 

@@ -148,6 +148,4 @@ describe('print function calls', () => {
     let expected = 'foo(a(), b + 2);'
     expect(print(source)).toEqual(expected)
   })
-
-  test.todo('a.b()')
 })

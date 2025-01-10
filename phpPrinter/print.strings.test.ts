@@ -33,7 +33,7 @@ describe('print double-quoted strings', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('"hello\nworld"', () => {
+  test('"hello\\nworld"', () => {
     let source = '"hello\nworld"'
     let expected = '"hello\nworld";'
     expect(print(source)).toEqual(expected)
@@ -41,18 +41,6 @@ describe('print double-quoted strings', () => {
 })
 
 describe('print template strings', () => {
-  test('""', () => {
-    let source = '""'
-    let expected = '"";'
-    expect(print(source)).toEqual(expected)
-  })
-
-  test('"hello"', () => {
-    let source = '"hello"'
-    let expected = '"hello";'
-    expect(print(source)).toEqual(expected)
-  })
-
   test('"$name"', () => {
     let source = '"$name"'
     let expected = '("" . $name);'

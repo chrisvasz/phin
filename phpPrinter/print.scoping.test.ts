@@ -67,13 +67,13 @@ function a() {
 describe('print scoping: classes', () => {
   test('class A {} A;', () => {
     let source = 'class A {} A;'
-    let expected = 'class A {}\nA;'
+    let expected = 'class A {\n}\nA;'
     expect(print(source)).toEqual(expected)
   })
 
   test('A; class A {}', () => {
     let source = 'A; class A {}'
-    let expected = 'A;\nclass A {}'
+    let expected = 'A;\nclass A {\n}'
     expect(print(source)).toEqual(expected)
   })
 

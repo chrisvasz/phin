@@ -6,123 +6,176 @@ import { runtime } from '../parser/globalEnvironment'
 
 export class PrintError extends Error {}
 
-export class PhpPrinter
-  implements nodes.Visitor<string>, types.Visitor<string>
-{
+class Line {
+  constructor(
+    public content: string,
+    public indent: number,
+  ) {}
+}
+
+export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
   private currentIndent = 0
   private phinRuntimeFunctionsUsed = new Set<string>()
+
+  private currentLine: Line | null = null
+  private lines: Line[] = []
+
   constructor(private readonly leadingWhitespace: string = '  ') {}
 
   print(node: nodes.Program): string {
+    this.currentIndent = 0
+    this.currentLine = new Line('', this.currentIndent)
+    this.lines = []
     this.phinRuntimeFunctionsUsed.clear()
-    let result = node.accept(this)
+    node.accept(this)
     for (let name of this.phinRuntimeFunctionsUsed) {
-      result += runtime[name]?.().accept(this) ?? ''
+      runtime[name]?.().accept(this) ?? ''
     }
-    return result
+    return this.lines
+      .map((l) => this.leadingWhitespace.repeat(l.indent) + l.content)
+      .join('\n')
   }
 
-  private indentBlock(fn: () => string[]): string {
+  private append(content: string) {
+    if (this.currentLine == null) {
+      this.currentLine = new Line('', this.currentIndent)
+    }
+    this.currentLine.content += content
+  }
+
+  private commit(content: string = '') {
+    if (content) this.append(content)
+    if (this.currentLine) this.lines.push(this.currentLine)
+    this.currentLine = null
+  }
+
+  private i(fn: () => void) {
     this.currentIndent++
-    let result = fn().map((s) => this.indent(s))
+    fn()
     this.currentIndent--
-    return result.join('\n')
   }
 
-  private indent(content: string): string {
-    return this.leadingWhitespace.repeat(this.currentIndent) + content
+  private commaSeparate(elements: nodes.Node[] | types.Type[]) {
+    for (let i = 0; i < elements.length; i++) {
+      elements[i].accept(this)
+      if (i < elements.length - 1) this.append(', ')
+    }
   }
 
   /////////////////////////////
   // TYPES
   /////////////////////////////
 
-  visitBooleanType = () => 'bool'
-  visitFalseType = () => 'false'
-  visitFloatType = () => 'float'
-  visitIntType = () => 'int'
-  visitNullType = () => 'null'
-  visitNumberType = () => 'number'
-  visitStringType = () => 'string'
-  visitTrueType = () => 'true'
+  visitBooleanType = () => this.append('bool')
+  visitFalseType = () => this.append('false')
+  visitFloatType = () => this.append('float')
+  visitIntType = () => this.append('int')
+  visitNullType = () => this.append('null')
+  visitNumberType = () => this.append('number')
+  visitStringType = () => this.append('string')
+  visitTrueType = () => this.append('true')
 
-  visitIdentifierType(identifier: types.Identifier): string {
-    let result = identifier.name
+  visitIdentifierType(identifier: types.Identifier): void {
+    this.append(identifier.name)
     if (identifier.generics.length > 0) {
-      let generics = identifier.generics.map((g) => g.accept(this)).join(', ')
-      result += `<${generics}>`
+      this.append('<')
+      this.commaSeparate(identifier.generics)
+      this.append('>')
     }
-    return result
   }
 
-  visitIntersectionType(intersection: types.Intersection): string {
-    return intersection.types.map((t) => t.accept(this)).join('&')
+  visitIntersectionType(intersection: types.Intersection): void {
+    for (let i = 0; i < intersection.types.length; i++) {
+      intersection.types[i].accept(this)
+      if (i < intersection.types.length - 1) this.append('&')
+    }
   }
 
-  visitNullableType(nullable: types.Nullable): string {
-    return '?' + nullable.type.accept(this)
+  visitNullableType(nullable: types.Nullable): void {
+    this.append('?')
+    nullable.type.accept(this)
   }
 
-  visitNumberLiteralType(numberLiteral: types.NumberLiteral): string {
+  visitNumberLiteralType(numberLiteral: types.NumberLiteral): void {
     throw new Error('Method not implemented.')
   }
-  visitStringLiteralType(stringLiteral: types.StringLiteral): string {
+
+  visitStringLiteralType(stringLiteral: types.StringLiteral): void {
     throw new Error('Method not implemented.')
   }
 
-  visitUnionType(union: types.Union): string {
-    return union.types.map((t) => t.accept(this)).join('|')
+  visitUnionType(union: types.Union): void {
+    for (let i = 0; i < union.types.length; i++) {
+      union.types[i].accept(this)
+      if (i < union.types.length - 1) this.append('|')
+    }
   }
 
   /////////////////////////////
   // STATEMENTS
   /////////////////////////////
 
-  visitArrayElement(node: nodes.ArrayElement): string {
-    let value = node.value.accept(this)
-    if (!node.key) return value
-    let key = node.key.accept(this)
-    return `${key} => ${value}`
+  visitArrayElement(node: nodes.ArrayElement): void {
+    if (node.key != null) {
+      node.key.accept(this)
+      this.append(' => ')
+    }
+    node.value.accept(this)
   }
 
-  visitArrayLiteral(node: nodes.ArrayLiteral): string {
-    let elements = node.elements.map((e) => e.accept(this)).join(', ')
-    return `[${elements}]`
+  visitArrayLiteral(node: nodes.ArrayLiteral): void {
+    this.append('[')
+    this.commaSeparate(node.elements)
+    this.append(']')
   }
 
-  visitArrayAccess(node: nodes.ArrayAccess): string {
-    return `${node.left.accept(this)}[${node.index.accept(this)}]`
+  visitArrayAccess(node: nodes.ArrayAccess): void {
+    node.left.accept(this)
+    this.append('[')
+    node.index.accept(this)
+    this.append(']')
   }
 
-  visitAssign(node: nodes.Assign): string {
+  visitAssign(node: nodes.Assign): void {
+    node.name.accept(this)
     let operator = node.operator === '+.=' ? '.=' : node.operator
-    return `${node.name.accept(this)} ${operator} ${node.value.accept(this)}`
+    this.append(` ${operator} `)
+    node.value.accept(this)
   }
 
-  visitBinary(node: nodes.Binary): string {
-    let left = node.left.accept(this)
-    let right = node.right.accept(this)
+  visitBinary(node: nodes.Binary): void {
+    node.left.accept(this)
     let operator = node.operator === '+.' ? '.' : node.operator
-    return `${left} ${operator} ${right}`
+    this.append(` ${operator} `)
+    node.right.accept(this)
   }
 
-  visitBlock(node: nodes.Block): string {
-    if (node.statements.length === 0) return '{}'
-    let body = this.indentBlock(() =>
-      node.statements.map((s) => s.accept(this)),
-    )
-    return ['{', body, this.indent('}')].join('\n')
+  visitBlock(node: nodes.Block): void {
+    this.append('{')
+    if (node.statements.length === 0) {
+      return this.append('}')
+    }
+    this.commit()
+    this.i(() => {
+      for (let s of node.statements) {
+        s.accept(this)
+      }
+    })
+    this.append('}')
   }
 
-  visitBooleanLiteral(node: nodes.BooleanLiteral): string {
-    return node.value ? 'true' : 'false'
+  visitBooleanLiteral(node: nodes.BooleanLiteral): void {
+    this.append(node.value ? 'true' : 'false')
   }
 
-  visitCall(node: nodes.Call): string {
-    return `${node.callee.accept(this)}(${node.args.map((a) => a.accept(this)).join(', ')})`
+  visitCall(node: nodes.Call): void {
+    node.callee.accept(this)
+    this.append('(')
+    this.commaSeparate(node.args)
+    this.append(')')
   }
 
-  visitCatch(node: nodes.Catch): string {
+  visitCatch(node: nodes.Catch): void {
     throw new Error('Method not implemented.')
   }
 
@@ -130,91 +183,83 @@ export class PhpPrinter
   // CLASSES
   /////////////////////////////
 
-  visitClassConst(node: nodes.ClassConst): string {
+  visitClassConst(node: nodes.ClassConst): void {
     // TODO final, abstract, static, docblock
-    let visibility = node.visibility ? `${node.visibility} ` : ''
-    let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''
-    return `${visibility}const ${node.name}${init};`
+    if (node.visibility) this.append(`${node.visibility} `)
+    this.append(`const ${node.name} = `)
+    node.initializer.accept(this)
+    this.append(';')
   }
 
-  visitClassInitializer(node: nodes.ClassInitializer): string {
+  visitClassInitializer(node: nodes.ClassInitializer): void {
     throw new Error('Method not implemented.')
   }
 
-  visitClassAbstractMethod(node: nodes.ClassAbstractMethod): string {
-    let params = this.functionParams(node.params)
-    let type = this.typeAnnotation(node.returnType)
-    let result = `abstract function ${node.name}(${params})${type};`
-    let docblock = this.functionDocblock(node.params, node.returnType)
-    return `${docblock}${result}`
+  visitClassAbstractMethod(node: nodes.ClassAbstractMethod): void {
+    this.functionDocblock(node.params, node.returnType)
+    this.append(`abstract function ${node.name}(`)
+    this.commaSeparate(node.params)
+    this.append(')')
+    this.typeAnnotation(node.returnType)
+    this.append(';')
   }
 
-  visitClassMethod(node: nodes.ClassMethod): string {
-    // TODO visibility, final, abstract, static
-    let params = this.functionParams(node.params)
-    let type = this.typeAnnotation(node.returnType)
-    let body = this.functionBody(node.body)
-    let result = `function ${node.name}(${params})${type} ${body}`
-    let docblock = this.functionDocblock(node.params, node.returnType)
-    return `${docblock}${result}`
+  visitClassMethod(node: nodes.ClassMethod): void {
+    this.functionDocblock(node.params, node.returnType)
+    this.append(`function ${node.name}(`)
+    this.commaSeparate(node.params)
+    this.append(')')
+    this.typeAnnotation(node.returnType)
+    this.append(' ')
+    this.functionBody(node.body)
   }
 
-  classMethodBody(body: nodes.ClassMethod['body']) {
-    let result = body.accept(this)
-    if (body instanceof nodes.Block) return result
-    return [
-      '{',
-      this.indentBlock(() => [`return ${result};`]),
-      this.indent('}'),
-    ].join('\n')
-  }
-
-  visitClassProperty(node: nodes.ClassProperty): string {
+  visitClassProperty(node: nodes.ClassProperty): void {
     // TODO abstract, static, docblock
-    let final = node.isFinal ? 'final ' : ''
-    let readonly = node.isReadonly ? 'readonly ' : ''
-    let visibility = `${node.visibility ?? 'public'} `
-    let type = node.type ? `${node.type.simplify().accept(this)} ` : ''
-    return `${final}${visibility}${readonly}${type}$${node.name};`
+    if (node.isFinal) this.append('final ')
+    this.append(`${node.visibility ?? 'public'} `)
+    if (node.isReadonly) this.append('readonly ')
+    if (node.type != null) {
+      node.type.simplify().accept(this)
+      this.append(' ')
+    }
+    this.append(`$${node.name};`)
   }
 
-  visitClassDeclaration(node: nodes.ClassDeclaration): string {
-    let declaration = [
-      node.isAbstract ? 'abstract' : '',
-      'class',
-      node.name,
-      this.classExtends(node),
-      this.classImplements(node),
-      '{',
-    ]
-      .filter(Boolean)
-      .join(' ')
-    let body = this.indentBlock(() => {
-      let constructor = this.classConstructor(node)
-      if (node.members.length === 0 && !constructor && !node.iterates) return []
-      let members = node.members.map((m) => m.accept(this))
-      if (node.iterates) members.unshift(this.classGetIterator(node))
-      if (constructor) members.unshift(constructor)
-      return members
+  visitClassDeclaration(node: nodes.ClassDeclaration): void {
+    if (node.isAbstract) this.append('abstract ')
+    this.append(`class ${node.name} `)
+    this.classExtends(node)
+    this.classImplements(node)
+    this.commit('{')
+    this.i(() => {
+      this.classConstructor(node)
+      if (node.iterates) this.classGetIterator(node)
+      for (let member of node.members) {
+        member.accept(this)
+        this.commit()
+      }
     })
-    if (body === '') return declaration + '}'
-    return [declaration, body, this.indent('}')].join('\n')
+    this.commit('}')
   }
 
-  classExtends(node: nodes.ClassDeclaration): string {
-    if (!node.superclass) return ''
-    return `extends ${node.superclass.accept(this)}`
+  private classExtends(node: nodes.ClassDeclaration): void {
+    if (node.superclass) {
+      this.append('extends ')
+      node.superclass.accept(this)
+      this.append(' ')
+    }
   }
 
-  classImplements(node: nodes.ClassDeclaration): string {
+  private classImplements(node: nodes.ClassDeclaration): void {
     let interfaces = node.interfaces
     if (node.iterates) interfaces = [...interfaces, 'IteratorAggregate']
-    if (interfaces.length === 0) return ''
-    return `implements ${interfaces.join(', ')}`
+    if (interfaces.length === 0) return
+    this.append(`implements ${interfaces.join(', ')} `)
   }
 
-  classGetIterator(node: nodes.ClassDeclaration): string {
-    if (!node.iterates) return ''
+  private classGetIterator(node: nodes.ClassDeclaration): void {
+    if (!node.iterates) return
     let method = new nodes.ClassMethod(
       false,
       null,
@@ -226,331 +271,412 @@ export class PhpPrinter
         new nodes.Call(new nodes.Identifier('ArrayIterator'), [node.iterates]),
       ),
     )
-    return method.accept(this)
+    method.accept(this)
+    this.commit()
   }
 
-  classConstructor(node: nodes.ClassDeclaration): string {
-    let { params, constructorVisibility } = node
-    let visibility = constructorVisibility ? `${constructorVisibility} ` : ''
-    let propertiesWithInitializers = node
-      .properties()
-      .filter((p) => p.initializer) // TODO only non compile time constants
-    if (!params.length && !visibility && !propertiesWithInitializers.length)
-      return ''
-    let declaration = `${visibility}function __construct(${this.classParams(params)}) {`
-    let docblock = this.functionDocblock(params, null)
-    let body = '}'
-    if (propertiesWithInitializers.length) {
-      body =
-        '\n' +
-        this.indentBlock(() =>
-          propertiesWithInitializers.map(
-            (p) => `$this->${p.name} = ${p.initializer?.accept(this)};`,
-          ),
-        ) +
-        '\n' +
-        this.indent('}')
+  private classConstructor(node: nodes.ClassDeclaration): void {
+    let propsWithInitializers = node.members
+      .filter((p) => p instanceof nodes.ClassProperty)
+      .filter((p) => p.initializer != null)
+    let visibility = node.constructorVisibility ?? 'public'
+    if (node.params.length === 0)
+      if (propsWithInitializers.length === 0)
+        if (visibility === 'public') return
+    this.functionDocblock(node.params, null)
+    if (visibility !== 'public') {
+      this.append(`${visibility} `)
     }
-    return docblock + this.indent(declaration) + body
+    this.append(`function __construct(`)
+    this.classParams(node.params)
+    this.append(') {')
+    if (propsWithInitializers.length === 0) {
+      return this.commit('}')
+    }
+    this.commit()
+    this.i(() => {
+      for (let prop of propsWithInitializers) {
+        this.append(`$this->${prop.name} = `)
+        prop.initializer!.accept(this)
+        this.commit(';')
+      }
+    })
+    this.commit('}')
   }
 
-  classParams(params: Array<nodes.Param | nodes.ClassProperty>): string {
-    return params
-      .map((p) => {
-        let result = p.accept(this)
-        if (p instanceof nodes.ClassProperty) {
-          result = result.slice(0, -1) // remove semicolon
-        }
-        return result
-      })
-      .join(', ')
+  private classParams(params: Array<nodes.Param | nodes.ClassProperty>): void {
+    for (let i = 0; i < params.length; i++) {
+      let param = params[i]
+      if (param instanceof nodes.Param) {
+        param.accept(this)
+      } else if (param instanceof nodes.ClassProperty) {
+        this.classConstructorPromotedProperty(param)
+      }
+      if (i < params.length - 1) this.append(', ')
+    }
   }
 
-  visitClassSuperclass(node: nodes.ClassSuperclass): string {
-    return node.name
+  // TODO reuse visitClassProperty?
+  private classConstructorPromotedProperty(node: nodes.ClassProperty): void {
+    if (node.isFinal) this.append('final ')
+    this.append(`${node.visibility ?? 'public'} `)
+    if (node.isReadonly) this.append('readonly ')
+    if (node.type != null) {
+      node.type.simplify().accept(this)
+      this.append(' ')
+    }
+    this.append(`$${node.name}`)
   }
 
-  visitClone(node: nodes.Clone): string {
-    throw new Error('Method not implemented.')
+  visitClassSuperclass(node: nodes.ClassSuperclass): void {
+    this.append(node.name)
+  }
+
+  visitClone(node: nodes.Clone): void {
+    this.append('clone ')
+    node.expression.accept(this)
   }
 
   /////////////////////////////
   // END CLASSES
   /////////////////////////////
 
-  visitDestructuring(node: nodes.Destructuring): string {
-    return `[${node.elements.map((e) => e?.accept(this)).join(', ')}]`
+  visitDestructuring(node: nodes.Destructuring): void {
+    this.append('[')
+    for (let i = 0; i < node.elements.length; i++) {
+      let element = node.elements[i]
+      element?.accept(this)
+      if (i < node.elements.length - 1) this.append(', ')
+    }
+    this.append(']')
   }
 
-  visitDestructuringElement(node: nodes.DestructuringElement): string {
-    // TODO print type somewhere
-    let key = node.key ? `'${node.key}' => ` : '' // TODO single quote or double quote?
-    let value = `$${node.value}`
-    return key + value
+  visitDestructuringElement(node: nodes.DestructuringElement): void {
+    if (node.key != null) {
+      this.append(`'${node.key}' => `)
+    }
+    this.append(`$${node.value}`)
   }
 
-  visitEcho(node: nodes.Echo): string {
-    return `echo ${node.expression.accept(this)};`
+  visitEcho(node: nodes.Echo): void {
+    this.append('echo ')
+    node.expression.accept(this)
+    this.commit(';')
   }
 
-  visitExpressionStatement(node: nodes.ExpressionStatement): string {
-    return node.expression.accept(this) + ';'
+  visitExpressionStatement(node: nodes.ExpressionStatement): void {
+    node.expression.accept(this)
+    this.commit(';')
   }
 
-  visitForeach(node: nodes.Foreach): string {
-    let iterable = node.iterable.accept(this)
-    let key = node.key ? `${node.key.accept(this)} => ` : ''
-    let value = node.value.accept(this)
-    let result = `foreach (${iterable} as ${key}${value}) `
-    let body = node.body.accept(this)
-    return result + body
+  visitForeach(node: nodes.Foreach): void {
+    this.append('foreach (')
+    node.iterable.accept(this)
+    this.append(' as ')
+    if (node.key) {
+      node.key.accept(this)
+      this.append(` => `)
+    }
+    node.value.accept(this)
+    this.append(') ')
+    node.body.accept(this)
   }
 
-  visitForeachVariable(node: nodes.ForeachVariable): string {
+  visitForeachVariable(node: nodes.ForeachVariable): void {
     // TODO output var comment for type
-    return `$${node.name}`
+    this.append(`$${node.name}`)
   }
 
-  visitFor(node: nodes.For): string {
+  visitFor(node: nodes.For): void {
     throw new Error('Method not implemented.')
   }
 
-  visitFunctionExpression(node: nodes.FunctionExpression): string {
-    let params = node.params.map((p) => p.accept(this)).join(', ')
-    let type = this.typeAnnotation(node.returnType)
-    let use = this.functionUse(node.closureVariables)
-    let body = this.functionBody(node.body)
-    let result = `function (${params})${type}${use} ${body}`
-    return `${result}`
+  visitFunctionExpression(node: nodes.FunctionExpression): void {
+    this.append('function (')
+    this.commaSeparate(node.params)
+    this.append(')')
+    this.typeAnnotation(node.returnType)
+    this.append(' ')
+    this.functionUse(node.closureVariables)
+    this.functionBody(node.body)
   }
 
-  visitFunctionDeclaration(node: nodes.FunctionDeclaration): string {
-    let params = this.functionParams(node.params)
-    let type = this.typeAnnotation(node.returnType)
-    let body = this.functionBody(node.body)
-    let result = `function ${node.name}(${params})${type} ${body}`
-    let docblock = this.functionDocblock(node.params, node.returnType)
-    return `${docblock}${result}`
+  visitFunctionDeclaration(node: nodes.FunctionDeclaration): void {
+    this.functionDocblock(node.params, node.returnType)
+    this.append(`function ${node.name}(`)
+    this.commaSeparate(node.params)
+    this.append(')')
+    this.typeAnnotation(node.returnType?.simplify())
+    this.append(' ')
+    this.functionBody(node.body)
+    this.commit()
   }
 
-  functionParams(params: nodes.Param[]): string {
-    return params.map((p) => this.functionParam(p)).join(', ')
+  private functionBody(body: nodes.FunctionDeclaration['body']): void {
+    if (body instanceof nodes.Block) {
+      return body.accept(this)
+    }
+    this.commit('{')
+    this.i(() => {
+      this.append(`return `)
+      body.accept(this)
+      this.commit(';')
+    })
+    this.append('}')
   }
 
-  functionParam(param: nodes.Param): string {
-    return param.accept(this)
-  }
-
-  functionBody(body: nodes.FunctionDeclaration['body']) {
-    let result = body.accept(this)
-    if (body instanceof nodes.Block) return result
-    return [
-      '{',
-      this.indentBlock(() => [`return ${result};`]),
-      this.indent('}'),
-    ].join('\n')
-  }
-
-  functionUse(closureVariables: nodes.FunctionExpression['closureVariables']) {
-    if (!closureVariables.length) return ''
-    return ` use (${closureVariables.map((v) => '$' + v).join(', ')})`
+  private functionUse(
+    closureVariables: nodes.FunctionExpression['closureVariables'],
+  ): void {
+    if (!closureVariables.length) return
+    this.append(`use (${closureVariables.map((v) => '$' + v).join(', ')}) `)
   }
 
   functionDocblock(
     params: Array<{ name: string; type: Type | null }>,
     returnType: Type | null,
-  ): string {
+  ): void {
     if (returnType?.isExpressibleInPhp()) returnType = null
     let nonExpressibleParams = params.filter(
       (p) => p.type?.isExpressibleInPhp() === false,
     )
-    if (nonExpressibleParams.length === 0) return ''
-    return (
-      [
-        '/**',
-        ...nonExpressibleParams.map(
-          (p) => ` * @param ${p.type?.accept(this)} $${p.name}`,
-        ),
-        returnType && ` * @return ${returnType.accept(this)}`,
-        ' */',
-      ]
-        .filter(Boolean)
-        .map((line) => this.indent(line ?? ''))
-        .join('\n') + '\n'
-    )
+    if (nonExpressibleParams.length === 0) return
+    this.commit('/**')
+    for (let param of nonExpressibleParams) {
+      if (param.type == null) continue
+      this.append(' * @param ')
+      param.type?.accept(this)
+      this.commit(` $${param.name}`)
+    }
+    if (returnType) {
+      this.append(' * @return ')
+      returnType.accept(this)
+      this.commit()
+    }
+    this.commit(' */')
   }
 
-  visitGetExpr(node: nodes.Get): string {
-    return `${node.object.accept(this)}->${node.name}`
+  visitGetExpr(node: nodes.Get): void {
+    node.object.accept(this)
+    this.append(`->${node.name}`)
   }
 
-  visitGrouping(node: nodes.Grouping): string {
-    return `(${node.expression.accept(this)})`
+  visitGrouping(node: nodes.Grouping): void {
+    this.append('(')
+    node.expression.accept(this)
+    this.append(')')
   }
 
-  visitIdentifier(node: nodes.Identifier): string {
+  visitIdentifier(node: nodes.Identifier): void {
     let kind = node.kind!
-    if (kind === EnvironmentKind.Variable) return `$${node.name}`
-    if (kind === EnvironmentKind.ClosureVariable) return `$${node.name}`
-    if (kind === EnvironmentKind.ClassProperty) return `$this->${node.name}`
-    if (kind === EnvironmentKind.ClassMethod) return `$this->${node.name}`
-    if (kind === EnvironmentKind.ClassConst) return `self::${node.name}`
+    if (kind === EnvironmentKind.Variable) {
+      return this.append(`$${node.name}`)
+    }
+    if (kind === EnvironmentKind.ClosureVariable) {
+      return this.append(`$${node.name}`)
+    }
+    if (kind === EnvironmentKind.ClassProperty) {
+      return this.append(`$this->${node.name}`)
+    }
+    if (kind === EnvironmentKind.ClassMethod) {
+      return this.append(`$this->${node.name}`)
+    }
+    if (kind === EnvironmentKind.ClassConst) {
+      return this.append(`self::${node.name}`)
+    }
     if (kind === EnvironmentKind.PhinRuntimeFunction) {
       this.phinRuntimeFunctionsUsed.add(node.name)
     }
-    return `${node.name}`
+    return this.append(`${node.name}`)
   }
 
-  visitIf(node: nodes.If): string {
-    let result = `if (${node.condition.accept(this)}) `
-    let thenBranch = node.thenBranch.accept(this)
-    let elseBranch = node.elseBranch
-      ? ` else ${node.elseBranch.accept(this)}`
-      : ''
-    return result + thenBranch + elseBranch
-  }
-
-  visitMatch(node: nodes.Match): string {
-    let subject = node.subject.accept(this)
-    let result = `match (${subject}) {`
-    if (!node.arms.length && !node.defaultArm) return result + '}'
-    let arms = this.indentBlock(() => {
-      let result = node.arms.map((a) => a.accept(this))
-      if (node.defaultArm) {
-        result.push('default => ' + node.defaultArm.accept(this) + ',')
-      }
-      return result
-    })
-    return `${result}\n${arms}\n${this.indent('}')}`
-  }
-
-  visitMatchArm(node: nodes.MatchArm): string {
-    let pattern = node.patterns.map((p) => p.accept(this)).join(', ')
-    let body = node.body.accept(this)
-    return `${pattern} => ${body},`
-  }
-
-  visitNew(node: nodes.New): string {
-    return `new ${node.expression.accept(this)}`
-  }
-
-  visitNullLiteral(node: nodes.NullLiteral): string {
-    return 'null'
-  }
-
-  visitNumberLiteral(node: nodes.NumberLiteral): string {
-    return node.value
-  }
-
-  visitOptionalGet(node: nodes.OptionalGet): string {
-    throw new Error('Method not implemented.')
-  }
-
-  visitParam(node: nodes.Param): string {
-    let type = node.type ? `${node.type.simplify().accept(this)} ` : ''
-    let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''
-    return `${type}$${node.name}${init}`
-  }
-
-  visitPipeline(node: nodes.Pipeline): string {
-    let left = node.left.accept(this)
-    let right = node.right.accept(this)
-    return `${right}(${left})`
-  }
-
-  visitPostfix(node: nodes.Postfix): string {
-    return `${node.left.accept(this)}${node.operator}`
-  }
-
-  visitPrefix(node: nodes.Prefix): string {
-    throw new Error('Method not implemented.')
-  }
-
-  visitProgram(node: nodes.Program): string {
-    return node.statements.map((s) => s.accept(this)).join('\n') + '\n'
-  }
-
-  visitReturn(node: nodes.Return): string {
-    let value = node.value ? ' ' + node.value.accept(this) : ''
-    return `return${value};`
-  }
-
-  visitScopeResolution(node: nodes.ScopeResolution): string {
-    return `${node.left.accept(this)}::${node.right}`
-  }
-
-  visitStringLiteral(node: nodes.StringLiteral): string {
-    return `"${node.value}"`
-  }
-
-  visitTemplateStringLiteral(node: nodes.TemplateStringLiteral): string {
-    if (node.parts.length === 0) return '""'
-    let parts = node.parts.map((p) => p.accept(this))
-    if (
-      node.parts.length === 1 &&
-      !(node.parts[0] instanceof nodes.StringLiteral)
-    ) {
-      parts.unshift('""')
+  visitIf(node: nodes.If): void {
+    this.append('if (')
+    node.condition.accept(this)
+    this.append(') ')
+    node.thenBranch.accept(this)
+    if (node.elseBranch) {
+      this.append(' else ')
+      node.elseBranch.accept(this)
     }
-    if (parts.length <= 1) return parts.join('')
-    return `(${parts.join(' . ')})`
+    this.commit()
   }
 
-  visitSuper(): string {
-    return 'super'
+  visitMatch(node: nodes.Match): void {
+    this.append('match (')
+    node.subject.accept(this)
+    this.append(') {')
+    if (node.arms.length === 0 && !node.defaultArm) {
+      return this.append('}')
+    }
+    this.i(() => {
+      this.commit()
+      for (let arm of node.arms) {
+        arm.accept(this)
+        this.commit(',')
+      }
+      if (node.defaultArm) {
+        this.append('default => ')
+        node.defaultArm.accept(this)
+        this.commit(',')
+      }
+    })
+    this.append('}')
   }
 
-  visitTernary(node: nodes.Ternary): string {
+  visitMatchArm(node: nodes.MatchArm): void {
+    this.commaSeparate(node.patterns)
+    this.append(' => ')
+    node.body.accept(this)
+  }
+
+  visitNew(node: nodes.New): void {
+    this.append('new ')
+    node.expression.accept(this)
+  }
+
+  visitNullLiteral(node: nodes.NullLiteral): void {
+    this.append('null')
+  }
+
+  visitNumberLiteral(node: nodes.NumberLiteral): void {
+    this.append(node.value)
+  }
+
+  visitOptionalGet(node: nodes.OptionalGet): void {
+    throw new Error('Method not implemented.')
+  }
+
+  visitParam(node: nodes.Param): void {
+    if (node.type != null) {
+      node.type.simplify().accept(this)
+      this.append(' ')
+    }
+    this.append(`$${node.name}`)
+    if (node.initializer) {
+      this.append(' = ')
+      node.initializer.accept(this)
+    }
+  }
+
+  visitPipeline(node: nodes.Pipeline): void {
+    node.right.accept(this)
+    this.append('(')
+    node.left.accept(this)
+    this.append(')')
+  }
+
+  visitPostfix(node: nodes.Postfix): void {
+    node.left.accept(this)
+    this.append(node.operator)
+  }
+
+  visitPrefix(node: nodes.Prefix): void {
+    throw new Error('Method not implemented.')
+  }
+
+  visitProgram(node: nodes.Program): void {
+    node.statements.map((s) => s.accept(this))
+    this.commit()
+  }
+
+  visitReturn(node: nodes.Return): void {
+    this.append('return ')
+    if (node.value != null) node.value.accept(this)
+    this.commit(';')
+  }
+
+  visitScopeResolution(node: nodes.ScopeResolution): void {
+    node.left.accept(this)
+    this.append(`::${node.right}`)
+  }
+
+  visitStringLiteral(node: nodes.StringLiteral): void {
+    this.append(`"${node.value}"`)
+  }
+
+  visitTemplateStringLiteral(node: nodes.TemplateStringLiteral): void {
+    if (node.parts.length === 0) return this.append('""')
+    this.append('(')
+    if (node.parts.length === 1) {
+      if (!(node.parts[0] instanceof nodes.StringLiteral)) {
+        this.append('"" . ')
+      }
+    }
+    for (let i = 0; i < node.parts.length; i++) {
+      node.parts[i].accept(this)
+      if (i < node.parts.length - 1) this.append(' . ')
+    }
+    this.append(')')
+  }
+
+  visitSuper(): void {
+    this.append('super')
+  }
+
+  visitTernary(node: nodes.Ternary): void {
     let { condition, left, right } = node
-    return `${condition.accept(this)} ? ${left.accept(this)} : ${right.accept(this)}`
+    condition.accept(this)
+    this.append(' ? ')
+    left.accept(this)
+    this.append(' : ')
+    right.accept(this)
   }
 
-  visitThis(): string {
-    return '$this'
+  visitThis(): void {
+    this.append('$this')
   }
 
-  visitThrowExpression(node: nodes.ThrowExpression): string {
-    return `throw ${node.expression.accept(this)}`
+  visitThrowExpression(node: nodes.ThrowExpression): void {
+    this.append('throw ')
+    node.expression.accept(this)
   }
 
-  visitThrowStatement(node: nodes.ThrowStatement): string {
+  visitThrowStatement(node: nodes.ThrowStatement): void {
     throw new Error('Method not implemented.')
   }
-  visitTry(node: nodes.Try): string {
+  visitTry(node: nodes.Try): void {
     throw new Error('Method not implemented.')
   }
-  visitUnary(node: nodes.Unary): string {
+  visitUnary(node: nodes.Unary): void {
     throw new Error('Method not implemented.')
   }
 
-  visitVarDeclaration(node: nodes.VarDeclaration): string {
-    let name = node.name
-    let type = ''
-    type = this.typeAnnotationViaComment(node.type, name)
-    name = `$${name}`
-    let init = node.initializer ? ` = ${node.initializer.accept(this)}` : ''
-    return `${type}${name}${init};`
+  visitVarDeclaration(node: nodes.VarDeclaration): void {
+    if (node.type != null) {
+      this.typeAnnotationViaComment(node.type, node.name)
+    }
+    this.append(`$${node.name}`)
+    if (node.initializer) {
+      this.append(' = ')
+      node.initializer.accept(this)
+    }
+    this.commit(';')
   }
 
   visitVarDestructuringDeclaration(
     node: nodes.VarDestructuringDeclaration,
-  ): string {
-    let destructuring = node.destructuring.accept(this)
-    let init = node.initializer.accept(this)
-    return `${destructuring} = ${init};`
+  ): void {
+    node.destructuring.accept(this)
+    this.append(' = ')
+    node.initializer.accept(this)
+    this.commit(';')
   }
 
-  visitWhile(node: nodes.While): string {
+  visitWhile(node: nodes.While): void {
     throw new Error('Method not implemented.')
   }
 
-  typeAnnotation(type: Type | null): string {
-    if (!type) return ''
-    return `: ${type.simplify().accept(this)}`
+  typeAnnotation(type: Type | null | undefined): void {
+    if (type == null) return
+    this.append(': ')
+    type.accept(this)
   }
 
-  typeAnnotationViaComment(type: Type | null, name: string): string {
-    if (!type) return ''
-    return `/** @var ${type.accept(this)} $${name} */\n`
+  typeAnnotationViaComment(type: Type | null, name: string): void {
+    if (type == null) return
+    this.append(`/** @var `)
+    type.accept(this)
+    this.commit(` $${name} */`)
   }
 }

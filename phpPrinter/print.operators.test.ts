@@ -29,6 +29,20 @@ describe('print new', () => {
   })
 })
 
+describe('print clone', () => {
+  test('clone a', () => {
+    let source = 'clone a'
+    let expected = 'clone $a;'
+    expect(print(source)).toEqual(expected)
+  })
+
+  test('clone a()', () => {
+    let source = 'clone a()'
+    let expected = 'clone $a();'
+    expect(print(source)).toEqual(expected)
+  })
+})
+
 describe('print .', () => {
   test('a.b', () => {
     let source = 'a.b'
