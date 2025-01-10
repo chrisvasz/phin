@@ -1,6 +1,5 @@
-import parse from '../parser'
-import scan from '../scanner'
-import { PhpPrinter } from '../phpPrinter/print'
+import { PhpPrinter } from '../src/phpPrinter/print'
+import compile from '../src/compiler'
 
 // @ts-ignore
 const { Bun, process } = globalThis
@@ -11,8 +10,7 @@ let src = await file.text()
 
 let php = ''
 try {
-  let tokens = scan(src)
-  let ast = parse(tokens)
+  let ast = compile(src)
   php = new PhpPrinter().print(ast)
 } catch (e: any) {
   console.error(e)

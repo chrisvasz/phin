@@ -1,5 +1,5 @@
-import compile from '../compiler'
-import { PhpPrinter } from '../phpPrinter/print'
+import compile from '../src/compiler'
+import { PhpPrinter } from '../src/phpPrinter/print'
 
 // @ts-ignore
 const { Bun, process } = globalThis

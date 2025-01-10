@@ -678,13 +678,14 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
     throw new Error('Method not implemented.')
   }
 
-  typeAnnotation(type: Type | null | undefined): void {
+  private typeAnnotation(type: Type | null | undefined): void {
     if (type == null) return
     this.append(': ')
     type.accept(this)
   }
 
-  typeAnnotationViaComment(type: Type | null, name: string): void {
+  // TODO use me in more places
+  private typeAnnotationViaComment(type: Type | null, name: string): void {
     if (type == null) return
     this.append(`/** @var `)
     type.accept(this)
