@@ -114,10 +114,6 @@ export class StringLiteral extends Type {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitStringLiteralType(this)
   }
-  override isAssignableTo = (other: Type) => {
-    if (other instanceof String) return true
-    return false
-  }
   override toString() {
     return 'stringLiteral'
   }

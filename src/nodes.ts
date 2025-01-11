@@ -506,7 +506,7 @@ export class ClassInitializer extends Node {
   }
 }
 
-export class Assign extends Node {
+export class Assign extends TypedNode {
   _type = 'Assign' as const
   constructor(
     public readonly name: Identifier | Get | ArrayAccess,
@@ -517,6 +517,12 @@ export class Assign extends Node {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitAssign(this)
+  }
+  override type(): Type {
+    if (this.value instanceof TypedNode) {
+      return this.value.type()
+    }
+    throw new Error('TODO assign value must be a typed node')
   }
 }
 
@@ -836,9 +842,22 @@ export class Match extends TypedNode {
       if (this.defaultArm === null) {
         return t.void()
       }
+      if (this.defaultArm instanceof TypedNode) {
+        return this.defaultArm.type()
+      }
+      throw new Error('TODO Match default arm must be a typed node')
     }
-    let first = this.arms[0] ?? this.defaultArm
-    return first.type()
+    let recent = this.arms[0].type()
+    let all = [recent]
+    for (let i = 1; i < this.arms.length; i++) {
+      let type = this.arms[i].type()
+      if (!recent.equals(type)) {
+        all.push(type)
+        recent = type
+      }
+    }
+    if (all.length === 1) return all[0]
+    return t.union(...all)
   }
 }
 
