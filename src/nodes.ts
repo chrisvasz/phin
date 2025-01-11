@@ -3,11 +3,16 @@ import {
   EnvironmentKind,
   HoistedEnvironment,
 } from './parser/environment'
+import { t } from './parser/parser.builder'
 import { Type } from './types'
 
 export abstract class Node {
   abstract _type: string
   abstract accept<T>(visitor: Visitor<T>): T
+}
+
+export abstract class TypedNode extends Node {
+  abstract type(): Type
 }
 
 export type Visibility = 'public' | 'protected' | 'private' | null
@@ -567,7 +572,7 @@ export class Pipeline extends Node {
   }
 }
 
-export class Binary extends Node {
+export class Binary extends TypedNode {
   _type = 'Binary' as const
   constructor(
     public readonly left: Expr,
@@ -578,6 +583,20 @@ export class Binary extends Node {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitBinary(this)
+  }
+  type(): Type {
+    if (this.operator === '==') return t.bool()
+    if (this.operator === '!=') return t.bool()
+    if (this.operator === '===') return t.bool()
+    if (this.operator === '!==') return t.bool()
+    if (this.operator === '<') return t.bool()
+    if (this.operator === '<=') return t.bool()
+    if (this.operator === '>') return t.bool()
+    if (this.operator === '>=') return t.bool()
+    if (this.operator === '&&') return t.bool()
+    if (this.operator === '||') return t.bool()
+    if (this.operator === '+.') return t.string()
+    return t.null() // TODO
   }
 }
 
@@ -595,7 +614,7 @@ export class Ternary extends Node {
   }
 }
 
-export class Grouping extends Node {
+export class Grouping extends TypedNode {
   _type = 'Grouping' as const
   constructor(public readonly expression: Expr) {
     super()
@@ -603,9 +622,15 @@ export class Grouping extends Node {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitGrouping(this)
   }
+  type(): Type {
+    if (this.expression instanceof TypedNode) {
+      return this.expression.type()
+    }
+    return t.null() // TODO
+  }
 }
 
-export class NumberLiteral extends Node {
+export class NumberLiteral extends TypedNode {
   _type = 'NumberLiteral' as const
   constructor(public readonly value: string) {
     super()
@@ -613,9 +638,12 @@ export class NumberLiteral extends Node {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitNumberLiteral(this)
   }
+  type(): Type {
+    return t.number() // TODO distinguish between int and float
+  }
 }
 
-export class StringLiteral extends Node {
+export class StringLiteral extends TypedNode {
   _type = 'StringLiteral' as const
   constructor(public readonly value: string) {
     super()
@@ -623,9 +651,12 @@ export class StringLiteral extends Node {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitStringLiteral(this)
   }
+  type(): Type {
+    return t.string() // TODO should this be specific to the literal?
+  }
 }
 
-export class TemplateStringLiteral extends Node {
+export class TemplateStringLiteral extends TypedNode {
   _type = 'TemplateStringLiteral' as const
   constructor(public readonly parts: Array<StringLiteral | Expr>) {
     super()
@@ -633,19 +664,12 @@ export class TemplateStringLiteral extends Node {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitTemplateStringLiteral(this)
   }
-}
-
-export class DoubleQuoteStringLiteral extends Node {
-  _type = 'TemplateStringLiteral' as const
-  constructor(public readonly parts: Array<StringLiteral | Expr>) {
-    super()
-  }
-  accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitTemplateStringLiteral(this)
+  type(): Type {
+    return t.string()
   }
 }
 
-export class BooleanLiteral extends Node {
+export class BooleanLiteral extends TypedNode {
   _type = 'BooleanLiteral' as const
   constructor(public readonly value: boolean) {
     super()
@@ -653,12 +677,18 @@ export class BooleanLiteral extends Node {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitBooleanLiteral(this)
   }
+  type(): Type {
+    return this.value ? t.true() : t.false()
+  }
 }
 
-export class NullLiteral extends Node {
+export class NullLiteral extends TypedNode {
   _type = 'NullLiteral' as const
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitNullLiteral(this)
+  }
+  type(): Type {
+    return t.null()
   }
 }
 
@@ -789,7 +819,7 @@ export class Clone extends Node {
   }
 }
 
-export class Match extends Node {
+export class Match extends TypedNode {
   _type = 'Match' as const
   constructor(
     public readonly subject: Expr,
@@ -801,9 +831,18 @@ export class Match extends Node {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitMatch(this)
   }
+  override type(): Type {
+    if (this.arms.length === 0) {
+      if (this.defaultArm === null) {
+        return t.void()
+      }
+    }
+    let first = this.arms[0] ?? this.defaultArm
+    return first.type()
+  }
 }
 
-export class MatchArm extends Node {
+export class MatchArm extends TypedNode {
   _type = 'MatchArm' as const
   constructor(
     public readonly patterns: Array<Expr>,
@@ -813,6 +852,12 @@ export class MatchArm extends Node {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitMatchArm(this)
+  }
+  override type(): Type {
+    if (this.body instanceof TypedNode) {
+      return this.body.type()
+    }
+    throw new Error('TODO Match arm body must be a typed node')
   }
 }
 

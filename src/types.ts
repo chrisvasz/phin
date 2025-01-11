@@ -1,142 +1,172 @@
 export interface Visitor<T> {
-  visitNumberType(number: Number): T;
-  visitStringType(string: String): T;
-  visitBooleanType(boolean: Boolean): T;
-  visitIntType(int: Int): T;
-  visitFloatType(float: Float): T;
-  visitNullType(null_: Null): T;
-  visitIdentifierType(identifier: Identifier): T;
-  visitNumberLiteralType(numberLiteral: NumberLiteral): T;
-  visitStringLiteralType(stringLiteral: StringLiteral): T;
-  visitTrueType(true_: True): T;
-  visitFalseType(false_: False): T;
-  visitNullableType(nullable: Nullable): T;
-  visitUnionType(union: Union): T;
-  visitIntersectionType(intersection: Intersection): T;
+  visitNumberType(number: Number): T
+  visitStringType(string: String): T
+  visitBooleanType(boolean: Boolean): T
+  visitIntType(int: Int): T
+  visitFloatType(float: Float): T
+  visitNullType(null_: Null): T
+  visitIdentifierType(identifier: Identifier): T
+  visitNumberLiteralType(numberLiteral: NumberLiteral): T
+  visitStringLiteralType(stringLiteral: StringLiteral): T
+  visitTrueType(true_: True): T
+  visitFalseType(false_: False): T
+  visitNullableType(nullable: Nullable): T
+  visitUnionType(union: Union): T
+  visitIntersectionType(intersection: Intersection): T
+  visitVoidType(void_: Void): T
 }
 
-const returnTrue = () => true;
+const returnTrue = () => true
 function returnThis(this: Type): Type {
-  return this;
+  return this
 }
 
 export abstract class Type {
-  abstract accept<T>(visitor: Visitor<T>): T;
-  isExpressibleInPhp: () => boolean = returnTrue;
-  simplify: () => Type = returnThis;
+  abstract accept<T>(visitor: Visitor<T>): T
+  isAssignableTo(other: Type) {
+    return this instanceof other.constructor
+  }
+  equals(other: Type) {
+    // TODO override this in subclasses, esp literals
+    return this instanceof other.constructor
+  }
+  isExpressibleInPhp: () => boolean = returnTrue
+  simplify: () => Type = returnThis
 }
 
 export class Number extends Type {
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitNumberType(this);
+    return visitor.visitNumberType(this)
   }
 }
 
 export class String extends Type {
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitStringType(this);
+    return visitor.visitStringType(this)
+  }
+  override toString() {
+    return 'string'
   }
 }
 
 export class Boolean extends Type {
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitBooleanType(this);
+    return visitor.visitBooleanType(this)
   }
 }
 
 export class Int extends Type {
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitIntType(this);
+    return visitor.visitIntType(this)
   }
 }
 
 export class Float extends Type {
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitFloatType(this);
+    return visitor.visitFloatType(this)
   }
 }
 
 export class Null extends Type {
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitNullType(this);
+    return visitor.visitNullType(this)
+  }
+  override toString() {
+    return 'null'
   }
 }
 
 function hasNoGenerics(this: Identifier) {
-  return this.generics.length === 0;
+  return this.generics.length === 0
 }
 
 function simplifyIdentifier(this: Identifier) {
-  return this.generics.length === 0 ? this : new Identifier(this.name, []);
+  return this.generics.length === 0 ? this : new Identifier(this.name, [])
 }
 
 export class Identifier extends Type {
-  constructor(public readonly name: string, public readonly generics: Type[]) {
-    super();
+  constructor(
+    public readonly name: string,
+    public readonly generics: Type[],
+  ) {
+    super()
   }
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitIdentifierType(this);
+    return visitor.visitIdentifierType(this)
   }
-  override isExpressibleInPhp = hasNoGenerics;
-  override simplify = simplifyIdentifier;
+  override isExpressibleInPhp = hasNoGenerics
+  override simplify = simplifyIdentifier
 }
 
 export class NumberLiteral extends Type {
   constructor(public readonly value: string) {
-    super();
+    super()
   }
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitNumberLiteralType(this);
+    return visitor.visitNumberLiteralType(this)
   }
 }
 
 export class StringLiteral extends Type {
   constructor(public readonly value: string) {
-    super();
+    super()
   }
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitStringLiteralType(this);
+    return visitor.visitStringLiteralType(this)
+  }
+  override isAssignableTo = (other: Type) => {
+    if (other instanceof String) return true
+    return false
+  }
+  override toString() {
+    return 'stringLiteral'
   }
 }
 
 export class True extends Type {
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitTrueType(this);
+    return visitor.visitTrueType(this)
   }
 }
 
 export class False extends Type {
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitFalseType(this);
+    return visitor.visitFalseType(this)
   }
 }
 
 // TODO needs an override for isExpressibleInPhp and simplify
 export class Nullable extends Type {
   constructor(public readonly type: Type) {
-    super();
+    super()
   }
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitNullableType(this);
+    return visitor.visitNullableType(this)
   }
 }
 
 // TODO needs an override for isExpressibleInPhp and simplify
 export class Union extends Type {
   constructor(public readonly types: Type[]) {
-    super();
+    super()
   }
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitUnionType(this);
+    return visitor.visitUnionType(this)
   }
 }
 
 // TODO needs an override for isExpressibleInPhp and simplify
 export class Intersection extends Type {
   constructor(public readonly types: Type[]) {
-    super();
+    super()
   }
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitIntersectionType(this);
+    return visitor.visitIntersectionType(this)
+  }
+}
+
+export class Void extends Type {
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitVoidType(this)
   }
 }

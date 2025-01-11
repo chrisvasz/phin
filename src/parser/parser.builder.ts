@@ -289,6 +289,7 @@ export const t = (function () {
     string: () => new types.String(),
     stringLiteral: (value: string) => new types.StringLiteral(value),
     union: (...members: types.Type[]) => new types.Union(members),
+    void: () => new types.Void(),
   }
 
   function id(name: string, ...generics: types.Type[]) {
