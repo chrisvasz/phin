@@ -14,6 +14,7 @@ export interface Visitor<T> {
   visitUnionType(union: Union): T
   visitIntersectionType(intersection: Intersection): T
   visitVoidType(void_: Void): T
+  visitFunctionType(function_: Function): T
 }
 
 const returnTrue = () => true
@@ -32,6 +33,15 @@ export abstract class Type {
   }
   isExpressibleInPhp: () => boolean = returnTrue
   simplify: () => Type = returnThis
+}
+
+export class Any extends Type {
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitNumberType(this)
+  }
+  override toString() {
+    return 'any'
+  }
 }
 
 export class Number extends Type {
@@ -164,5 +174,17 @@ export class Intersection extends Type {
 export class Void extends Type {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitVoidType(this)
+  }
+}
+
+export class Function extends Type {
+  constructor(
+    public readonly params: Type[],
+    public readonly returnType: Type,
+  ) {
+    super()
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitFunctionType(this)
   }
 }

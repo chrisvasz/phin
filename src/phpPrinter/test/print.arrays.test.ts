@@ -1,8 +1,10 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import { PhpPrinter } from './print'
-import { Token } from '../token'
-import compile, { resolveUndeclaredIdentifiersToVariables } from '../compiler'
+import { PhpPrinter } from '../print'
+import { Token } from '../../token'
+import compile, {
+  resolveUndeclaredIdentifiersToVariables,
+} from '../../compiler'
 
 function ast(source: string) {
   return compile(source, {

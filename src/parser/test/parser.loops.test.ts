@@ -4,7 +4,7 @@ import scan from '../../scanner'
 import parse from '../parser'
 import * as nodes from '../../nodes'
 import * as types from '../../types'
-import { b } from '../parser.builder'
+import { b } from '../../builder'
 
 function ast(source: string) {
   return parse(scan(source))

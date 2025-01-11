@@ -11,12 +11,13 @@ export default class TypeCheckVisitor extends VoidVisitor {
   }
 
   override visitVarDeclaration(node: n.VarDeclaration): void {
-    if (!node.initializer) return
-    if (!node.type) return
-    if (!node.initializer.type().isAssignableTo(node.type)) {
-      throw new TypeCheckError(
-        `Type error: ${node.initializer.type()} is not assignable to ${node.type}`,
-      )
-    }
+    throw new Error('Method not implemented.')
+    // if (!node.initializer) return
+    // if (!node.type) return
+    // if (!node.initializer.type().isAssignableTo(node.type)) {
+    //   throw new TypeCheckError(
+    //     `Type error: ${node.initializer.type()} is not assignable to ${node.type}`,
+    //   )
+    // }
   }
 }

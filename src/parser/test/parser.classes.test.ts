@@ -2,8 +2,8 @@
 import { expect, test, describe } from 'bun:test'
 import scan from '../../scanner'
 import parse from '../parser'
-import { EnvironmentKind } from '../environment'
-import { b, t } from '../parser.builder'
+import { SymbolKind } from '../../symbols'
+import { b, t } from '../../builder'
 
 function ast(source: string) {
   return parse(scan(source))

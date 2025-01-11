@@ -1,9 +1,9 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import * as n from './nodes'
-import compile, { resolveUndeclaredIdentifiersToVariables } from './compiler'
-import * as t from './types'
-import VoidVisitor from './compiler/VoidVisitor'
+import * as n from '../nodes'
+import compile, { resolveUndeclaredIdentifiersToVariables } from '.'
+import * as t from '../types'
+import VoidVisitor from './VoidVisitor'
 
 describe('literal types', () => {
   function check(src: string, type: typeof t.Type) {
@@ -85,6 +85,14 @@ describe('match expression types', () => {
     expect(match.type()).toBeInstanceOf(t.Number)
   })
 
+  test('match (1) { default => true }', () => {
+    let src = 'match (1) { default => true }'
+    let ast = compile(src)
+    let stmt = ast.statements[0] as n.ExpressionStatement
+    let match = stmt.expression as n.Match
+    expect(match.type()).toBeInstanceOf(t.True)
+  })
+
   test('match (1) { 1 => "2" }', () => {
     let src = 'match (1) { 1 => "2" }'
     let ast = compile(src)
@@ -113,14 +121,17 @@ describe('match expression types', () => {
       expect(actual.types[1]).toBeInstanceOf(t.String)
     }
   })
-})
 
-describe('call expression types', () => {
-  test.todo('fun a(): true => true; a()', () => {
-    let src = 'fun a(): true => true; a()'
+  test('match (1) { 1 => 2, default => "3" }', () => {
+    let src = 'match (1) { 1 => 2, default => "3" }'
     let ast = compile(src)
-    let stmt = ast.statements[1] as n.ExpressionStatement
-    let call = stmt.expression as n.Call
-    expect(call.type()).toBeInstanceOf(t.True)
+    let stmt = ast.statements[0] as n.ExpressionStatement
+    let match = stmt.expression as n.Match
+    let actual = match.type()
+    expect(actual).toBeInstanceOf(t.Union)
+    if (actual instanceof t.Union) {
+      expect(actual.types[0]).toBeInstanceOf(t.Number)
+      expect(actual.types[1]).toBeInstanceOf(t.String)
+    }
   })
 })

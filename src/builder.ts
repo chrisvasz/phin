@@ -1,7 +1,7 @@
 // @ts-ignore
-import * as nodes from '../nodes'
-import * as types from '../types'
-import { ClassEnvironment, HoistedEnvironment } from './environment'
+import * as nodes from './nodes'
+import * as types from './types'
+import { ClassEnvironment, HoistedEnvironment } from './symbols'
 
 export const b = (function () {
   return {
@@ -273,23 +273,36 @@ export const b = (function () {
 })()
 
 export const t = (function () {
+  const any = new types.Any()
+  const void_ = new types.Void()
+  const bool = new types.Boolean()
+  const int = new types.Int()
+  const float = new types.Float()
+  const number = new types.Number()
+  const string = new types.String()
+  const null_ = new types.Null()
+  const true_ = new types.True()
+  const false_ = new types.False()
+
   return {
+    any: () => any,
     array,
-    bool: () => new types.Boolean(),
-    false: () => new types.False(),
-    float: () => new types.Float(),
+    bool: () => bool,
+    false: () => false_,
+    float: () => float,
+    fun,
     id,
-    int: () => new types.Int(),
-    intersection: (...members: types.Type[]) => new types.Intersection(members),
-    null: () => new types.Null(),
+    int: () => int,
+    intersection,
+    null: () => null_,
     nullable: (type: types.Type) => new types.Nullable(type),
-    number: () => new types.Number(),
+    number: () => number,
     numberLiteral: (value: string) => new types.NumberLiteral(value),
-    true: () => new types.True(),
-    string: () => new types.String(),
+    true: () => true_,
+    string: () => string,
     stringLiteral: (value: string) => new types.StringLiteral(value),
-    union: (...members: types.Type[]) => new types.Union(members),
-    void: () => new types.Void(),
+    union,
+    void: () => void_,
   }
 
   function id(name: string, ...generics: types.Type[]) {
@@ -298,5 +311,37 @@ export const t = (function () {
 
   function array(...generics: types.Type[]) {
     return id('array', ...generics)
+  }
+
+  function fun(params: types.Type[], returnType: types.Type) {
+    return new types.Function(params, returnType)
+  }
+
+  function intersection(...members: types.Type[]) {
+    if (members.length === 0) return new types.Void()
+    let prev = members[0]
+    let unique = [prev]
+    for (let i = 1; i < members.length; i++) {
+      if (!members[i].equals(prev)) {
+        unique.push(members[i])
+        prev = members[i]
+      }
+    }
+    if (unique.length === 1) return unique[0]
+    return new types.Intersection(unique)
+  }
+
+  function union(...elements: types.Type[]) {
+    if (elements.length === 0) return new types.Void()
+    let prev = elements[0]
+    let unique = [prev]
+    for (let i = 1; i < elements.length; i++) {
+      if (!elements[i].equals(prev)) {
+        unique.push(elements[i])
+        prev = elements[i]
+      }
+    }
+    if (unique.length === 1) return unique[0]
+    return new types.Union(unique)
   }
 })()

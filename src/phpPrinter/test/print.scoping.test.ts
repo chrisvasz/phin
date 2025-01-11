@@ -1,7 +1,9 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import { PhpPrinter } from './print'
-import compile, { resolveUndeclaredIdentifiersToVariables } from '../compiler'
+import { PhpPrinter } from '../print'
+import compile, {
+  resolveUndeclaredIdentifiersToVariables,
+} from '../../compiler'
 
 function print(source: string) {
   let printer = new PhpPrinter()

@@ -4,14 +4,15 @@ import scan from '../scanner'
 import BindIdentifiersVisitor, {
   defaultResolveUndeclaredIdentifier,
 } from './BindIdentifiersVisitor'
-import { EnvironmentKind } from '../parser/environment'
+import { Symbol, SymbolKind } from '../symbols'
+import { t } from '../builder'
 
-export function resolveUndeclaredIdentifiersToVariables() {
-  return EnvironmentKind.Variable
+export function resolveUndeclaredIdentifiersToVariables(name: string): Symbol {
+  return new Symbol(name, t.any(), SymbolKind.Variable)
 }
 
-export function resolveUndeclaredIdentifiersToFunctions() {
-  return EnvironmentKind.Function
+export function resolveUndeclaredIdentifiersToFunctions(name: string): Symbol {
+  return new Symbol(name, t.any(), SymbolKind.Function)
 }
 
 export default function compile(

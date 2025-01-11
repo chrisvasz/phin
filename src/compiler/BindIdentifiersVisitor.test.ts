@@ -6,7 +6,7 @@ import ParseError from '../parser/ParseError'
 import parse from '../parser/parser'
 import scan from '../scanner'
 import VoidVisitor from './VoidVisitor'
-import { EnvironmentKind } from '../parser/environment'
+import { SymbolKind } from '../symbols'
 
 function ast(source: string) {
   return parse(scan(source), {
@@ -17,14 +17,14 @@ function ast(source: string) {
 function checkIdentifierType(
   ast: nodes.Program,
   name: string,
-  kind: EnvironmentKind,
+  kind: SymbolKind,
 ) {
   let calls = 0
   let check = new (class extends VoidVisitor {
     override visitIdentifier(node: nodes.Identifier): void {
       if (node.name !== name) return
       calls++
-      expect(node.kind).toBe(kind)
+      expect(node.symbol!.kind).toBe(kind)
     }
   })()
   check.visitProgram(ast)
@@ -46,7 +46,7 @@ describe('hoisting', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'a', EnvironmentKind.Function)
+    checkIdentifierType(program, 'a', SymbolKind.Function)
   })
 
   test('A; class A {}', () => {
@@ -54,7 +54,7 @@ describe('hoisting', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'A', EnvironmentKind.Class)
+    checkIdentifierType(program, 'A', SymbolKind.Class)
   })
 })
 
@@ -73,7 +73,7 @@ describe('var at global scope', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'a', EnvironmentKind.Variable)
+    checkIdentifierType(program, 'a', SymbolKind.Variable)
   })
 })
 
@@ -83,7 +83,7 @@ describe('var in function scope', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'a', EnvironmentKind.Function)
+    checkIdentifierType(program, 'a', SymbolKind.Function)
   })
 
   test('fun a() { b; var b; }', () => {
@@ -100,7 +100,7 @@ describe('var in function scope', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'b', EnvironmentKind.Variable)
+    checkIdentifierType(program, 'b', SymbolKind.Variable)
   })
 
   test('fun a() { { var b; } b; }', () => {
@@ -108,7 +108,7 @@ describe('var in function scope', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'b', EnvironmentKind.Variable)
+    checkIdentifierType(program, 'b', SymbolKind.Variable)
   })
 
   test('fun a() { { var b; } } b;', () => {
@@ -125,7 +125,7 @@ describe('var in function scope', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'b', EnvironmentKind.Variable)
+    checkIdentifierType(program, 'b', SymbolKind.Variable)
   })
 
   test('var a = fun(b) => b', () => {
@@ -133,7 +133,7 @@ describe('var in function scope', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'b', EnvironmentKind.Variable)
+    checkIdentifierType(program, 'b', SymbolKind.Variable)
   })
 })
 
@@ -152,7 +152,15 @@ describe('classes', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'a', EnvironmentKind.ClassProperty)
+    checkIdentifierType(program, 'a', SymbolKind.ClassProperty)
+  })
+
+  test('class A(var a) iterates a {}', () => {
+    let source = 'class A(var a) iterates a {}'
+    let program = ast(source)
+    let visitor = new BindIdentifiersVisitor()
+    expect(() => visitor.visit(program)).not.toThrow()
+    checkIdentifierType(program, 'a', SymbolKind.ClassProperty)
   })
 
   test('class A { const B = 1; fun a() => B }', () => {
@@ -160,7 +168,7 @@ describe('classes', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'B', EnvironmentKind.ClassConst)
+    checkIdentifierType(program, 'B', SymbolKind.ClassConst)
   })
 })
 
@@ -170,7 +178,7 @@ describe('destructuring', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'b', EnvironmentKind.Variable)
+    checkIdentifierType(program, 'b', SymbolKind.Variable)
   })
 
   test('var a; foreach (a as [b]) { b; }', () => {
@@ -178,6 +186,6 @@ describe('destructuring', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'b', EnvironmentKind.Variable)
+    checkIdentifierType(program, 'b', SymbolKind.Variable)
   })
 })

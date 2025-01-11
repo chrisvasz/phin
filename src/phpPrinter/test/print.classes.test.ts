@@ -1,8 +1,8 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import { PhpPrinter, PrintError } from './print'
-import { trimMargin } from './trimMargin'
-import compile from '../compiler'
+import { PhpPrinter, PrintError } from '../print'
+import { trimMargin } from '../trimMargin'
+import compile from '../../compiler'
 
 function ast(source: string) {
   return compile(source, { buildEnvironment: true })

@@ -1,8 +1,8 @@
-import { EnvironmentKind } from '../parser/environment'
+import { SymbolKind } from '../symbols'
 import * as nodes from '../nodes'
 import * as types from '../types'
 import { Type } from '../types'
-import { runtime } from '../parser/globalEnvironment'
+import { builtins, runtime } from '../compiler/builtins'
 
 export class PrintError extends Error {}
 
@@ -109,6 +109,14 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
       union.types[i].accept(this)
       if (i < union.types.length - 1) this.append('|')
     }
+  }
+
+  visitFunctionType(function_: types.Function): void {
+    throw new Error('Method not implemented.')
+  }
+
+  visitVoidType(void_: types.Void): void {
+    this.append('void')
   }
 
   /////////////////////////////
@@ -262,6 +270,8 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
 
   private classGetIterator(node: nodes.ClassDeclaration): void {
     if (!node.iterates) return
+    let ArrayIterator = new nodes.Identifier('ArrayIterator')
+    ArrayIterator.bind(builtins.get('ArrayIterator')!)
     let method = new nodes.ClassMethod(
       false,
       null,
@@ -269,9 +279,7 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
       'getIterator',
       [],
       new types.Identifier('Traversable', []),
-      new nodes.New(
-        new nodes.Call(new nodes.Identifier('ArrayIterator'), [node.iterates]),
-      ),
+      new nodes.New(new nodes.Call(ArrayIterator, [node.iterates])),
     )
     method.accept(this)
     this.commit()
@@ -475,23 +483,23 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
   }
 
   visitIdentifier(node: nodes.Identifier): void {
-    let kind = node.kind!
-    if (kind === EnvironmentKind.Variable) {
+    let kind = node.symbol!.kind!
+    if (kind === SymbolKind.Variable) {
       return this.append(`$${node.name}`)
     }
-    if (kind === EnvironmentKind.ClosureVariable) {
+    if (kind === SymbolKind.ClosureVariable) {
       return this.append(`$${node.name}`)
     }
-    if (kind === EnvironmentKind.ClassProperty) {
+    if (kind === SymbolKind.ClassProperty) {
       return this.append(`$this->${node.name}`)
     }
-    if (kind === EnvironmentKind.ClassMethod) {
+    if (kind === SymbolKind.ClassMethod) {
       return this.append(`$this->${node.name}`)
     }
-    if (kind === EnvironmentKind.ClassConst) {
+    if (kind === SymbolKind.ClassConst) {
       return this.append(`self::${node.name}`)
     }
-    if (kind === EnvironmentKind.PhinRuntimeFunction) {
+    if (kind === SymbolKind.PhinRuntimeFunction) {
       this.phinRuntimeFunctionsUsed.add(node.name)
     }
     return this.append(`${node.name}`)

@@ -4,7 +4,7 @@ import scan from '../../scanner'
 import parse from '../parser'
 import * as nodes from '../../nodes'
 import { Expr } from '../../nodes'
-import { b as builder } from '../parser.builder'
+import { b as builder } from '../../builder'
 
 function ast(source: string) {
   return parse(scan(source))

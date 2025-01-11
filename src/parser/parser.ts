@@ -3,12 +3,7 @@ import { Node, Expr, Stmt } from '../nodes'
 import * as nodes from '../nodes'
 import * as types from '../types'
 import { Type } from '../types'
-import {
-  ClassEnvironment,
-  Environment,
-  EnvironmentKind,
-  HoistedEnvironment,
-} from './environment'
+import { ClassEnvironment, SymbolKind, HoistedEnvironment } from '../symbols'
 
 const emptyArray: [] = []
 
@@ -112,17 +107,15 @@ class ParseError extends Error {}
 // TODO static thing: int = abc();
 // TODO val thing: int = 123;
 
-export function defaultResolveUnknownIdentifier(name: string): EnvironmentKind {
+export function defaultResolveUnknownIdentifier(name: string): SymbolKind {
   throw new ParseError(`Unknown identifier: ${name}`)
 }
 
 export default function parse(
   tokens: Token[],
   {
-    enclosingEnvironment = null,
     buildEnvironment = false,
   }: {
-    enclosingEnvironment?: Environment | null
     buildEnvironment?: boolean
   } = {},
 ): nodes.Program {
@@ -202,7 +195,7 @@ export default function parse(
   ): nodes.ClassDeclaration {
     let env = new ClassEnvironment()
     let name = consume('Expect class name', IDENTIFIER).lexeme
-    hoistedEnvironment.add(name, EnvironmentKind.Class)
+    hoistedEnvironment.add(name, null, SymbolKind.Class) // TODO
     let constructorVisibility = classVisibility()
     let params = match(LEFT_PAREN) ? classParams(env) : emptyArray
     let superclass = match(EXTENDS) ? classSuperclass() : null
@@ -248,7 +241,7 @@ export default function parse(
     let name = consume('Expect class param name', IDENTIFIER).lexeme
     let type = match(COLON) ? typeAnnotation() : null
     let initializer = match(EQUAL) ? expression() : null
-    env.add(name, EnvironmentKind.ClassProperty)
+    env.add(name, type, SymbolKind.ClassProperty)
     return new nodes.ClassProperty(
       isFinal,
       visibility,
@@ -337,7 +330,7 @@ export default function parse(
     consume('Expect "(" after method name', LEFT_PAREN)
     let params = functionParams()
     let returnType = match(COLON) ? typeAnnotation() : null
-    env.add(name, EnvironmentKind.ClassMethod)
+    env.add(name, null, SymbolKind.ClassMethod) // TODO function type
     return new nodes.ClassAbstractMethod(
       visibility,
       isStatic,
@@ -364,7 +357,7 @@ export default function parse(
     consume('Expect "(" after function name', LEFT_PAREN)
     let params = functionParams()
     let returnType = match(COLON) ? typeAnnotation() : null
-    env.add(name, EnvironmentKind.ClassMethod)
+    env.add(name, null, SymbolKind.ClassMethod) // TODO function type
     return new nodes.ClassMethod(
       isFinal,
       visibility,
@@ -386,7 +379,7 @@ export default function parse(
     let name = consume('Expect variable name', IDENTIFIER).lexeme
     let type = match(COLON) ? typeAnnotation() : null
     let initializer = match(EQUAL) ? expression() : null
-    env.add(name, EnvironmentKind.ClassProperty)
+    env.add(name, type, SymbolKind.ClassProperty)
     return new nodes.ClassProperty(
       isFinal,
       visibility,
@@ -408,7 +401,7 @@ export default function parse(
     let type = match(COLON) ? typeAnnotation() : null
     consume('Expect "=" after class constant name', EQUAL)
     let initializer = expression()
-    env.add(name, EnvironmentKind.ClassConst)
+    env.add(name, type, SymbolKind.ClassConst)
     return new nodes.ClassConst(
       isFinal,
       visibility,
@@ -427,9 +420,9 @@ export default function parse(
   function functionDeclaration(): nodes.FunctionDeclaration {
     let name = consume('Expect function name', IDENTIFIER).lexeme
     consume('Expect "(" after function name', LEFT_PAREN)
-    hoistedEnvironment.add(name, EnvironmentKind.Function)
     let params = functionParams()
     let returnType = match(COLON) ? typeAnnotation() : null
+    hoistedEnvironment.add(name, returnType, SymbolKind.Function)
     return new nodes.FunctionDeclaration(
       name,
       params,

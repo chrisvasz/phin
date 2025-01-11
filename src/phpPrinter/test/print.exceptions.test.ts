@@ -1,8 +1,10 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import { PhpPrinter, PrintError } from './print'
-import { trimMargin } from './trimMargin'
-import compile, { resolveUndeclaredIdentifiersToFunctions } from '../compiler'
+import { PhpPrinter, PrintError } from '../print'
+import { trimMargin } from '../trimMargin'
+import compile, {
+  resolveUndeclaredIdentifiersToFunctions,
+} from '../../compiler'
 
 function ast(source: string) {
   return compile(source, {

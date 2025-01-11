@@ -1,9 +1,10 @@
 import {
   ClassEnvironment,
-  EnvironmentKind,
+  SymbolKind,
   HoistedEnvironment,
-} from './parser/environment'
-import { t } from './parser/parser.builder'
+  Symbol,
+} from './symbols'
+import { t } from './builder'
 import { Type } from './types'
 
 export abstract class Node {
@@ -773,17 +774,20 @@ export class Postfix extends Node {
   }
 }
 
-export class Identifier extends Node {
+export class Identifier extends TypedNode {
   _type = 'Identifier' as const
-  kind: EnvironmentKind | null = null
+  symbol: Symbol | null = null
   constructor(public readonly name: string) {
     super()
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitIdentifier(this)
   }
-  bind(kind: EnvironmentKind) {
-    this.kind = kind
+  bind(symbol: Symbol) {
+    this.symbol = symbol
+  }
+  type(): Type {
+    return this.symbol!.type
   }
 }
 
@@ -838,26 +842,11 @@ export class Match extends TypedNode {
     return visitor.visitMatch(this)
   }
   override type(): Type {
-    if (this.arms.length === 0) {
-      if (this.defaultArm === null) {
-        return t.void()
-      }
-      if (this.defaultArm instanceof TypedNode) {
-        return this.defaultArm.type()
-      }
-      throw new Error('TODO Match default arm must be a typed node')
+    let types = this.arms.map((arm) => arm.type())
+    if (this.defaultArm instanceof TypedNode) {
+      types.push(this.defaultArm.type())
     }
-    let recent = this.arms[0].type()
-    let all = [recent]
-    for (let i = 1; i < this.arms.length; i++) {
-      let type = this.arms[i].type()
-      if (!recent.equals(type)) {
-        all.push(type)
-        recent = type
-      }
-    }
-    if (all.length === 1) return all[0]
-    return t.union(...all)
+    return t.union(...types)
   }
 }
 

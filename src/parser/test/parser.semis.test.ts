@@ -3,7 +3,7 @@ import { expect, test, describe } from 'bun:test'
 import scan from '../../scanner'
 import parse from '../parser'
 import * as nodes from '../../nodes'
-import { b, t } from '../parser.builder'
+import { b, t } from '../../builder'
 
 function ast(source: string) {
   return parse(scan(source))
