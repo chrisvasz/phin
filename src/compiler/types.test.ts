@@ -135,3 +135,174 @@ describe('match expression types', () => {
     }
   })
 })
+
+describe('function declaration types', () => {
+  test('fun a(): int {}', () => {
+    let src = 'fun a(): int {}'
+    let ast = compile(src)
+    let stmt = ast.statements[0] as n.FunctionDeclaration
+    let actual = stmt.type()
+    expect(actual).toBeInstanceOf(t.Function)
+    if (actual instanceof t.Function) {
+      expect(actual.returnType).toBeInstanceOf(t.Int)
+    }
+  })
+
+  test('fun a(): int|string {}', () => {
+    let src = 'fun a(): int|string {}'
+    let ast = compile(src)
+    let stmt = ast.statements[0] as n.FunctionDeclaration
+    let actual = stmt.type()
+    expect(actual).toBeInstanceOf(t.Function)
+    if (actual instanceof t.Function) {
+      let returnType = actual.returnType
+      expect(returnType).toBeInstanceOf(t.Union)
+      if (returnType instanceof t.Union) {
+        expect(returnType.types[0]).toBeInstanceOf(t.Int)
+        expect(returnType.types[1]).toBeInstanceOf(t.String)
+      }
+    }
+  })
+
+  test('fun a(b: string): int {}', () => {
+    let src = 'fun a(b: string): int {}'
+    let ast = compile(src)
+    let stmt = ast.statements[0] as n.FunctionDeclaration
+    let actual = stmt.type()
+    expect(actual).toBeInstanceOf(t.Function)
+    if (actual instanceof t.Function) {
+      expect(actual.returnType).toBeInstanceOf(t.Int)
+      expect(actual.params[0]).toBeInstanceOf(t.String)
+    }
+  })
+
+  test('fun a(b: string, c: bool): int {}', () => {
+    let src = 'fun a(b: string, c: bool): int {}'
+    let ast = compile(src)
+    let stmt = ast.statements[0] as n.FunctionDeclaration
+    let actual = stmt.type()
+    expect(actual).toBeInstanceOf(t.Function)
+    if (actual instanceof t.Function) {
+      expect(actual.returnType).toBeInstanceOf(t.Int)
+      expect(actual.params[0]).toBeInstanceOf(t.String)
+      expect(actual.params[1]).toBeInstanceOf(t.Boolean)
+    }
+  })
+
+  test.todo('fun a() => ""', () => {
+    // infer return type from expression
+    let src = 'fun a() => ""'
+    let ast = compile(src)
+    let stmt = ast.statements[0] as n.FunctionDeclaration
+    let actual = stmt.type()
+    expect(actual).toBeInstanceOf(t.Function)
+    if (actual instanceof t.Function) {
+      expect(actual.returnType).toBeInstanceOf(t.String)
+    }
+  })
+})
+
+describe('function expression types', () => {
+  test('var a = fun(): int => 1', () => {
+    let src = 'var a = fun(): int => 1'
+    let ast = compile(src)
+    let stmt = ast.statements[0] as n.VarDeclaration
+    let expr = stmt.initializer as n.FunctionExpression
+    let actual = expr.type()
+    expect(actual).toBeInstanceOf(t.Function)
+    if (actual instanceof t.Function) {
+      expect(actual.returnType).toBeInstanceOf(t.Int)
+    }
+  })
+
+  test('var a = fun(b: string): int => 1', () => {
+    let src = 'var a = fun(b: string): int => 1'
+    let ast = compile(src)
+    let stmt = ast.statements[0] as n.VarDeclaration
+    let expr = stmt.initializer as n.FunctionExpression
+    let actual = expr.type()
+    expect(actual).toBeInstanceOf(t.Function)
+    if (actual instanceof t.Function) {
+      expect(actual.returnType).toBeInstanceOf(t.Int)
+      expect(actual.params[0]).toBeInstanceOf(t.String)
+    }
+  })
+
+  // infer return type from expression
+  test.todo('var a = fun () => ""', () => {
+    let src = 'var a = fun () => ""'
+    let ast = compile(src)
+    let stmt = ast.statements[0] as n.VarDeclaration
+    let expr = stmt.initializer as n.FunctionExpression
+    let actual = expr.type()
+    expect(actual).toBeInstanceOf(t.Function)
+    if (actual instanceof t.Function) {
+      expect(actual.returnType).toBeInstanceOf(t.String)
+    }
+  })
+
+  // infer return type from expression
+  test.todo('var a = ""; var b = fun() => a', () => {
+    let src = 'var a = ""; var b = fun() => a'
+    let ast = compile(src)
+    let stmt = ast.statements[1] as n.VarDeclaration
+    let expr = stmt.initializer as n.FunctionExpression
+    let actual = expr.type()
+    expect(actual).toBeInstanceOf(t.Function)
+    if (actual instanceof t.Function) {
+      expect(actual.returnType).toBeInstanceOf(t.String)
+    }
+  })
+})
+
+describe('var declaration types', () => {
+  test('var a: string', () => {
+    let src = 'var a: string'
+    let ast = compile(src)
+    let stmt = ast.statements[0] as n.VarDeclaration
+    let actual = stmt.type()
+    expect(actual).toBeInstanceOf(t.String)
+  })
+
+  // infers type from expression
+  test('var a = ""', () => {
+    let src = 'var a = ""'
+    let ast = compile(src)
+    let stmt = ast.statements[0] as n.VarDeclaration
+    let actual = stmt.type()
+    expect(actual).toBeInstanceOf(t.String)
+  })
+
+  // infers type from expression
+  test('var a = ""; var b = a', () => {
+    let src = 'var a = ""; var b = a'
+    let ast = compile(src)
+    let stmt = ast.statements[1] as n.VarDeclaration
+    let actual = stmt.type()
+    expect(actual).toBeInstanceOf(t.String)
+  })
+})
+
+describe('identifier types', () => {
+  test('var a: int = 1; a', () => {
+    let src = 'var a: int = 1; a'
+    let ast = compile(src)
+    let stmt = ast.statements[1] as n.ExpressionStatement
+    let id = stmt.expression as n.Identifier
+    let actual = id.type()
+    expect(actual).toBeInstanceOf(t.Int)
+  })
+
+  test('fun a(b: string): int => 1; a', () => {
+    let src = 'fun a(b: string): int => 1; a'
+    let ast = compile(src)
+    let stmt = ast.statements[1] as n.ExpressionStatement
+    let id = stmt.expression as n.Identifier
+    let actual = id.type()
+    expect(actual).toBeInstanceOf(t.Function)
+    if (actual instanceof t.Function) {
+      expect(actual.returnType).toBeInstanceOf(t.Int)
+      expect(actual.params[0]).toBeInstanceOf(t.String)
+    }
+  })
+})

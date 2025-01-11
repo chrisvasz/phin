@@ -13,6 +13,7 @@ export enum SymbolKind {
 }
 
 // TODO test this file
+// TODO so need to bind to actual nodes in the AST? then types resolve lazily AFTER this pass
 
 export class Symbol<K extends SymbolKind = SymbolKind> {
   constructor(
@@ -21,7 +22,7 @@ export class Symbol<K extends SymbolKind = SymbolKind> {
     public readonly kind: K,
   ) {}
   toString() {
-    return `${SymbolKind[this.kind]} ${this.name}: ${this.type}`
+    return `${SymbolKind[this.kind]} ${this.name}: ${this.type.constructor.name}`
   }
 }
 

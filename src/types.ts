@@ -187,4 +187,7 @@ export class Function extends Type {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitFunctionType(this)
   }
+  override toString() {
+    return `(${this.params.join(', ')}) => ${this.returnType}`
+  }
 }

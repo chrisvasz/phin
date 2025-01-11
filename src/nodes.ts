@@ -1,14 +1,9 @@
-import {
-  ClassEnvironment,
-  SymbolKind,
-  HoistedEnvironment,
-  Symbol,
-} from './symbols'
+import { ClassEnvironment, HoistedEnvironment, Symbol } from './symbols'
 import { t } from './builder'
 import { Type } from './types'
 
 export abstract class Node {
-  abstract _type: string
+  abstract _name: string
   abstract accept<T>(visitor: Visitor<T>): T
 }
 
@@ -128,7 +123,7 @@ export interface Visitor<T> {
 }
 
 export class Program extends Node {
-  _type = 'Program' as const
+  _name = 'Program' as const
   constructor(
     public readonly statements: Array<Node>,
     public readonly environment: HoistedEnvironment,
@@ -141,7 +136,7 @@ export class Program extends Node {
 }
 
 export class If extends Node {
-  _type = 'If' as const
+  _name = 'If' as const
   constructor(
     public readonly condition: Expr,
     public readonly thenBranch: Stmt,
@@ -155,7 +150,7 @@ export class If extends Node {
 }
 
 export class Block extends Node {
-  _type = 'Block' as const
+  _name = 'Block' as const
   constructor(public readonly statements: Array<Node>) {
     super()
   }
@@ -164,11 +159,11 @@ export class Block extends Node {
   }
 }
 
-export class VarDeclaration extends Node {
-  _type = 'VarDeclaration' as const
+export class VarDeclaration extends TypedNode {
+  _name = 'VarDeclaration' as const
   constructor(
     public readonly name: string,
-    public readonly type: Type | null,
+    public readonly _type: Type | null,
     public readonly initializer: Expr | null,
   ) {
     super()
@@ -176,10 +171,15 @@ export class VarDeclaration extends Node {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitVarDeclaration(this)
   }
+  type() {
+    if (this._type !== null) return this._type
+    if (this.initializer instanceof TypedNode) return this.initializer.type()
+    return t.any()
+  }
 }
 
 export class VarDestructuringDeclaration extends Node {
-  _type = 'VarDestructuringDeclaration' as const
+  _name = 'VarDestructuringDeclaration' as const
   constructor(
     public readonly destructuring: Destructuring,
     public readonly initializer: Expr,
@@ -192,7 +192,7 @@ export class VarDestructuringDeclaration extends Node {
 }
 
 export class Destructuring extends Node {
-  _type = 'Destructure' as const
+  _name = 'Destructure' as const
   constructor(public readonly elements: Array<DestructuringElement | null>) {
     super()
   }
@@ -202,7 +202,7 @@ export class Destructuring extends Node {
 }
 
 export class DestructuringElement extends Node {
-  _type = 'DestructuringElement' as const
+  _name = 'DestructuringElement' as const
   constructor(
     public readonly key: string | null,
     public readonly value: string,
@@ -216,7 +216,7 @@ export class DestructuringElement extends Node {
 }
 
 export class Echo extends Node {
-  _type = 'Echo' as const
+  _name = 'Echo' as const
   constructor(public readonly expression: Expr) {
     super()
   }
@@ -226,7 +226,7 @@ export class Echo extends Node {
 }
 
 export class ExpressionStatement extends Node {
-  _type = 'ExpressionStatement' as const
+  _name = 'ExpressionStatement' as const
   constructor(public readonly expression: Expr) {
     super()
   }
@@ -236,7 +236,7 @@ export class ExpressionStatement extends Node {
 }
 
 export class While extends Node {
-  _type = 'While' as const
+  _name = 'While' as const
   constructor(
     public readonly condition: Expr,
     public readonly body: Node,
@@ -249,7 +249,7 @@ export class While extends Node {
 }
 
 export class For extends Node {
-  _type = 'For' as const
+  _name = 'For' as const
   constructor(
     public readonly initializer: Node | null,
     public readonly condition: Expr | null,
@@ -264,7 +264,7 @@ export class For extends Node {
 }
 
 export class Foreach extends Node {
-  _type = 'Foreach' as const
+  _name = 'Foreach' as const
   constructor(
     public readonly key: ForeachVariable | null,
     public readonly value: ForeachVariable | Destructuring,
@@ -279,7 +279,7 @@ export class Foreach extends Node {
 }
 
 export class ForeachVariable extends Node {
-  _type = 'ForeachVariable' as const
+  _name = 'ForeachVariable' as const
   constructor(
     public readonly name: string,
     public readonly type: Type | null,
@@ -291,8 +291,8 @@ export class ForeachVariable extends Node {
   }
 }
 
-export class FunctionDeclaration extends Node {
-  _type = 'FunctionDeclaration' as const
+export class FunctionDeclaration extends TypedNode {
+  _name = 'FunctionDeclaration' as const
   constructor(
     public readonly name: string,
     public readonly params: Array<Param>,
@@ -303,6 +303,12 @@ export class FunctionDeclaration extends Node {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitFunctionDeclaration(this)
+  }
+  override type(): Type {
+    return t.fun(
+      this.params.map((p) => p.type),
+      this.returnType,
+    )
   }
 }
 
@@ -317,7 +323,7 @@ function simplifyParam(this: Param) {
 }
 
 export class Param extends Node {
-  _type = 'Param' as const
+  _name = 'Param' as const
   constructor(
     public readonly name: string,
     public readonly type: Type | null,
@@ -333,7 +339,7 @@ export class Param extends Node {
 }
 
 export class Return extends Node {
-  _type = 'Return' as const
+  _name = 'Return' as const
   constructor(public readonly value: Expr | null) {
     super()
   }
@@ -343,7 +349,7 @@ export class Return extends Node {
 }
 
 export class Try extends Node {
-  _type = 'Try' as const
+  _name = 'Try' as const
   constructor(
     public readonly tryBlock: Block,
     public readonly catches: Array<Catch>,
@@ -362,7 +368,7 @@ export class Try extends Node {
 }
 
 export class Catch extends Node {
-  _type = 'Catch' as const
+  _name = 'Catch' as const
   constructor(
     public readonly variable: string,
     public readonly types: Array<string>,
@@ -379,7 +385,7 @@ export class Catch extends Node {
 }
 
 export class ThrowStatement extends Node {
-  _type = 'ThrowStatement' as const
+  _name = 'ThrowStatement' as const
   constructor(public readonly expression: Expr) {
     super()
   }
@@ -395,7 +401,7 @@ function classProperties(this: ClassDeclaration) {
 }
 
 export class ClassDeclaration extends Node {
-  _type = 'ClassDeclaration' as const
+  _name = 'ClassDeclaration' as const
   constructor(
     public readonly name: string,
     public readonly constructorVisibility: Visibility,
@@ -416,7 +422,7 @@ export class ClassDeclaration extends Node {
 }
 
 export class ClassSuperclass extends Node {
-  _type = 'ClassSuperclass' as const
+  _name = 'ClassSuperclass' as const
   constructor(
     public readonly name: string,
     public readonly args: Array<Expr>,
@@ -429,7 +435,7 @@ export class ClassSuperclass extends Node {
 }
 
 export class ClassProperty extends Node {
-  _type = 'ClassProperty' as const
+  _name = 'ClassProperty' as const
   constructor(
     public readonly isFinal: boolean,
     public readonly visibility: Visibility,
@@ -447,7 +453,7 @@ export class ClassProperty extends Node {
 }
 
 export class ClassMethod extends Node {
-  _type = 'ClassMethod' as const
+  _name = 'ClassMethod' as const
   constructor(
     public readonly isFinal: boolean,
     public readonly visibility: Visibility,
@@ -465,7 +471,7 @@ export class ClassMethod extends Node {
 }
 
 export class ClassAbstractMethod extends Node {
-  _type = 'ClassAbstractMethod' as const
+  _name = 'ClassAbstractMethod' as const
   constructor(
     public readonly visibility: Visibility,
     public readonly isStatic: boolean,
@@ -481,7 +487,7 @@ export class ClassAbstractMethod extends Node {
 }
 
 export class ClassConst extends Node {
-  _type = 'ClassConst' as const
+  _name = 'ClassConst' as const
   constructor(
     public readonly isFinal: boolean,
     public readonly visibility: Visibility,
@@ -498,7 +504,7 @@ export class ClassConst extends Node {
 }
 
 export class ClassInitializer extends Node {
-  _type = 'ClassInitializer' as const
+  _name = 'ClassInitializer' as const
   constructor(public readonly body: Block) {
     super()
   }
@@ -508,7 +514,7 @@ export class ClassInitializer extends Node {
 }
 
 export class Assign extends TypedNode {
-  _type = 'Assign' as const
+  _name = 'Assign' as const
   constructor(
     public readonly name: Identifier | Get | ArrayAccess,
     public readonly operator: string,
@@ -528,7 +534,7 @@ export class Assign extends TypedNode {
 }
 
 export class Call extends Node {
-  _type = 'Call' as const
+  _name = 'Call' as const
   constructor(
     public readonly callee: Expr,
     public readonly args: Array<Expr>,
@@ -541,7 +547,7 @@ export class Call extends Node {
 }
 
 export class Get extends Node {
-  _type = 'Get' as const
+  _name = 'Get' as const
   constructor(
     public readonly object: Expr,
     public readonly name: string,
@@ -554,7 +560,7 @@ export class Get extends Node {
 }
 
 export class OptionalGet extends Node {
-  _type = 'OptionalGet' as const
+  _name = 'OptionalGet' as const
   constructor(
     public readonly object: Expr,
     public readonly name: string,
@@ -567,7 +573,7 @@ export class OptionalGet extends Node {
 }
 
 export class Pipeline extends Node {
-  _type = 'Pipeline' as const
+  _name = 'Pipeline' as const
   constructor(
     public readonly left: Expr,
     public readonly right: Expr,
@@ -580,7 +586,7 @@ export class Pipeline extends Node {
 }
 
 export class Binary extends TypedNode {
-  _type = 'Binary' as const
+  _name = 'Binary' as const
   constructor(
     public readonly left: Expr,
     public readonly operator: string,
@@ -608,7 +614,7 @@ export class Binary extends TypedNode {
 }
 
 export class Ternary extends Node {
-  _type = 'Ternary' as const
+  _name = 'Ternary' as const
   constructor(
     public readonly condition: Expr,
     public readonly left: Expr,
@@ -622,7 +628,7 @@ export class Ternary extends Node {
 }
 
 export class Grouping extends TypedNode {
-  _type = 'Grouping' as const
+  _name = 'Grouping' as const
   constructor(public readonly expression: Expr) {
     super()
   }
@@ -638,7 +644,7 @@ export class Grouping extends TypedNode {
 }
 
 export class NumberLiteral extends TypedNode {
-  _type = 'NumberLiteral' as const
+  _name = 'NumberLiteral' as const
   constructor(public readonly value: string) {
     super()
   }
@@ -651,7 +657,7 @@ export class NumberLiteral extends TypedNode {
 }
 
 export class StringLiteral extends TypedNode {
-  _type = 'StringLiteral' as const
+  _name = 'StringLiteral' as const
   constructor(public readonly value: string) {
     super()
   }
@@ -664,7 +670,7 @@ export class StringLiteral extends TypedNode {
 }
 
 export class TemplateStringLiteral extends TypedNode {
-  _type = 'TemplateStringLiteral' as const
+  _name = 'TemplateStringLiteral' as const
   constructor(public readonly parts: Array<StringLiteral | Expr>) {
     super()
   }
@@ -677,7 +683,7 @@ export class TemplateStringLiteral extends TypedNode {
 }
 
 export class BooleanLiteral extends TypedNode {
-  _type = 'BooleanLiteral' as const
+  _name = 'BooleanLiteral' as const
   constructor(public readonly value: boolean) {
     super()
   }
@@ -690,7 +696,7 @@ export class BooleanLiteral extends TypedNode {
 }
 
 export class NullLiteral extends TypedNode {
-  _type = 'NullLiteral' as const
+  _name = 'NullLiteral' as const
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitNullLiteral(this)
   }
@@ -700,7 +706,7 @@ export class NullLiteral extends TypedNode {
 }
 
 export class ArrayLiteral extends Node {
-  _type = 'ArrayLiteral' as const
+  _name = 'ArrayLiteral' as const
   constructor(public readonly elements: Array<ArrayElement>) {
     super()
   }
@@ -710,7 +716,7 @@ export class ArrayLiteral extends Node {
 }
 
 export class ArrayElement extends Node {
-  _type = 'ArrayElement' as const
+  _name = 'ArrayElement' as const
   constructor(
     public readonly key: NumberLiteral | StringLiteral | null,
     public readonly value: Expr,
@@ -723,7 +729,7 @@ export class ArrayElement extends Node {
 }
 
 export class ArrayAccess extends Node {
-  _type = 'ArrayAccess' as const
+  _name = 'ArrayAccess' as const
   constructor(
     public readonly left: Expr,
     public readonly index: Expr,
@@ -736,7 +742,7 @@ export class ArrayAccess extends Node {
 }
 
 export class Unary extends Node {
-  _type = 'Unary' as const
+  _name = 'Unary' as const
   constructor(
     public readonly operator: string,
     public readonly right: Expr,
@@ -749,7 +755,7 @@ export class Unary extends Node {
 }
 
 export class Prefix extends Node {
-  _type = 'Prefix' as const
+  _name = 'Prefix' as const
   constructor(
     public readonly operator: string,
     public readonly right: Identifier,
@@ -762,7 +768,7 @@ export class Prefix extends Node {
 }
 
 export class Postfix extends Node {
-  _type = 'Postfix' as const
+  _name = 'Postfix' as const
   constructor(
     public readonly left: Identifier,
     public readonly operator: string,
@@ -775,7 +781,7 @@ export class Postfix extends Node {
 }
 
 export class Identifier extends TypedNode {
-  _type = 'Identifier' as const
+  _name = 'Identifier' as const
   symbol: Symbol | null = null
   constructor(public readonly name: string) {
     super()
@@ -787,12 +793,15 @@ export class Identifier extends TypedNode {
     this.symbol = symbol
   }
   type(): Type {
-    return this.symbol!.type
+    if (this.symbol === null) {
+      throw new Error(`Unbound identifier: ${this.name}`)
+    }
+    return this.symbol.type
   }
 }
 
-export class FunctionExpression extends Node {
-  _type = 'FunctionExpression' as const
+export class FunctionExpression extends TypedNode {
+  _name = 'FunctionExpression' as const
   public readonly closureVariables: Array<string> = []
   constructor(
     public readonly params: Array<Param>,
@@ -807,10 +816,21 @@ export class FunctionExpression extends Node {
   addClosureVariable(id: string) {
     this.closureVariables.push(id)
   }
+  type(): Type {
+    return t.fun(
+      this.params.map((p) => p.type),
+      this.return(),
+    )
+  }
+  return(): Type {
+    if (this.returnType !== null) return this.returnType
+    if (this.body instanceof TypedNode) return this.body.type()
+    return t.any()
+  }
 }
 
 export class New extends Node {
-  _type = 'New' as const
+  _name = 'New' as const
   constructor(public readonly expression: Expr) {
     super()
   }
@@ -820,7 +840,7 @@ export class New extends Node {
 }
 
 export class Clone extends Node {
-  _type = 'Clone' as const
+  _name = 'Clone' as const
   constructor(public readonly expression: Expr) {
     super()
   }
@@ -830,7 +850,7 @@ export class Clone extends Node {
 }
 
 export class Match extends TypedNode {
-  _type = 'Match' as const
+  _name = 'Match' as const
   constructor(
     public readonly subject: Expr,
     public readonly arms: Array<MatchArm>,
@@ -851,7 +871,7 @@ export class Match extends TypedNode {
 }
 
 export class MatchArm extends TypedNode {
-  _type = 'MatchArm' as const
+  _name = 'MatchArm' as const
   constructor(
     public readonly patterns: Array<Expr>,
     public readonly body: Expr,
@@ -870,7 +890,7 @@ export class MatchArm extends TypedNode {
 }
 
 export class ThrowExpression extends Node {
-  _type = 'ThrowExpression' as const
+  _name = 'ThrowExpression' as const
   constructor(public readonly expression: Expr) {
     super()
   }
@@ -880,21 +900,21 @@ export class ThrowExpression extends Node {
 }
 
 export class This extends Node {
-  _type = 'This' as const
+  _name = 'This' as const
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitThis()
   }
 }
 
 export class Super extends Node {
-  _type = 'Super' as const
+  _name = 'Super' as const
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitSuper()
   }
 }
 
 export class ScopeResolution extends Node {
-  _type = 'ScopeResolution' as const
+  _name = 'ScopeResolution' as const
   constructor(
     public readonly left: Expr,
     public readonly right: string,

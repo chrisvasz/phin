@@ -169,6 +169,14 @@ describe('function declarations', () => {
 })
 
 describe('function expressions', () => {
+  test.only('a = fun() {};', () => {
+    let source = 'a = fun() {};'
+    let expected = b.program(
+      b.expressionStatement(b.assign(b.id('a'), '=', b.fun(null))),
+    )
+    expect(ast(source)).toEqual(expected)
+  })
+
   test('var a = fun() {};', () => {
     let source = 'var a = fun() {};'
     let expected = b.program(b.var('a', null, b.fun(null)))

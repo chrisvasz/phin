@@ -4,6 +4,7 @@ import * as nodes from '../nodes'
 import * as types from '../types'
 import { Type } from '../types'
 import { ClassEnvironment, SymbolKind, HoistedEnvironment } from '../symbols'
+import { t } from '../builder'
 
 const emptyArray: [] = []
 
@@ -137,8 +138,6 @@ export default function parse(
   }
 
   function declaration(): Stmt {
-    if (match(TRY)) return tryDeclaration() // TODO move into statement()
-    if (match(THROW)) return throwDeclaration() // TODO move into statement()
     if (match(FUN)) return functionDeclaration()
     if (match(VAR)) {
       if (match(LEFT_BRACKET)) return varDestructuringDeclaration()
@@ -150,44 +149,6 @@ export default function parse(
       return classDeclaration(true)
     }
     return statement()
-  }
-
-  function tryDeclaration(): nodes.Try {
-    consume('Expect "{" before try body', LEFT_BRACE)
-    return new nodes.Try(block(), tryCatches(), tryFinally())
-  }
-
-  function tryCatches(): nodes.Catch[] {
-    let catches: nodes.Catch[] = []
-    while (match(CATCH)) {
-      consume('Expect "(" after catch', LEFT_PAREN)
-      let name = consume('Expect variable name', IDENTIFIER).lexeme
-      consume('Expect ":" after catch variable', COLON)
-      let types = tryCatchTypes()
-      consume('Expect ")" after catch', RIGHT_PAREN)
-      consume('Expect "{" before catch body', LEFT_BRACE)
-      let body = block()
-      catches.push(new nodes.Catch(name, types, body))
-    }
-    return catches
-  }
-
-  function tryCatchTypes(): string[] {
-    let types = [consume('Expect exception type', IDENTIFIER).lexeme]
-    while (match(PIPE)) {
-      types.push(consume('Expect exception type', IDENTIFIER).lexeme)
-    }
-    return types
-  }
-
-  function tryFinally(): nodes.Block | null {
-    if (!match(FINALLY)) return null
-    consume('Expect "{" before finally body', LEFT_BRACE)
-    return block()
-  }
-
-  function throwDeclaration(): nodes.ThrowStatement {
-    return new nodes.ThrowStatement(expression())
   }
 
   function classDeclaration(
@@ -422,20 +383,10 @@ export default function parse(
     consume('Expect "(" after function name', LEFT_PAREN)
     let params = functionParams()
     let returnType = match(COLON) ? typeAnnotation() : null
-    hoistedEnvironment.add(name, returnType, SymbolKind.Function)
-    return new nodes.FunctionDeclaration(
-      name,
-      params,
-      returnType,
-      functionBody(),
-    )
-  }
-
-  function functionExpression(): nodes.FunctionExpression {
-    consume('Expect "(" after fun', LEFT_PAREN)
-    let params = functionParams()
-    let returnType = match(COLON) ? typeAnnotation() : null
-    return new nodes.FunctionExpression(params, returnType, functionBody())
+    let body = functionBody()
+    let fn = new nodes.FunctionDeclaration(name, params, returnType, body)
+    hoistedEnvironment.add(name, fn.type(), SymbolKind.Function)
+    return fn
   }
 
   function functionParams(): nodes.Param[] {
@@ -508,6 +459,8 @@ export default function parse(
   }
 
   function statement(): Stmt {
+    if (match(TRY)) return tryStatement()
+    if (match(THROW)) return throwStatement()
     if (match(FOREACH)) return foreachStatement()
     if (match(FOR)) return forStatement()
     if (match(IF)) return ifStatement()
@@ -516,6 +469,44 @@ export default function parse(
     if (match(RETURN)) return returnStatement()
     if (match(LEFT_BRACE)) return block()
     return expressionStatement()
+  }
+
+  function tryStatement(): nodes.Try {
+    consume('Expect "{" before try body', LEFT_BRACE)
+    return new nodes.Try(block(), tryCatches(), tryFinally())
+  }
+
+  function tryCatches(): nodes.Catch[] {
+    let catches: nodes.Catch[] = []
+    while (match(CATCH)) {
+      consume('Expect "(" after catch', LEFT_PAREN)
+      let name = consume('Expect variable name', IDENTIFIER).lexeme
+      consume('Expect ":" after catch variable', COLON)
+      let types = tryCatchTypes()
+      consume('Expect ")" after catch', RIGHT_PAREN)
+      consume('Expect "{" before catch body', LEFT_BRACE)
+      let body = block()
+      catches.push(new nodes.Catch(name, types, body))
+    }
+    return catches
+  }
+
+  function tryCatchTypes(): string[] {
+    let types = [consume('Expect exception type', IDENTIFIER).lexeme]
+    while (match(PIPE)) {
+      types.push(consume('Expect exception type', IDENTIFIER).lexeme)
+    }
+    return types
+  }
+
+  function tryFinally(): nodes.Block | null {
+    if (!match(FINALLY)) return null
+    consume('Expect "{" before finally body', LEFT_BRACE)
+    return block()
+  }
+
+  function throwStatement(): nodes.ThrowStatement {
+    return new nodes.ThrowStatement(expression())
   }
 
   function foreachStatement(): nodes.Foreach {
@@ -610,14 +601,7 @@ export default function parse(
   }
 
   function expression(): Expr {
-    // TODO are these in the right places? think they need to be AFTER assign
-    if (match(FUN)) return functionExpression()
-    if (match(THROW)) return throwExpression()
     return assignment()
-  }
-
-  function throwExpression(): Expr {
-    return new nodes.ThrowExpression(expression())
   }
 
   function assignment(): Expr {
@@ -775,7 +759,21 @@ export default function parse(
       let right = unary()
       return new nodes.Unary(operator.lexeme, right)
     }
-    return matchExpression()
+    return functionExpression()
+  }
+
+  function functionExpression(): Expr {
+    if (!match(FUN)) return throwExpression()
+    consume('Expect "(" after fun', LEFT_PAREN)
+    let params = functionParams()
+    let returnType = match(COLON) ? typeAnnotation() : null
+    let body = functionBody()
+    return new nodes.FunctionExpression(params, returnType, body)
+  }
+
+  function throwExpression(): Expr {
+    if (!match(THROW)) return matchExpression()
+    return new nodes.ThrowExpression(expression())
   }
 
   function matchExpression(): Expr {
@@ -810,6 +808,7 @@ export default function parse(
     return new nodes.MatchArm(patterns, body)
   }
 
+  // TODO change keyword to else here
   function matchDefaultArm(): Expr | null {
     if (!match(DEFAULT)) return null
     consume('Expect "=>" after "default"', ARROW)

@@ -6,8 +6,11 @@ import compile, {
 } from '../../compiler'
 
 function print(source: string) {
+  const ast = compile(source, {
+    buildEnvironment: true,
+  })
   let printer = new PhpPrinter()
-  return printer.print(compile(source)).trim()
+  return printer.print(ast).trim()
 }
 
 describe('print scoping: vars and functions', () => {
@@ -42,7 +45,7 @@ describe('print scoping: vars and functions', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('fun a(b) => b', () => {
+  test.only('fun a(b) => b', () => {
     let source = 'fun a(b) => b'
     let expected = 'function a($b) {\n  return $b;\n}'
     expect(print(source)).toEqual(expected)

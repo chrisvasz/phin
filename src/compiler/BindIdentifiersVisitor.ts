@@ -94,7 +94,7 @@ export default class BindIdentifiersVisitor extends VoidVisitor {
 
   override visitVarDeclaration(node: n.VarDeclaration): void {
     super.visitVarDeclaration(node)
-    this.env.addLocal(node.name, node.type)
+    this.env.addLocal(node.name, node.type())
   }
 }
 

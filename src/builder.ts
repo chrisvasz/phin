@@ -6,6 +6,7 @@ import { ClassEnvironment, HoistedEnvironment } from './symbols'
 export const b = (function () {
   return {
     arrayAccess,
+    assign,
     block,
     binary,
     call,
@@ -33,6 +34,14 @@ export const b = (function () {
     varDestructuring,
     destructuring,
     destructuringElement,
+  }
+
+  function assign(
+    name: nodes.Identifier | nodes.Get | nodes.ArrayAccess,
+    operator: string,
+    value: nodes.Expr,
+  ) {
+    return new nodes.Assign(name, operator, value)
   }
 
   function arrayAccess(left: nodes.Expr, index: nodes.Expr) {
@@ -285,7 +294,7 @@ export const t = (function () {
   const false_ = new types.False()
 
   return {
-    any: () => any,
+    any: () => any, // TODO audit calls
     array,
     bool: () => bool,
     false: () => false_,
@@ -313,8 +322,15 @@ export const t = (function () {
     return id('array', ...generics)
   }
 
-  function fun(params: types.Type[], returnType: types.Type) {
-    return new types.Function(params, returnType)
+  function fun(
+    params: Array<types.Type | null>,
+    returnType: types.Type | null,
+  ) {
+    // TODO consider those anys
+    return new types.Function(
+      params.map((p) => p ?? any),
+      returnType ?? t.any(),
+    )
   }
 
   function intersection(...members: types.Type[]) {
