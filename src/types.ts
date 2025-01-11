@@ -22,9 +22,12 @@ function returnThis(this: Type): Type {
   return this
 }
 
+// TODO unit tests for assignability and equality
+
 export abstract class Type {
   abstract accept<T>(visitor: Visitor<T>): T
   isAssignableTo(other: Type) {
+    // TODO override this in subclasses, esp literals
     return this instanceof other.constructor
   }
   equals(other: Type) {

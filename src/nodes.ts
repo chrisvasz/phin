@@ -609,11 +609,11 @@ export class Binary extends TypedNode {
     if (this.operator === '&&') return t.bool()
     if (this.operator === '||') return t.bool()
     if (this.operator === '+.') return t.string()
-    return t.null() // TODO
+    return t.any()
   }
 }
 
-export class Ternary extends Node {
+export class Ternary extends TypedNode {
   _name = 'Ternary' as const
   constructor(
     public readonly condition: Expr,
@@ -624,6 +624,14 @@ export class Ternary extends Node {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitTernary(this)
+  }
+  type(): Type {
+    if (this.left instanceof TypedNode) {
+      if (this.right instanceof TypedNode) {
+        return t.union(this.left.type(), this.right.type())
+      }
+    }
+    return t.any()
   }
 }
 

@@ -9,8 +9,6 @@ function check(src: string) {
   new TypeCheckVisitor().visit(ast)
 }
 
-/* TODO
-
 describe('typecheck var declarations', () => {
   test('var a: string = "1"', () => {
     let src = 'var a: string = "1"'
@@ -30,4 +28,28 @@ describe('typecheck var declarations', () => {
   })
 })
 
-*/
+describe('shorthand function syntax', () => {
+  test('fun a(): string => ""', () => {
+    let src = 'fun a(): string => ""'
+    expect(() => check(src)).not.toThrow()
+  })
+
+  test('var a = fun(): string => ""', () => {
+    let src = 'var a = fun (): string => ""'
+    expect(() => check(src)).not.toThrow()
+  })
+
+  test('fun a(): string => null', () => {
+    let src = 'fun a(): string => null'
+    expect(() => check(src)).toThrowError(
+      new TypeCheckError('Type error: null is not assignable to string'),
+    )
+  })
+
+  test('var a = fun(): string => null', () => {
+    let src = 'var a = fun (): string => null'
+    expect(() => check(src)).toThrowError(
+      new TypeCheckError('Type error: null is not assignable to string'),
+    )
+  })
+})

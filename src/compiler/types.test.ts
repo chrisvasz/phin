@@ -68,6 +68,51 @@ describe('binary expression types', () => {
   }
 })
 
+describe('ternary expression types', () => {
+  test('true ? 1 : 2', () => {
+    let src = 'true ? 1 : 2'
+    let ast = compile(src)
+    let stmt = ast.statements[0] as n.ExpressionStatement
+    let ternary = stmt.expression as n.Ternary
+    expect(ternary.type()).toBeInstanceOf(t.Number)
+  })
+
+  test('true ? 1 : "2"', () => {
+    let src = 'true ? 1 : "2"'
+    let ast = compile(src)
+    let stmt = ast.statements[0] as n.ExpressionStatement
+    let ternary = stmt.expression as n.Ternary
+    let actual = ternary.type()
+    expect(actual).toBeInstanceOf(t.Union)
+    if (actual instanceof t.Union) {
+      expect(actual.types[0]).toBeInstanceOf(t.Number)
+      expect(actual.types[1]).toBeInstanceOf(t.String)
+    }
+  })
+
+  test('true ? null : null', () => {
+    let src = 'true ? null : null'
+    let ast = compile(src)
+    let stmt = ast.statements[0] as n.ExpressionStatement
+    let ternary = stmt.expression as n.Ternary
+    let actual = ternary.type()
+    expect(actual).toBeInstanceOf(t.Null)
+  })
+
+  test('true ? "" : true', () => {
+    let src = 'true ? "" : true'
+    let ast = compile(src)
+    let stmt = ast.statements[0] as n.ExpressionStatement
+    let ternary = stmt.expression as n.Ternary
+    let actual = ternary.type()
+    expect(actual).toBeInstanceOf(t.Union)
+    if (actual instanceof t.Union) {
+      expect(actual.types[0]).toBeInstanceOf(t.String)
+      expect(actual.types[1]).toBeInstanceOf(t.True)
+    }
+  })
+})
+
 describe('match expression types', () => {
   test('match (1) {}', () => {
     let src = 'match (1) {}'
