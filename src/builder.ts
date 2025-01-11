@@ -1,7 +1,7 @@
 // @ts-ignore
 import * as nodes from './nodes'
 import * as types from './types'
-import { ClassEnvironment, HoistedEnvironment } from './symbols'
+import { ClassSymbols } from './symbols'
 
 export const b = (function () {
   return {
@@ -49,7 +49,7 @@ export const b = (function () {
   }
 
   function program(...statements: nodes.Stmt[]) {
-    return new nodes.Program(statements, new HoistedEnvironment())
+    return new nodes.Program(statements)
   }
 
   function pipeline(left: nodes.Expr, right: nodes.Expr) {
@@ -157,7 +157,7 @@ export const b = (function () {
       iterates = null,
       members = [],
       isAbstract = false,
-      env = new ClassEnvironment(),
+      symbols = new ClassSymbols(),
     }: {
       params?: Array<nodes.Param | nodes.ClassProperty>
       constructorVisibility?: nodes.Visibility
@@ -166,7 +166,7 @@ export const b = (function () {
       iterates?: nodes.Identifier | null
       members?: nodes.ClassMember[]
       isAbstract?: boolean
-      env?: ClassEnvironment
+      symbols?: ClassSymbols
     } = {},
   ): nodes.ClassDeclaration {
     return new nodes.ClassDeclaration(
@@ -178,7 +178,7 @@ export const b = (function () {
       iterates,
       members,
       isAbstract,
-      env,
+      symbols,
     )
   }
 

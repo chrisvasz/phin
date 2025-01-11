@@ -1,12 +1,11 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
-import * as nodes from '../nodes'
+import * as n from '../nodes'
 import BindIdentifiersVisitor from './BindIdentifiersVisitor'
 import ParseError from '../parser/ParseError'
 import parse from '../parser/parser'
 import scan from '../scanner'
 import VoidVisitor from './VoidVisitor'
-import { SymbolKind } from '../symbols'
 
 function ast(source: string) {
   return parse(scan(source), {
@@ -14,17 +13,13 @@ function ast(source: string) {
   })
 }
 
-function checkIdentifierType(
-  ast: nodes.Program,
-  name: string,
-  kind: SymbolKind,
-) {
+function checkIdentifierNode(ast: n.Program, name: string, node: unknown) {
   let calls = 0
   let check = new (class extends VoidVisitor {
-    override visitIdentifier(node: nodes.Identifier): void {
-      if (node.name !== name) return
+    override visitIdentifier(identifier: n.Identifier): void {
+      if (identifier.name !== name) return
       calls++
-      expect(node.symbol!.kind).toBe(kind)
+      expect(identifier.node).toBeInstanceOf(node)
     }
   })()
   check.visitProgram(ast)
@@ -46,7 +41,7 @@ describe('hoisting', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'a', SymbolKind.Function)
+    checkIdentifierNode(program, 'a', n.FunctionDeclaration)
   })
 
   test('A; class A {}', () => {
@@ -54,7 +49,7 @@ describe('hoisting', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'A', SymbolKind.Class)
+    checkIdentifierNode(program, 'A', n.ClassDeclaration)
   })
 })
 
@@ -73,7 +68,7 @@ describe('var at global scope', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'a', SymbolKind.Variable)
+    checkIdentifierNode(program, 'a', n.VarDeclaration)
   })
 })
 
@@ -83,7 +78,7 @@ describe('var in function scope', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'a', SymbolKind.Function)
+    checkIdentifierNode(program, 'a', n.FunctionDeclaration)
   })
 
   test('fun a() { b; var b; }', () => {
@@ -100,7 +95,7 @@ describe('var in function scope', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'b', SymbolKind.Variable)
+    checkIdentifierNode(program, 'b', n.VarDeclaration)
   })
 
   test('fun a() { { var b; } b; }', () => {
@@ -108,7 +103,7 @@ describe('var in function scope', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'b', SymbolKind.Variable)
+    checkIdentifierNode(program, 'b', n.VarDeclaration)
   })
 
   test('fun a() { { var b; } } b;', () => {
@@ -125,7 +120,7 @@ describe('var in function scope', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'b', SymbolKind.Variable)
+    checkIdentifierNode(program, 'b', n.Param)
   })
 
   test('var a = fun(b) => b', () => {
@@ -133,7 +128,7 @@ describe('var in function scope', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'b', SymbolKind.Variable)
+    checkIdentifierNode(program, 'b', n.Param)
   })
 })
 
@@ -152,7 +147,7 @@ describe('classes', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'a', SymbolKind.ClassProperty)
+    checkIdentifierNode(program, 'a', n.ClassProperty)
   })
 
   test('class A(var a) iterates a {}', () => {
@@ -160,7 +155,7 @@ describe('classes', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'a', SymbolKind.ClassProperty)
+    checkIdentifierNode(program, 'a', n.ClassProperty)
   })
 
   test('class A { const B = 1; fun a() => B }', () => {
@@ -168,7 +163,7 @@ describe('classes', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'B', SymbolKind.ClassConst)
+    checkIdentifierNode(program, 'B', n.ClassConst)
   })
 })
 
@@ -178,7 +173,7 @@ describe('destructuring', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'b', SymbolKind.Variable)
+    checkIdentifierNode(program, 'b', n.DestructuringElement)
   })
 
   test('var a; foreach (a as [b]) { b; }', () => {
@@ -186,6 +181,6 @@ describe('destructuring', () => {
     let program = ast(source)
     let visitor = new BindIdentifiersVisitor()
     expect(() => visitor.visit(program)).not.toThrow()
-    checkIdentifierType(program, 'b', SymbolKind.Variable)
+    checkIdentifierNode(program, 'b', n.DestructuringElement)
   })
 })

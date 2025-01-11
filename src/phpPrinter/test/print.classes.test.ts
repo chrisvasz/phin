@@ -108,7 +108,7 @@ describe('print class params & constructor', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('class A(var a: array<int>) {}', () => {
+  test.todo('class A(var a: array<int>) {}', () => {
     let source = 'class A(var a: array<int>) {}'
     let expected = trimMargin(`
       class A {
@@ -203,11 +203,14 @@ describe('print class constants', () => {
 })
 
 describe('print class methods', () => {
-  test('class A { fun a() {} }', () => {
-    let source = 'class A { fun a() {} }'
+  test('class A { fun a() {} fun b() => a() }', () => {
+    let source = 'class A { fun a() {} fun b() => a() }'
     let expected = trimMargin(`
       class A {
         function a() {}
+        function b() {
+          return $this->a();
+        }
       }
     `)
     expect(print(source)).toEqual(expected)

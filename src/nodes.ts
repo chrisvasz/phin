@@ -1,14 +1,15 @@
-import { ClassEnvironment, HoistedEnvironment, Symbol } from './symbols'
+import { ClassSymbols, HoistedSymbols } from './symbols'
 import { t } from './builder'
 import { Type } from './types'
 
 export abstract class Node {
   abstract _name: string
   abstract accept<T>(visitor: Visitor<T>): T
+  type: Type | null = null
 }
 
-export abstract class TypedNode extends Node {
-  abstract type(): Type
+export abstract class IdentifierTargetNode {
+  abstract phpIdentifier(): string
 }
 
 export type Visibility = 'public' | 'protected' | 'private' | null
@@ -126,7 +127,7 @@ export class Program extends Node {
   _name = 'Program' as const
   constructor(
     public readonly statements: Array<Node>,
-    public readonly environment: HoistedEnvironment,
+    public readonly symbols: HoistedSymbols = new HoistedSymbols(),
   ) {
     super()
   }
@@ -159,7 +160,7 @@ export class Block extends Node {
   }
 }
 
-export class VarDeclaration extends TypedNode {
+export class VarDeclaration extends Node {
   _name = 'VarDeclaration' as const
   constructor(
     public readonly name: string,
@@ -171,11 +172,12 @@ export class VarDeclaration extends TypedNode {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitVarDeclaration(this)
   }
-  type() {
-    if (this._type !== null) return this._type
-    if (this.initializer instanceof TypedNode) return this.initializer.type()
-    return t.any()
-  }
+  // TODO
+  // type() {
+  //   if (this._type !== null) return this._type
+  //   if (this.initializer instanceof TypedNode) return this.initializer.type()
+  //   return t.any()
+  // }
 }
 
 export class VarDestructuringDeclaration extends Node {
@@ -206,7 +208,7 @@ export class DestructuringElement extends Node {
   constructor(
     public readonly key: string | null,
     public readonly value: string,
-    public readonly type: Type | null,
+    public readonly _type: Type | null,
   ) {
     super()
   }
@@ -282,7 +284,7 @@ export class ForeachVariable extends Node {
   _name = 'ForeachVariable' as const
   constructor(
     public readonly name: string,
-    public readonly type: Type | null,
+    public readonly _type: Type | null,
   ) {
     super()
   }
@@ -291,7 +293,7 @@ export class ForeachVariable extends Node {
   }
 }
 
-export class FunctionDeclaration extends TypedNode {
+export class FunctionDeclaration extends Node {
   _name = 'FunctionDeclaration' as const
   constructor(
     public readonly name: string,
@@ -304,29 +306,20 @@ export class FunctionDeclaration extends TypedNode {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitFunctionDeclaration(this)
   }
-  override type(): Type {
-    return t.fun(
-      this.params.map((p) => p.type),
-      this.returnType,
-    )
-  }
-}
-
-function paramIsExpressibleInPhp(this: Param) {
-  return this.type === null || this.type.isExpressibleInPhp()
-}
-
-function simplifyParam(this: Param) {
-  let type = this.type
-  if (type === null || type.isExpressibleInPhp()) return this
-  return new Param(this.name, type.simplify(), this.initializer)
+  // TODO
+  // override type(): Type {
+  //   return t.fun(
+  //     this.params.map((p) => p._type()),
+  //     this.returnType,
+  //   )
+  // }
 }
 
 export class Param extends Node {
   _name = 'Param' as const
   constructor(
     public readonly name: string,
-    public readonly type: Type | null,
+    public readonly _type: Type | null,
     public readonly initializer: Expr | null,
   ) {
     super()
@@ -334,8 +327,12 @@ export class Param extends Node {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitParam(this)
   }
-  isExpressibleInPhp = paramIsExpressibleInPhp
-  simplify = simplifyParam
+  isExpressibleInPhp() {
+    return this._type?.isExpressibleInPhp() ?? false
+  }
+  simplify() {
+    return this._type?.simplify() ?? this._type
+  }
 }
 
 export class Return extends Node {
@@ -411,7 +408,7 @@ export class ClassDeclaration extends Node {
     public readonly iterates: Identifier | null,
     public readonly members: Array<ClassMember>,
     public readonly isAbstract: boolean = false,
-    public readonly environment: ClassEnvironment,
+    public readonly symbols: ClassSymbols,
   ) {
     super()
   }
@@ -442,7 +439,7 @@ export class ClassProperty extends Node {
     public readonly isStatic: boolean,
     public readonly isReadonly: boolean,
     public readonly name: string,
-    public readonly type: Type | null,
+    public readonly _type: Type | null,
     public readonly initializer: Expr | null,
   ) {
     super()
@@ -493,7 +490,7 @@ export class ClassConst extends Node {
     public readonly visibility: Visibility,
     public readonly isStatic: boolean,
     public readonly name: string,
-    public readonly type: Type | null,
+    public readonly _type: Type | null,
     public readonly initializer: Expr, // TODO must be compile-time constant. this and others
   ) {
     super()
@@ -513,7 +510,7 @@ export class ClassInitializer extends Node {
   }
 }
 
-export class Assign extends TypedNode {
+export class Assign extends Node {
   _name = 'Assign' as const
   constructor(
     public readonly name: Identifier | Get | ArrayAccess,
@@ -524,12 +521,6 @@ export class Assign extends TypedNode {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitAssign(this)
-  }
-  override type(): Type {
-    if (this.value instanceof TypedNode) {
-      return this.value.type()
-    }
-    throw new Error('TODO assign value must be a typed node')
   }
 }
 
@@ -585,7 +576,7 @@ export class Pipeline extends Node {
   }
 }
 
-export class Binary extends TypedNode {
+export class Binary extends Node {
   _name = 'Binary' as const
   constructor(
     public readonly left: Expr,
@@ -597,7 +588,7 @@ export class Binary extends TypedNode {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitBinary(this)
   }
-  type(): Type {
+  _type(): Type {
     if (this.operator === '==') return t.bool()
     if (this.operator === '!=') return t.bool()
     if (this.operator === '===') return t.bool()
@@ -613,7 +604,7 @@ export class Binary extends TypedNode {
   }
 }
 
-export class Ternary extends TypedNode {
+export class Ternary extends Node {
   _name = 'Ternary' as const
   constructor(
     public readonly condition: Expr,
@@ -625,17 +616,9 @@ export class Ternary extends TypedNode {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitTernary(this)
   }
-  type(): Type {
-    if (this.left instanceof TypedNode) {
-      if (this.right instanceof TypedNode) {
-        return t.union(this.left.type(), this.right.type())
-      }
-    }
-    return t.any()
-  }
 }
 
-export class Grouping extends TypedNode {
+export class Grouping extends Node {
   _name = 'Grouping' as const
   constructor(public readonly expression: Expr) {
     super()
@@ -643,15 +626,9 @@ export class Grouping extends TypedNode {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitGrouping(this)
   }
-  type(): Type {
-    if (this.expression instanceof TypedNode) {
-      return this.expression.type()
-    }
-    return t.null() // TODO
-  }
 }
 
-export class NumberLiteral extends TypedNode {
+export class NumberLiteral extends Node {
   _name = 'NumberLiteral' as const
   constructor(public readonly value: string) {
     super()
@@ -659,12 +636,9 @@ export class NumberLiteral extends TypedNode {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitNumberLiteral(this)
   }
-  type(): Type {
-    return t.number() // TODO distinguish between int and float
-  }
 }
 
-export class StringLiteral extends TypedNode {
+export class StringLiteral extends Node {
   _name = 'StringLiteral' as const
   constructor(public readonly value: string) {
     super()
@@ -672,12 +646,9 @@ export class StringLiteral extends TypedNode {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitStringLiteral(this)
   }
-  type(): Type {
-    return t.string() // TODO should this be specific to the literal?
-  }
 }
 
-export class TemplateStringLiteral extends TypedNode {
+export class TemplateStringLiteral extends Node {
   _name = 'TemplateStringLiteral' as const
   constructor(public readonly parts: Array<StringLiteral | Expr>) {
     super()
@@ -685,12 +656,9 @@ export class TemplateStringLiteral extends TypedNode {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitTemplateStringLiteral(this)
   }
-  type(): Type {
-    return t.string()
-  }
 }
 
-export class BooleanLiteral extends TypedNode {
+export class BooleanLiteral extends Node {
   _name = 'BooleanLiteral' as const
   constructor(public readonly value: boolean) {
     super()
@@ -698,18 +666,12 @@ export class BooleanLiteral extends TypedNode {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitBooleanLiteral(this)
   }
-  type(): Type {
-    return this.value ? t.true() : t.false()
-  }
 }
 
-export class NullLiteral extends TypedNode {
+export class NullLiteral extends Node {
   _name = 'NullLiteral' as const
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitNullLiteral(this)
-  }
-  type(): Type {
-    return t.null()
   }
 }
 
@@ -788,27 +750,21 @@ export class Postfix extends Node {
   }
 }
 
-export class Identifier extends TypedNode {
+export class Identifier extends Node {
   _name = 'Identifier' as const
-  symbol: Symbol | null = null
+  node: Node | null = null
   constructor(public readonly name: string) {
     super()
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitIdentifier(this)
   }
-  bind(symbol: Symbol) {
-    this.symbol = symbol
-  }
-  type(): Type {
-    if (this.symbol === null) {
-      throw new Error(`Unbound identifier: ${this.name}`)
-    }
-    return this.symbol.type
+  bind(node: Node) {
+    this.node = node
   }
 }
 
-export class FunctionExpression extends TypedNode {
+export class FunctionExpression extends Node {
   _name = 'FunctionExpression' as const
   public readonly closureVariables: Array<string> = []
   constructor(
@@ -823,17 +779,6 @@ export class FunctionExpression extends TypedNode {
   }
   addClosureVariable(id: string) {
     this.closureVariables.push(id)
-  }
-  type(): Type {
-    return t.fun(
-      this.params.map((p) => p.type),
-      this.return(),
-    )
-  }
-  return(): Type {
-    if (this.returnType !== null) return this.returnType
-    if (this.body instanceof TypedNode) return this.body.type()
-    return t.any()
   }
 }
 
@@ -857,7 +802,7 @@ export class Clone extends Node {
   }
 }
 
-export class Match extends TypedNode {
+export class Match extends Node {
   _name = 'Match' as const
   constructor(
     public readonly subject: Expr,
@@ -869,16 +814,9 @@ export class Match extends TypedNode {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitMatch(this)
   }
-  override type(): Type {
-    let types = this.arms.map((arm) => arm.type())
-    if (this.defaultArm instanceof TypedNode) {
-      types.push(this.defaultArm.type())
-    }
-    return t.union(...types)
-  }
 }
 
-export class MatchArm extends TypedNode {
+export class MatchArm extends Node {
   _name = 'MatchArm' as const
   constructor(
     public readonly patterns: Array<Expr>,
@@ -888,12 +826,6 @@ export class MatchArm extends TypedNode {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitMatchArm(this)
-  }
-  override type(): Type {
-    if (this.body instanceof TypedNode) {
-      return this.body.type()
-    }
-    throw new Error('TODO Match arm body must be a typed node')
   }
 }
 

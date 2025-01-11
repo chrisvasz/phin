@@ -1,8 +1,8 @@
-import { SymbolKind } from '../symbols'
 import * as nodes from '../nodes'
 import * as types from '../types'
 import { Type } from '../types'
-import { builtins, runtime } from '../compiler/builtins'
+import { runtime } from '../compiler/builtins'
+import { b } from '../builder'
 
 export class PrintError extends Error {}
 
@@ -227,8 +227,8 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
     if (node.isFinal) this.append('final ')
     this.append(`${node.visibility ?? 'public'} `)
     if (node.isReadonly) this.append('readonly ')
-    if (node.type != null) {
-      node.type.simplify().accept(this)
+    if (node._type != null) {
+      node._type.simplify().accept(this)
       this.append(' ')
     }
     this.append(`$${node.name};`)
@@ -271,7 +271,7 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
   private classGetIterator(node: nodes.ClassDeclaration): void {
     if (!node.iterates) return
     let ArrayIterator = new nodes.Identifier('ArrayIterator')
-    ArrayIterator.bind(builtins.get('ArrayIterator')!)
+    ArrayIterator.bind(b.class('ArrayIterator'))
     let method = new nodes.ClassMethod(
       false,
       null,
@@ -336,8 +336,8 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
     if (node.isFinal) this.append('final ')
     this.append(`${node.visibility ?? 'public'} `)
     if (node.isReadonly) this.append('readonly ')
-    if (node.type != null) {
-      node.type.simplify().accept(this)
+    if (node._type != null) {
+      node._type.simplify().accept(this)
       this.append(' ')
     }
     this.append(`$${node.name}`)
@@ -482,27 +482,33 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
     this.append(')')
   }
 
-  visitIdentifier(node: nodes.Identifier): void {
-    let kind = node.symbol!.kind!
-    if (kind === SymbolKind.Variable) {
-      return this.append(`$${node.name}`)
+  visitIdentifier(identifier: nodes.Identifier): void {
+    let node = identifier.node!
+    let name = identifier.name
+    // TODO put this behavior on the nodes themselves?
+    if (node instanceof nodes.VarDeclaration) {
+      return this.append(`$${name}`)
     }
-    if (kind === SymbolKind.ClosureVariable) {
-      return this.append(`$${node.name}`)
+    if (node instanceof nodes.Param) {
+      return this.append(`$${name}`)
     }
-    if (kind === SymbolKind.ClassProperty) {
-      return this.append(`$this->${node.name}`)
+    if (node instanceof nodes.ForeachVariable) {
+      return this.append(`$${name}`)
     }
-    if (kind === SymbolKind.ClassMethod) {
-      return this.append(`$this->${node.name}`)
+    if (node instanceof nodes.ClassProperty) {
+      return this.append(`$this->${name}`)
     }
-    if (kind === SymbolKind.ClassConst) {
-      return this.append(`self::${node.name}`)
+    if (node instanceof nodes.ClassMethod) {
+      return this.append(`$this->${name}`)
     }
-    if (kind === SymbolKind.PhinRuntimeFunction) {
-      this.phinRuntimeFunctionsUsed.add(node.name)
+    if (node instanceof nodes.ClassConst) {
+      return this.append(`self::${name}`)
     }
-    return this.append(`${node.name}`)
+    // TODO
+    // if (kind === SymbolKind.PhinRuntimeFunction) {
+    //   this.phinRuntimeFunctionsUsed.add(name)
+    // }
+    return this.append(`${name}`)
   }
 
   visitIf(node: nodes.If): void {
@@ -563,8 +569,8 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
   }
 
   visitParam(node: nodes.Param): void {
-    if (node.type != null) {
-      node.type.simplify().accept(this)
+    if (node._type != null) {
+      node._type.simplify().accept(this)
       this.append(' ')
     }
     this.append(`$${node.name}`)

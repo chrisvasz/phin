@@ -1,19 +1,12 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
 import { PhpPrinter } from '../print'
-import compile, {
-  resolveUndeclaredIdentifiersToVariables,
-} from '../../compiler'
-
-function ast(source: string) {
-  return compile(source, {
-    resolveUndeclaredIdentifiers: resolveUndeclaredIdentifiersToVariables,
-  })
-}
+import compile from '../../compiler'
 
 function print(source: string) {
+  let ast = compile(source)
   let printer = new PhpPrinter()
-  return printer.print(ast(source)).trim()
+  return printer.print(ast).trim()
 }
 
 describe('print variables', () => {

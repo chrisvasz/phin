@@ -2,14 +2,16 @@
 import { expect, test, describe } from 'bun:test'
 import { PhpPrinter } from '../print'
 import { trimMargin } from '../trimMargin'
-import compile, {
-  resolveUndeclaredIdentifiersToVariables,
-} from '../../compiler'
+import compile from '../../compiler'
+import { TestSymbols } from '../../symbols'
+import { b } from '../../builder'
+
+const symbols = new TestSymbols()
+symbols.add('a', b.fun('a'))
+symbols.add('b', b.fun('a'))
 
 function ast(source: string) {
-  return compile(source, {
-    resolveUndeclaredIdentifiers: resolveUndeclaredIdentifiersToVariables,
-  })
+  return compile(source, { symbols: symbols })
 }
 
 function print(source: string) {
@@ -21,12 +23,6 @@ describe('print: match', () => {
   test('match (true) {}', () => {
     let source = 'match (true) {}'
     let expected = 'match (true) {};'
-    expect(print(source)).toEqual(expected)
-  })
-
-  test('match (a()) {}', () => {
-    let source = 'match (a()) {}'
-    let expected = 'match ($a()) {};'
     expect(print(source)).toEqual(expected)
   })
 
@@ -45,7 +41,7 @@ describe('print: match', () => {
     let expected = trimMargin(`
       match (true) {
         1, 2 => 3,
-        $a(), $b < 2 => 5,
+        a(), b < 2 => 5,
       };
     `)
     expect(print(source)).toEqual(expected)
@@ -62,11 +58,11 @@ describe('print: match', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('match (true) { default => throw b }', () => {
-    let source = 'match (true) { default => throw b }'
+  test('match (true) { default => throw 1 }', () => {
+    let source = 'match (true) { default => throw 1 }'
     let expected = trimMargin(`
       match (true) {
-        default => throw $b,
+        default => throw 1,
       };
     `)
     expect(print(source)).toEqual(expected)

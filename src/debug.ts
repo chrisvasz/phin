@@ -1,3 +1,4 @@
 import compile from './compiler'
 
-compile('fun a(b) => b')
+let source = 'foo()'
+let program = compile(source)

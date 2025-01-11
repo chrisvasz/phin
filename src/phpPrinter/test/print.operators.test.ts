@@ -1,15 +1,22 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
 import { PhpPrinter } from '../print'
-import compile, {
-  resolveUndeclaredIdentifiersToVariables,
-} from '../../compiler'
+import compile from '../../compiler'
 import { trimMargin } from '../trimMargin'
+import { TestSymbols } from '../../symbols'
+import { b } from '../../builder'
+
+const symbols = new TestSymbols()
+symbols.add('a', b.var('a'))
+symbols.add('b', b.var('b'))
+symbols.add('c', b.var('c'))
+symbols.add('map', b.fun('map'))
+symbols.add('filter', b.fun('filter'))
+symbols.add('sum', b.fun('sum'))
+symbols.add('A', b.class('A'))
 
 function ast(source: string) {
-  return compile(source, {
-    resolveUndeclaredIdentifiers: resolveUndeclaredIdentifiersToVariables,
-  })
+  return compile(source, { symbols })
 }
 
 function print(source: string) {
@@ -118,7 +125,7 @@ describe('print postfix', () => {
 describe('print ::', () => {
   test('A::b', () => {
     let source = 'A::b'
-    let expected = '$A::b;'
+    let expected = 'A::b;'
     expect(print(source)).toEqual(expected)
   })
 })
@@ -139,7 +146,7 @@ describe('print |', () => {
   test('a | map(fun(r) => r + 1) | filter() | sum', () => {
     let source = 'a | map(fun(r) => r + 1) | filter() | sum'
     let expected = trimMargin(`
-      $sum($filter()($map(function ($r) {
+      sum(filter()(map(function ($r) {
         return $r + 1;
       })($a)));
     `)

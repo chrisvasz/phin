@@ -1,19 +1,14 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
 import { PhpPrinter } from '../print'
-import compile, {
-  resolveUndeclaredIdentifiersToVariables,
-} from '../../compiler'
+import compile from '../../compiler'
+import { TestSymbols } from '../../symbols'
+import { b } from '../../builder'
 
-function ast(source: string) {
-  return compile(source, {
-    resolveUndeclaredIdentifiers: resolveUndeclaredIdentifiersToVariables,
-  })
-}
-
-function print(source: string) {
+function print(source: string, symbols?: TestSymbols) {
+  let ast = compile(source, { symbols })
   let printer = new PhpPrinter()
-  return printer.print(ast(source)).trim()
+  return printer.print(ast).trim()
 }
 
 describe('print double-quoted strings', () => {
@@ -43,28 +38,31 @@ describe('print double-quoted strings', () => {
 })
 
 describe('print template strings', () => {
+  const symbols = new TestSymbols()
+  symbols.add('name', b.var('name'))
+
   test('"$name"', () => {
     let source = '"$name"'
     let expected = '("" . $name);'
-    expect(print(source)).toEqual(expected)
+    expect(print(source, symbols)).toEqual(expected)
   })
 
   test('"${name}"', () => {
     let source = '"${name}"'
     let expected = '("" . $name);'
-    expect(print(source)).toEqual(expected)
+    expect(print(source, symbols)).toEqual(expected)
   })
 
   test('"${name()}"', () => {
     let source = '"${name()}"'
     let expected = '("" . $name());'
-    expect(print(source)).toEqual(expected)
+    expect(print(source, symbols)).toEqual(expected)
   })
 
   test('"hello ${name}?"', () => {
     let source = '"hello ${name}?"'
     let expected = '("hello " . $name . "?");'
-    expect(print(source)).toEqual(expected)
+    expect(print(source, symbols)).toEqual(expected)
   })
 
   test('"1${"2${"3"}4"}5"', () => {

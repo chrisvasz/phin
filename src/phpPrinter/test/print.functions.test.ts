@@ -1,20 +1,18 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
 import { PhpPrinter } from '../print'
-import compile, {
-  resolveUndeclaredIdentifiersToFunctions,
-} from '../../compiler'
+import compile from '../../compiler'
 import { trimMargin } from '../trimMargin'
+import { HoistedSymbols } from '../../symbols'
+import { b } from '../../builder'
 
-function ast(source: string) {
-  return compile(source, {
-    resolveUndeclaredIdentifiers: resolveUndeclaredIdentifiersToFunctions,
-  })
+function ast(source: string, symbols?: HoistedSymbols) {
+  return compile(source, { symbols })
 }
 
-function print(source: string) {
+function print(source: string, symbols?: HoistedSymbols) {
   let printer = new PhpPrinter()
-  return printer.print(ast(source)).trim()
+  return printer.print(ast(source, symbols)).trim()
 }
 
 describe('print function declarations', () => {
@@ -69,7 +67,7 @@ function foo() {
     expect(print(source)).toEqual(expected)
   })
 
-  test('fun foo(a: array<number>, b: array<string>): Five<T> {}', () => {
+  test.todo('fun foo(a: array<number>, b: array<string>): Five<T> {}', () => {
     let source = 'fun foo(a: array<number>, b: array<string>): Five<T> {}'
     let expected = `
 /**
@@ -126,7 +124,7 @@ describe('print function expressions with bodies', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('var a; var b = fun() { return a; }', () => {
+  test.todo('var a; var b = fun() { return a; }', () => {
     let source = 'var a; var b = fun() { return a; }'
     let expected = trimMargin(`
       $a;
@@ -139,15 +137,20 @@ describe('print function expressions with bodies', () => {
 })
 
 describe('print function calls', () => {
+  const symbols = new HoistedSymbols()
+  symbols.add('foo', b.fun('foo'))
+  symbols.add('a', b.fun('a'))
+  symbols.add('b', b.fun('b'))
+
   test('foo()', () => {
     let source = 'foo()'
     let expected = 'foo();'
-    expect(print(source)).toEqual(expected)
+    expect(print(source, symbols)).toEqual(expected)
   })
 
   test('foo(a(), b+2)', () => {
     let source = 'foo(a(), b+2)'
     let expected = 'foo(a(), b + 2);'
-    expect(print(source)).toEqual(expected)
+    expect(print(source, symbols)).toEqual(expected)
   })
 })

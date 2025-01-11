@@ -2,19 +2,14 @@
 import { expect, test, describe } from 'bun:test'
 import { PhpPrinter } from '../print'
 import { trimMargin } from '../trimMargin'
-import compile, {
-  resolveUndeclaredIdentifiersToVariables,
-} from '../../compiler'
+import compile from '../../compiler'
+import { TestSymbols } from '../../symbols'
+import { b } from '../../builder'
 
-function ast(source: string) {
-  return compile(source, {
-    resolveUndeclaredIdentifiers: resolveUndeclaredIdentifiersToVariables,
-  })
-}
-
-function print(source: string) {
+function print(source: string, symbols?: TestSymbols) {
+  let ast = compile(source, { symbols })
   let printer = new PhpPrinter()
-  return printer.print(ast(source)).trim()
+  return printer.print(ast).trim()
 }
 
 describe('print: if', () => {
@@ -37,9 +32,11 @@ describe('print: if', () => {
   })
 
   test('if (a()) 1', () => {
+    let symbols = new TestSymbols()
+    symbols.add('a', b.fun('a'))
     let source = 'if (a()) 1'
-    let expected = 'if ($a()) 1;'
-    expect(print(source)).toEqual(expected)
+    let expected = 'if (a()) 1;'
+    expect(print(source, symbols)).toEqual(expected)
   })
 
   test('if (true) { echo "hello"; }', () => {
@@ -70,7 +67,10 @@ describe('print: ternary', () => {
 
   test('true ? a() : b()', () => {
     let source = 'true ? a() : b()'
-    let expected = 'true ? $a() : $b();'
-    expect(print(source)).toEqual(expected)
+    let expected = 'true ? a() : b();'
+    let symbols = new TestSymbols()
+    symbols.add('a', b.fun('a'))
+    symbols.add('b', b.fun('b'))
+    expect(print(source, symbols)).toEqual(expected)
   })
 })

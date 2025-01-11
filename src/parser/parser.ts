@@ -3,7 +3,7 @@ import { Node, Expr, Stmt } from '../nodes'
 import * as nodes from '../nodes'
 import * as types from '../types'
 import { Type } from '../types'
-import { ClassEnvironment, SymbolKind, HoistedEnvironment } from '../symbols'
+import { ClassSymbols, HoistedSymbols } from '../symbols'
 import { t } from '../builder'
 
 const emptyArray: [] = []
@@ -108,10 +108,6 @@ class ParseError extends Error {}
 // TODO static thing: int = abc();
 // TODO val thing: int = 123;
 
-export function defaultResolveUnknownIdentifier(name: string): SymbolKind {
-  throw new ParseError(`Unknown identifier: ${name}`)
-}
-
 export default function parse(
   tokens: Token[],
   {
@@ -121,7 +117,7 @@ export default function parse(
   } = {},
 ): nodes.Program {
   let tokensIndex = 0
-  let hoistedEnvironment = new HoistedEnvironment()
+  let hoistedSymbols = new HoistedSymbols()
   return program()
 
   function program(): nodes.Program {
@@ -133,7 +129,7 @@ export default function parse(
     }
     return new nodes.Program(
       statements,
-      buildEnvironment ? hoistedEnvironment : new HoistedEnvironment(),
+      buildEnvironment ? hoistedSymbols : new HoistedSymbols(),
     )
   }
 
@@ -154,18 +150,17 @@ export default function parse(
   function classDeclaration(
     isAbstract: boolean = false,
   ): nodes.ClassDeclaration {
-    let env = new ClassEnvironment()
+    let symbols = new ClassSymbols()
     let name = consume('Expect class name', IDENTIFIER).lexeme
-    hoistedEnvironment.add(name, null, SymbolKind.Class) // TODO
     let constructorVisibility = classVisibility()
-    let params = match(LEFT_PAREN) ? classParams(env) : emptyArray
+    let params = match(LEFT_PAREN) ? classParams(symbols) : emptyArray
     let superclass = match(EXTENDS) ? classSuperclass() : null
     let interfaces = match(IMPLEMENTS) ? classInterfaces() : emptyArray
     let iterates = classIterates()
     consume('Expect "{" before class body', LEFT_BRACE)
-    let members = classMembers(env)
+    let members = classMembers(symbols)
     consume('Expect "}" after class body', RIGHT_BRACE)
-    return new nodes.ClassDeclaration(
+    let result = new nodes.ClassDeclaration(
       name,
       constructorVisibility,
       params,
@@ -174,25 +169,27 @@ export default function parse(
       iterates,
       members,
       isAbstract,
-      buildEnvironment ? env : new ClassEnvironment(),
+      buildEnvironment ? symbols : new ClassSymbols(),
     )
+    hoistedSymbols.add(name, result)
+    return result
   }
 
   function classParams(
-    env: ClassEnvironment,
+    symbols: ClassSymbols,
   ): Array<nodes.Param | nodes.ClassProperty> {
     if (match(RIGHT_PAREN)) return emptyArray
-    let params = [classParam(env)]
+    let params = [classParam(symbols)]
     while (match(COMMA)) {
       if (check(RIGHT_PAREN)) break // support trailing commas
-      params.push(classParam(env))
+      params.push(classParam(symbols))
     }
     consume('Expect ")" after class params', RIGHT_PAREN)
     return params
   }
 
   function classParam(
-    env: ClassEnvironment,
+    symbols: ClassSymbols,
   ): nodes.Param | nodes.ClassProperty {
     if (check(IDENTIFIER)) return functionParam()
     let isFinal = match(FINAL)
@@ -202,8 +199,7 @@ export default function parse(
     let name = consume('Expect class param name', IDENTIFIER).lexeme
     let type = match(COLON) ? typeAnnotation() : null
     let initializer = match(EQUAL) ? expression() : null
-    env.add(name, type, SymbolKind.ClassProperty)
-    return new nodes.ClassProperty(
+    let result = new nodes.ClassProperty(
       isFinal,
       visibility,
       false,
@@ -212,6 +208,8 @@ export default function parse(
       type,
       initializer,
     )
+    symbols.add(name, result)
+    return result
   }
 
   function classSuperclass(): nodes.ClassSuperclass {
@@ -248,42 +246,42 @@ export default function parse(
     return null
   }
 
-  function classMembers(env: ClassEnvironment): nodes.ClassMember[] {
+  function classMembers(symbols: ClassSymbols): nodes.ClassMember[] {
     let members: nodes.ClassMember[] = []
     while (!check(RIGHT_BRACE) && !isAtEnd()) {
-      members.push(classMember(env))
+      members.push(classMember(symbols))
       semicolons()
     }
     return members
   }
 
-  function classMember(env: ClassEnvironment): nodes.ClassMember {
-    if (match(ABSTRACT)) return abstractClassMember(env)
+  function classMember(symbols: ClassSymbols): nodes.ClassMember {
+    if (match(ABSTRACT)) return abstractClassMember(symbols)
     let isFinal = match(FINAL)
     let visibility = classVisibility()
     let isStatic = match(STATIC)
-    if (match(FUN)) return classMethod(env, isFinal, visibility, isStatic)
+    if (match(FUN)) return classMethod(symbols, isFinal, visibility, isStatic)
     if (matchIdentifier('init')) return classInitializer()
-    if (match(CONST)) return classConst(env, isFinal, visibility, isStatic)
+    if (match(CONST)) return classConst(symbols, isFinal, visibility, isStatic)
     if (match(VAR, VAL)) {
       // TODO val must have a type annotation according to PHP
       let isReadonly = previous().type === VAL
-      return classProperty(env, isFinal, visibility, isStatic, isReadonly)
+      return classProperty(symbols, isFinal, visibility, isStatic, isReadonly)
     }
     throw error(peek(), 'Expect class member')
   }
 
   function abstractClassMember(
-    env: ClassEnvironment,
+    symbols: ClassSymbols,
   ): nodes.ClassAbstractMethod {
     let visibility = classVisibility()
     let isStatic = match(STATIC)
     consume('Expect class method declaration', FUN)
-    return abstractClassMethod(env, visibility, isStatic)
+    return abstractClassMethod(symbols, visibility, isStatic)
   }
 
   function abstractClassMethod(
-    env: ClassEnvironment,
+    symbols: ClassSymbols,
     visibility: nodes.Visibility,
     isStatic: boolean,
   ): nodes.ClassAbstractMethod {
@@ -291,14 +289,15 @@ export default function parse(
     consume('Expect "(" after method name', LEFT_PAREN)
     let params = functionParams()
     let returnType = match(COLON) ? typeAnnotation() : null
-    env.add(name, null, SymbolKind.ClassMethod) // TODO function type
-    return new nodes.ClassAbstractMethod(
+    let result = new nodes.ClassAbstractMethod(
       visibility,
       isStatic,
       name,
       params,
       returnType,
     )
+    symbols.add(name, result)
+    return result
   }
 
   function classVisibility(): nodes.Visibility {
@@ -309,7 +308,7 @@ export default function parse(
   }
 
   function classMethod(
-    env: ClassEnvironment,
+    symbols: ClassSymbols,
     isFinal: boolean,
     visibility: nodes.Visibility,
     isStatic: boolean,
@@ -318,8 +317,7 @@ export default function parse(
     consume('Expect "(" after function name', LEFT_PAREN)
     let params = functionParams()
     let returnType = match(COLON) ? typeAnnotation() : null
-    env.add(name, null, SymbolKind.ClassMethod) // TODO function type
-    return new nodes.ClassMethod(
+    let result = new nodes.ClassMethod(
       isFinal,
       visibility,
       isStatic,
@@ -328,10 +326,12 @@ export default function parse(
       returnType,
       functionBody(),
     )
+    symbols.add(name, result)
+    return result
   }
 
   function classProperty(
-    env: ClassEnvironment,
+    symbols: ClassSymbols,
     isFinal: boolean,
     visibility: nodes.Visibility,
     isStatic: boolean,
@@ -340,8 +340,7 @@ export default function parse(
     let name = consume('Expect variable name', IDENTIFIER).lexeme
     let type = match(COLON) ? typeAnnotation() : null
     let initializer = match(EQUAL) ? expression() : null
-    env.add(name, type, SymbolKind.ClassProperty)
-    return new nodes.ClassProperty(
+    let result = new nodes.ClassProperty(
       isFinal,
       visibility,
       isStatic,
@@ -350,10 +349,12 @@ export default function parse(
       type,
       initializer,
     )
+    symbols.add(name, result)
+    return result
   }
 
   function classConst(
-    env: ClassEnvironment,
+    symbols: ClassSymbols,
     isFinal: boolean,
     visibility: nodes.Visibility,
     isStatic: boolean,
@@ -362,8 +363,7 @@ export default function parse(
     let type = match(COLON) ? typeAnnotation() : null
     consume('Expect "=" after class constant name', EQUAL)
     let initializer = expression()
-    env.add(name, type, SymbolKind.ClassConst)
-    return new nodes.ClassConst(
+    let result = new nodes.ClassConst(
       isFinal,
       visibility,
       isStatic,
@@ -371,6 +371,8 @@ export default function parse(
       type,
       initializer,
     )
+    symbols.add(name, result)
+    return result
   }
 
   function classInitializer(): nodes.ClassInitializer {
@@ -385,7 +387,7 @@ export default function parse(
     let returnType = match(COLON) ? typeAnnotation() : null
     let body = functionBody()
     let fn = new nodes.FunctionDeclaration(name, params, returnType, body)
-    hoistedEnvironment.add(name, fn.type(), SymbolKind.Function)
+    hoistedSymbols.add(name, fn)
     return fn
   }
 

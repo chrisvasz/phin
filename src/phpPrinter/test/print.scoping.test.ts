@@ -1,9 +1,7 @@
 // @ts-ignore
 import { expect, test, describe } from 'bun:test'
 import { PhpPrinter } from '../print'
-import compile, {
-  resolveUndeclaredIdentifiersToVariables,
-} from '../../compiler'
+import compile from '../../compiler'
 
 function print(source: string) {
   const ast = compile(source, {

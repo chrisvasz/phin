@@ -27,25 +27,4 @@ export default class TypeCheckVisitor extends VoidVisitor {
   visit(node: n.Program): void {
     node.accept(this)
   }
-
-  override visitVarDeclaration(node: n.VarDeclaration): void {
-    super.visitVarDeclaration(node)
-    if (!(node.initializer instanceof n.TypedNode)) return
-    if (!node.type) return
-    check(node.type(), node.initializer.type())
-  }
-
-  override visitFunctionDeclaration(node: n.FunctionDeclaration): void {
-    super.visitFunctionDeclaration(node)
-    if (!node.returnType) return
-    if (!(node.body instanceof n.TypedNode)) return
-    check(node.returnType, node.body.type())
-  }
-
-  override visitFunctionExpression(node: n.FunctionExpression): void {
-    super.visitFunctionExpression(node)
-    if (!node.returnType) return
-    if (!(node.body instanceof n.TypedNode)) return
-    check(node.returnType, node.body.type())
-  }
 }

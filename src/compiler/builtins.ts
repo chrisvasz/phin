@@ -1,13 +1,13 @@
-import { SymbolKind, HoistedEnvironment } from '../symbols'
+import {} from '../symbols'
 import * as n from '../nodes'
 import compile from '.'
 import { t } from '../builder'
 
+export const runtime: { [key: string]: () => n.Node } = {}
+
+/*
+
 export const builtins = new HoistedEnvironment()
-export const runtime: { [key: string]: () => n.Node } = {
-  map,
-  sum,
-}
 
 // TODO better types
 
@@ -29,9 +29,12 @@ builtins.add('Exception', t.any(), SymbolKind.Class)
 function map() {
   return compile(
     `fun map(transform) => fun(arr: array) => array_map(transform, arr)`,
-  )
+  ).statements[0] as n.FunctionDeclaration
 }
 
 function sum() {
   return compile(`fun sum(arr: array) => array_sum(arr)`)
+    .statements[0] as n.FunctionDeclaration
 }
+
+*/

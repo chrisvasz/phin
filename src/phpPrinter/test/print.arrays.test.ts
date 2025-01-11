@@ -2,14 +2,18 @@
 import { expect, test, describe } from 'bun:test'
 import { PhpPrinter } from '../print'
 import { Token } from '../../token'
-import compile, {
-  resolveUndeclaredIdentifiersToVariables,
-} from '../../compiler'
+import compile from '../../compiler'
+import { TestSymbols } from '../../symbols'
+import { b } from '../../builder'
+
+const symbols = new TestSymbols()
+symbols.add('a', b.var('a'))
+symbols.add('b', b.var('b'))
+symbols.add('c', b.var('c'))
+symbols.add('d', b.var('d'))
 
 function ast(source: string) {
-  return compile(source, {
-    resolveUndeclaredIdentifiers: resolveUndeclaredIdentifiersToVariables,
-  })
+  return compile(source, { symbols })
 }
 
 function print(source: string) {
