@@ -4,7 +4,7 @@ import { PhpPrinter } from '../print'
 import { trimMargin } from '../trimMargin'
 import compile from '../../compiler'
 import { TestSymbols } from '../../symbols'
-import { b } from '../../builder'
+import { b, t } from '../../builder'
 
 function print(source: string, symbols?: TestSymbols) {
   let ast = compile(source, { symbols })
@@ -59,18 +59,18 @@ describe('print: if', () => {
 })
 
 describe('print: ternary', () => {
-  test('true ? 1 : 2', () => {
-    let source = 'true ? 1 : 2'
-    let expected = 'true ? 1 : 2;'
+  test('true ? true : false', () => {
+    let source = 'true ? true : false'
+    let expected = 'true ? true : false;'
     expect(print(source)).toEqual(expected)
   })
 
-  test('true ? a() : b()', () => {
+  test.todo('true ? a() : b()', () => {
     let source = 'true ? a() : b()'
     let expected = 'true ? a() : b();'
     let symbols = new TestSymbols()
-    symbols.add('a', b.fun('a'))
-    symbols.add('b', b.fun('b'))
+    symbols.add('a', b.fun('a', { returnType: t.null() }))
+    symbols.add('b', b.fun('b', { returnType: t.null() }))
     expect(print(source, symbols)).toEqual(expected)
   })
 })

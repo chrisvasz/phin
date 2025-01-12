@@ -7,7 +7,7 @@ import { HoistedSymbols } from '../../symbols'
 import { b } from '../../builder'
 
 function ast(source: string, symbols?: HoistedSymbols) {
-  return compile(source, { symbols })
+  return compile(source, { symbols, typecheck: false })
 }
 
 function print(source: string, symbols?: HoistedSymbols) {

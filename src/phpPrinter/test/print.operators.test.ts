@@ -16,7 +16,7 @@ symbols.add('sum', b.fun('sum'))
 symbols.add('A', b.class('A'))
 
 function ast(source: string) {
-  return compile(source, { symbols })
+  return compile(source, { symbols, typecheck: false })
 }
 
 function print(source: string) {

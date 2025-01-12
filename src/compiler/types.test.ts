@@ -7,7 +7,7 @@ import VoidVisitor from './VoidVisitor'
 import { HoistedSymbols } from '../symbols'
 import { b } from '../builder'
 
-/*
+/* TODO
 
 describe('literal types', () => {
   function check(src: string, type: typeof t.Type) {

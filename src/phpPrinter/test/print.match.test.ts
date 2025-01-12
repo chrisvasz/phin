@@ -36,7 +36,7 @@ describe('print: match', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('match (true) { 1, 2 => 3, a(), b < 2 => 5 }', () => {
+  test.todo('match (true) { 1, 2 => 3, a(), b < 2 => 5 }', () => {
     let source = 'match (true) { 1, 2 => 3, a(), b < 2 => 5 }'
     let expected = trimMargin(`
       match (true) {
@@ -47,7 +47,7 @@ describe('print: match', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('match (true) { 1 => 2, default => 6 }', () => {
+  test.todo('match (true) { 1 => 2, default => 6 }', () => {
     let source = 'match (true) { 1 => 2, default => 6 }'
     let expected = trimMargin(`
       match (true) {

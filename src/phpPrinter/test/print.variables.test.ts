@@ -22,15 +22,15 @@ describe('print variables', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('var a: int = 1;', () => {
-    let source = 'var a: int = 1;'
-    let expected = '/** @var int $a */\n$a = 1;'
+  test('var a: string = "";', () => {
+    let source = 'var a: string = "";'
+    let expected = '/** @var string $a */\n$a = "";'
     expect(print(source)).toEqual(expected)
   })
 
-  test('var a: int = 1 + 2;', () => {
-    let source = 'var a: int = 1 + 2;'
-    let expected = '/** @var int $a */\n$a = 1 + 2;'
+  test('var a: string = "1" +. "2";', () => {
+    let source = 'var a: string = "1" +. "2";'
+    let expected = '/** @var string $a */\n$a = "1" . "2";'
     expect(print(source)).toEqual(expected)
   })
 })

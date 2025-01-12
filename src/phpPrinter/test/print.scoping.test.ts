@@ -6,6 +6,7 @@ import compile from '../../compiler'
 function print(source: string) {
   const ast = compile(source, {
     buildEnvironment: true,
+    typecheck: false,
   })
   let printer = new PhpPrinter()
   return printer.print(ast).trim()

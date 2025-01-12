@@ -8,10 +8,6 @@ export abstract class Node {
   type: Type | null = null
 }
 
-export abstract class IdentifierTargetNode {
-  abstract phpIdentifier(): string
-}
-
 export type Visibility = 'public' | 'protected' | 'private' | null
 export type FinalOrAbstract = 'final' | 'abstract' | null
 export type ClassMember =
@@ -164,20 +160,15 @@ export class VarDeclaration extends Node {
   _name = 'VarDeclaration' as const
   constructor(
     public readonly name: string,
-    public readonly _type: Type | null,
+    public readonly typeAnnotation: Type | null,
     public readonly initializer: Expr | null,
   ) {
     super()
+    this.type = typeAnnotation
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitVarDeclaration(this)
   }
-  // TODO
-  // type() {
-  //   if (this._type !== null) return this._type
-  //   if (this.initializer instanceof TypedNode) return this.initializer.type()
-  //   return t.any()
-  // }
 }
 
 export class VarDestructuringDeclaration extends Node {
@@ -306,32 +297,26 @@ export class FunctionDeclaration extends Node {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitFunctionDeclaration(this)
   }
-  // TODO
-  // override type(): Type {
-  //   return t.fun(
-  //     this.params.map((p) => p._type()),
-  //     this.returnType,
-  //   )
-  // }
 }
 
 export class Param extends Node {
   _name = 'Param' as const
   constructor(
     public readonly name: string,
-    public readonly _type: Type | null,
+    public readonly typeAnnotation: Type | null,
     public readonly initializer: Expr | null,
   ) {
     super()
+    this.type = typeAnnotation
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitParam(this)
   }
   isExpressibleInPhp() {
-    return this._type?.isExpressibleInPhp() ?? false
+    return this.type?.isExpressibleInPhp() ?? false
   }
   simplify() {
-    return this._type?.simplify() ?? this._type
+    return this.type?.simplify() ?? this.type
   }
 }
 
@@ -439,10 +424,11 @@ export class ClassProperty extends Node {
     public readonly isStatic: boolean,
     public readonly isReadonly: boolean,
     public readonly name: string,
-    public readonly _type: Type | null,
+    public readonly typeAnnotation: Type | null,
     public readonly initializer: Expr | null,
   ) {
     super()
+    this.type = typeAnnotation
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitClassProperty(this)
@@ -490,10 +476,11 @@ export class ClassConst extends Node {
     public readonly visibility: Visibility,
     public readonly isStatic: boolean,
     public readonly name: string,
-    public readonly _type: Type | null,
+    public readonly typeAnnotation: Type | null,
     public readonly initializer: Expr, // TODO must be compile-time constant. this and others
   ) {
     super()
+    this.type = typeAnnotation
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitClassConst(this)
@@ -642,6 +629,7 @@ export class StringLiteral extends Node {
   _name = 'StringLiteral' as const
   constructor(public readonly value: string) {
     super()
+    this.type = t.string()
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitStringLiteral(this)
@@ -662,6 +650,7 @@ export class BooleanLiteral extends Node {
   _name = 'BooleanLiteral' as const
   constructor(public readonly value: boolean) {
     super()
+    this.type = value ? t.true() : t.false()
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitBooleanLiteral(this)
@@ -670,6 +659,10 @@ export class BooleanLiteral extends Node {
 
 export class NullLiteral extends Node {
   _name = 'NullLiteral' as const
+  constructor() {
+    super()
+    this.type = t.null()
+  }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitNullLiteral(this)
   }

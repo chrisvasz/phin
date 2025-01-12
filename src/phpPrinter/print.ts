@@ -227,8 +227,8 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
     if (node.isFinal) this.append('final ')
     this.append(`${node.visibility ?? 'public'} `)
     if (node.isReadonly) this.append('readonly ')
-    if (node._type != null) {
-      node._type.simplify().accept(this)
+    if (node.typeAnnotation != null) {
+      node.typeAnnotation.simplify().accept(this)
       this.append(' ')
     }
     this.append(`$${node.name};`)
@@ -336,8 +336,8 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
     if (node.isFinal) this.append('final ')
     this.append(`${node.visibility ?? 'public'} `)
     if (node.isReadonly) this.append('readonly ')
-    if (node._type != null) {
-      node._type.simplify().accept(this)
+    if (node.typeAnnotation != null) {
+      node.typeAnnotation.simplify().accept(this)
       this.append(' ')
     }
     this.append(`$${node.name}`)
@@ -569,8 +569,8 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
   }
 
   visitParam(node: nodes.Param): void {
-    if (node._type != null) {
-      node._type.simplify().accept(this)
+    if (node.typeAnnotation != null) {
+      node.typeAnnotation.simplify().accept(this)
       this.append(' ')
     }
     this.append(`$${node.name}`)
@@ -668,9 +668,9 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
   }
 
   visitVarDeclaration(node: nodes.VarDeclaration): void {
-    if (node._type != null) {
+    if (node.type != null) {
       // TODO what is the right choice here?
-      this.typeAnnotationViaComment(node._type, node.name)
+      this.typeAnnotationViaComment(node.type, node.name)
     }
     this.append(`$${node.name}`)
     if (node.initializer) {

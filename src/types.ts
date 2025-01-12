@@ -190,6 +190,14 @@ export class Function extends Type {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitFunctionType(this)
   }
+  override equals(other: Type) {
+    if (!(other instanceof Function)) return false
+    if (this.params.length !== other.params.length) return false
+    for (let i = 0; i < this.params.length; i++) {
+      if (!this.params[i].equals(other.params[i])) return false
+    }
+    return this.returnType.equals(other.returnType)
+  }
   override toString() {
     return `(${this.params.join(', ')}) => ${this.returnType}`
   }

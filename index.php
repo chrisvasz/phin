@@ -1,2 +1,8 @@
 <?php
-$a = 1;
+function outer() {
+    inner();
+    function inner() {
+        echo "hello world";
+    }
+}
+inner();
