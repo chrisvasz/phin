@@ -668,9 +668,9 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
   }
 
   visitVarDeclaration(node: nodes.VarDeclaration): void {
-    if (node._type != null) {
+    if (node.type != null) {
       // TODO what is the right choice here?
-      this.typeAnnotationViaComment(node._type, node.name)
+      this.typeAnnotationViaComment(node.type, node.name)
     }
     this.append(`$${node.name}`)
     if (node.initializer) {

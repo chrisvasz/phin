@@ -9,10 +9,8 @@ function check(src: string) {
   new TypeCheckVisitor().visit(ast)
 }
 
-/*
-
 describe('typecheck var declarations', () => {
-  test('var a: string = "1"', () => {
+  test.only('var a: string = "1"', () => {
     let src = 'var a: string = "1"'
     expect(() => check(src)).not.toThrow()
   })
@@ -27,6 +25,12 @@ describe('typecheck var declarations', () => {
   test('var a: string = "" +. ""', () => {
     let src = 'var a: string = "" +. ""'
     expect(() => check(src)).not.toThrow()
+  })
+})
+
+describe('infers var declarations without explicit annotations', () => {
+  test.only('var a = ""', () => {
+    let src = 'var a = ""'
   })
 })
 
@@ -55,5 +59,3 @@ describe('shorthand function syntax', () => {
     )
   })
 })
-
-*/

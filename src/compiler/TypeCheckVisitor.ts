@@ -27,4 +27,15 @@ export default class TypeCheckVisitor extends VoidVisitor {
   visit(node: n.Program): void {
     node.accept(this)
   }
+
+  override visitVarDeclaration(node: n.VarDeclaration): void {
+    super.visitVarDeclaration(node)
+    if (!node.initializer) return
+    let actual = node.initializer.type!
+    if (node.type) {
+      check(node.type, actual)
+    } else {
+      node.type = actual
+    }
+  }
 }

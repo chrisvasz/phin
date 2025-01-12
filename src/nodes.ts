@@ -8,10 +8,6 @@ export abstract class Node {
   type: Type | null = null
 }
 
-export abstract class IdentifierTargetNode {
-  abstract phpIdentifier(): string
-}
-
 export type Visibility = 'public' | 'protected' | 'private' | null
 export type FinalOrAbstract = 'final' | 'abstract' | null
 export type ClassMember =
@@ -164,20 +160,15 @@ export class VarDeclaration extends Node {
   _name = 'VarDeclaration' as const
   constructor(
     public readonly name: string,
-    public readonly _type: Type | null,
+    public readonly typeAnnotation: Type | null,
     public readonly initializer: Expr | null,
   ) {
     super()
+    this.type = typeAnnotation
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitVarDeclaration(this)
   }
-  // TODO
-  // type() {
-  //   if (this._type !== null) return this._type
-  //   if (this.initializer instanceof TypedNode) return this.initializer.type()
-  //   return t.any()
-  // }
 }
 
 export class VarDestructuringDeclaration extends Node {
@@ -642,6 +633,7 @@ export class StringLiteral extends Node {
   _name = 'StringLiteral' as const
   constructor(public readonly value: string) {
     super()
+    this.type = t.string()
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitStringLiteral(this)
