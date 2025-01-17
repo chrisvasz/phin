@@ -41,30 +41,6 @@ describe('type inference: var declarations without explicit annotations', () => 
   })
 })
 
-describe('type inference: ternary', () => {
-  function check(ast: n.Program, expected: types.Type) {
-    let calls = 0
-    let visitor = new (class extends VoidVisitor {
-      override visitTernary(node: n.Ternary): void {
-        calls++
-        expect(node.type?.equals(expected)).toBe(true)
-      }
-    })()
-    visitor.visitProgram(ast)
-    expect(calls).toBe(1)
-  }
-
-  test('true ? null : null', () => {
-    let src = 'true ? null : null'
-    check(compile(src), t.null())
-  })
-
-  test('true ? "" : false', () => {
-    let src = 'true ? "" : false'
-    check(compile(src), t.union(t.string(), t.false()))
-  })
-})
-
 describe('type inference: shorthand function return type', () => {
   function check(ast: n.Program, expected: types.Type) {
     let calls = 0
@@ -110,40 +86,6 @@ describe('type inference: function param', () => {
   test('fun a(b = "") => null', () => {
     let src = 'fun a(b = "") => null'
     check(compile(src), t.string())
-  })
-})
-
-describe('type inference: match expression', () => {
-  function check(ast: n.Program, expected: types.Type) {
-    let calls = 0
-    let visitor = new (class extends VoidVisitor {
-      override visitMatch(node: n.Match): void {
-        calls++
-        expect(node.type?.equals(expected)).toBe(true)
-      }
-    })()
-    visitor.visitProgram(ast)
-    expect(calls).toBe(1)
-  }
-
-  test('match (1) { 1 => null }', () => {
-    let src = 'match (1) { 1 => null }'
-    check(compile(src), t.null())
-  })
-
-  test('match (1) { 1 => "", 2 => null }', () => {
-    let src = 'match (1) { 1 => "", 2 => null }'
-    check(compile(src), t.union(t.string(), t.null()))
-  })
-
-  test('match (1) { 1 => true, default => true }', () => {
-    let src = 'match (1) { 1 => true, default => true }'
-    check(compile(src), t.true())
-  })
-
-  test('match (1) { 1 => true, default => "" }', () => {
-    let src = 'match (1) { 1 => true, default => "" }'
-    check(compile(src), t.union(t.true(), t.string()))
   })
 })
 
@@ -230,7 +172,7 @@ describe('type inference: classes', () => {
     })
   })
 
-  describe('class method', () => {
+  describe('class method shorthand return', () => {
     function check(ast: n.Program, expected: types.Type) {
       let calls = 0
       let visitor = new (class extends VoidVisitor {

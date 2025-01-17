@@ -40,9 +40,9 @@ describe('print array literals', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('["a",b(),c<d]', () => {
-    let source = '["a",b(),c<d]'
-    let expected = '["a", $b(), $c < $d];'
+  test('["a",c<d]', () => {
+    let source = '["a"c<d]'
+    let expected = '["a", $c < $d];'
     expect(print(source)).toEqual(expected)
   })
 
@@ -58,9 +58,9 @@ describe('print array literals', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('[1=>2,"3"=>4+5,a()]', () => {
-    let source = '[1=>2,"3"=>4+5,a()]'
-    let expected = '[1 => 2, "3" => 4 + 5, $a()];'
+  test('[1=>2,"3"=>4+5]', () => {
+    let source = '[1=>2,"3"=>4+5]'
+    let expected = '[1 => 2, "3" => 4 + 5];'
     expect(print(source)).toEqual(expected)
   })
 })

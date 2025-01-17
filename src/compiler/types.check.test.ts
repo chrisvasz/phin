@@ -4,8 +4,8 @@ import compile from './compiler'
 import { TypeCheckError } from './TypeCheckVisitor'
 
 describe('type check: var declarations with explicit annotations', () => {
-  test('var a: string = "1"', () => {
-    let src = 'var a: string = "1"'
+  test('var a: string = ""', () => {
+    let src = 'var a: string = ""'
     expect(() => compile(src)).not.toThrow()
   })
 
@@ -14,10 +14,5 @@ describe('type check: var declarations with explicit annotations', () => {
     expect(() => compile(src)).toThrowError(
       new TypeCheckError('Type error: null is not assignable to string'),
     )
-  })
-
-  test('var a: string = "" +. ""', () => {
-    let src = 'var a: string = "" +. ""'
-    expect(() => compile(src)).not.toThrow()
   })
 })

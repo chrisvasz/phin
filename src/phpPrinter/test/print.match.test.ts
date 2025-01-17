@@ -4,11 +4,13 @@ import { PhpPrinter } from '../print'
 import { trimMargin } from '../trimMargin'
 import compile from '../../compiler'
 import { TestSymbols } from '../../symbols'
-import { b } from '../../builder'
+import { b, t } from '../../builder'
 
 const symbols = new TestSymbols()
-symbols.add('a', b.fun('a'))
-symbols.add('b', b.fun('a'))
+let a = b.fun('a')
+a.type = t.fun([], t.int())
+symbols.add('a', a)
+symbols.add('b', b.var('b', t.int()))
 
 function ast(source: string) {
   return compile(source, { symbols: symbols })
@@ -36,18 +38,18 @@ describe('print: match', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test.todo('match (true) { 1, 2 => 3, a(), b < 2 => 5 }', () => {
+  test('match (true) { 1, 2 => 3, a(), b < 2 => 5 }', () => {
     let source = 'match (true) { 1, 2 => 3, a(), b < 2 => 5 }'
     let expected = trimMargin(`
       match (true) {
         1, 2 => 3,
-        a(), b < 2 => 5,
+        a(), $b < 2 => 5,
       };
     `)
     expect(print(source)).toEqual(expected)
   })
 
-  test.todo('match (true) { 1 => 2, default => 6 }', () => {
+  test('match (true) { 1 => 2, default => 6 }', () => {
     let source = 'match (true) { 1 => 2, default => 6 }'
     let expected = trimMargin(`
       match (true) {

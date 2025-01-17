@@ -1,7 +1,8 @@
 import VoidVisitor from './VoidVisitor'
 import * as n from '../nodes'
-import { Type } from '../types'
+import * as types from '../types'
 import { t } from '../builder'
+import { Type } from '../types'
 
 export class TypeCheckError extends Error {
   override name: string = 'TypeCheckError'
@@ -30,10 +31,34 @@ export default class TypeCheckVisitor extends VoidVisitor {
     node.accept(this)
   }
 
+  override visitAssign(node: n.Assign): void {
+    super.visitAssign(node)
+    node.type = node.value.type!
+  }
+
   override visitBinary(node: n.Binary): void {
     super.visitBinary(node)
-    if (node.operator === '+.') node.type = t.string()
-    // TODO all operators
+    if (node.operator === '==') node.type = t.bool()
+    else if (node.operator === '!=') node.type = t.bool()
+    else if (node.operator === '===') node.type = t.bool()
+    else if (node.operator === '!==') node.type = t.bool()
+    else if (node.operator === '<') node.type = t.bool()
+    else if (node.operator === '<=') node.type = t.bool()
+    else if (node.operator === '>') node.type = t.bool()
+    else if (node.operator === '>=') node.type = t.bool()
+    else if (node.operator === '&&') node.type = t.bool()
+    else if (node.operator === '||') node.type = t.bool()
+    else if (node.operator === '+.') node.type = t.string()
+    else node.type = t.any()
+  }
+
+  override visitCall(node: n.Call): void {
+    super.visitCall(node)
+    let fun = node.callee.type
+    if (!(fun instanceof types.Function)) {
+      throw new TypeCheckError('Cannot call non-function')
+    }
+    node.type = fun.returnType!
   }
 
   override visitClassConst(node: n.ClassConst): void {

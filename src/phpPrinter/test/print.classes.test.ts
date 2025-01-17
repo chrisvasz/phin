@@ -150,11 +150,11 @@ describe('print class properties', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test.todo('class A(a) { var b = a; }', () => {
-    let source = 'class A(a) { var b = a; }'
+  test.todo('class A(a: string) { var b = a; }', () => {
+    let source = 'class A(a: string) { var b = a; }'
     let expected = trimMargin(`
       class A {
-        function __construct($a) {
+        function __construct(string $a) {
           $this->b = $a;
         }
         public $b;

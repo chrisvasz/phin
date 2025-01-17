@@ -4,7 +4,6 @@ import * as nodes from '../nodes'
 import * as types from '../types'
 import { Type } from '../types'
 import { ClassSymbols, HoistedSymbols } from '../symbols'
-import { t } from '../builder'
 
 const emptyArray: [] = []
 

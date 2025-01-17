@@ -33,7 +33,9 @@ describe('print: if', () => {
 
   test('if (a()) 1', () => {
     let symbols = new TestSymbols()
-    symbols.add('a', b.fun('a'))
+    let a = b.fun('a')
+    a.type = t.fun([], t.bool())
+    symbols.add('a', a)
     let source = 'if (a()) 1'
     let expected = 'if (a()) 1;'
     expect(print(source, symbols)).toEqual(expected)
@@ -65,12 +67,16 @@ describe('print: ternary', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test.todo('true ? a() : b()', () => {
-    let source = 'true ? a() : b()'
-    let expected = 'true ? a() : b();'
+  test('true ? a() : c()', () => {
+    let source = 'true ? a() : c()'
+    let expected = 'true ? a() : c();'
     let symbols = new TestSymbols()
-    symbols.add('a', b.fun('a', { returnType: t.null() }))
-    symbols.add('b', b.fun('b', { returnType: t.null() }))
+    let a = b.fun('a')
+    a.type = t.fun([], t.bool())
+    let c = b.fun('b')
+    c.type = t.fun([], t.bool())
+    symbols.add('a', a)
+    symbols.add('c', c)
     expect(print(source, symbols)).toEqual(expected)
   })
 })

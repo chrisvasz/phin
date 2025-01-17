@@ -577,20 +577,6 @@ export class Binary extends Node {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitBinary(this)
   }
-  _type(): Type {
-    if (this.operator === '==') return t.bool()
-    if (this.operator === '!=') return t.bool()
-    if (this.operator === '===') return t.bool()
-    if (this.operator === '!==') return t.bool()
-    if (this.operator === '<') return t.bool()
-    if (this.operator === '<=') return t.bool()
-    if (this.operator === '>') return t.bool()
-    if (this.operator === '>=') return t.bool()
-    if (this.operator === '&&') return t.bool()
-    if (this.operator === '||') return t.bool()
-    if (this.operator === '+.') return t.string()
-    return t.any()
-  }
 }
 
 export class Ternary extends Node {
@@ -654,6 +640,7 @@ export class TemplateStringLiteral extends Node {
   _name = 'TemplateStringLiteral' as const
   constructor(public readonly parts: Array<StringLiteral | Expr>) {
     super()
+    this.type = t.string()
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitTemplateStringLiteral(this)

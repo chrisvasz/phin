@@ -3,7 +3,7 @@ import { expect, test, describe } from 'bun:test'
 import { PhpPrinter } from '../print'
 import compile from '../../compiler'
 import { TestSymbols } from '../../symbols'
-import { b } from '../../builder'
+import { b, t } from '../../builder'
 
 function print(source: string, symbols?: TestSymbols) {
   let ast = compile(source, { symbols })
@@ -40,6 +40,9 @@ describe('print double-quoted strings', () => {
 describe('print template strings', () => {
   const symbols = new TestSymbols()
   symbols.add('name', b.var('name'))
+  let a = b.fun('a')
+  a.type = t.fun([], t.string())
+  symbols.add('a', a)
 
   test('"$name"', () => {
     let source = '"$name"'
@@ -53,9 +56,9 @@ describe('print template strings', () => {
     expect(print(source, symbols)).toEqual(expected)
   })
 
-  test('"${name()}"', () => {
-    let source = '"${name()}"'
-    let expected = '("" . $name());'
+  test('"${a()}"', () => {
+    let source = '"${a()}"'
+    let expected = '("" . a());'
     expect(print(source, symbols)).toEqual(expected)
   })
 

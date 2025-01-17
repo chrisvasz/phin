@@ -12,15 +12,17 @@ export default function compile(
     symbols = new HoistedSymbols(),
     typecheck = true,
   }: {
-    buildEnvironment?: boolean
+    buildEnvironment?: boolean // TODO can we drop this?
     symbols?: Symbols
-    typecheck?: boolean // TODO maybe remove this?
+    typecheck?: boolean // TODO can we drop this?
   } = {},
 ): Program {
   let ast = parse(scan(source), { buildEnvironment })
-  new BindIdentifiersVisitor(symbols).visit(ast) // TODO is there any way to indicate with types that node is set after this?
+  // TODO is there any way to indicate with types that node is set after this?
+  new BindIdentifiersVisitor(symbols).visit(ast)
   if (typecheck) {
-    new TypeCheckVisitor().visit(ast) // TODO is there any way to indicate with types that type is set after this?
+    // TODO is there any way to indicate with types that type is set after this?
+    new TypeCheckVisitor().visit(ast)
   }
   return ast
 }
