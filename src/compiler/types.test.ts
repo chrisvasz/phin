@@ -2,30 +2,26 @@
 import { expect, test, describe } from 'bun:test'
 import * as n from '../nodes'
 import compile from '.'
-import * as t from '../types'
-import VoidVisitor from './VoidVisitor'
-import { HoistedSymbols } from '../symbols'
-import { b } from '../builder'
-
-/* TODO
+import * as types from '../types'
+import { b, t } from '../builder'
 
 describe('literal types', () => {
-  function check(src: string, type: typeof t.Type) {
-    let ast = compile(src, {
-    })
+  function check(src: string, type: types.Type) {
+    let ast = compile(src, {})
     let stmt = ast.statements[0] as n.ExpressionStatement
-    let expr = stmt.expression as n.TypedNode
-    expect(expr._type()).toBeInstanceOf(type)
+    let expr = stmt.expression as n.Node
+    expect(expr.type?.equals(type)).toBe(true)
   }
-  test('null', () => check('null', t.Null))
-  test('""', () => check('""', t.String))
-  test('true', () => check('true', t.True))
-  test('false', () => check('false', t.False))
-  test('1', () => check('1', t.Number))
-  test('"${1}"', () => check('"${1}"', t.String))
-  test('(1)', () => check('(1)', t.Number))
+  test('null', () => check('null', t.null()))
+  test('""', () => check('""', t.string()))
+  test('true', () => check('true', t.true()))
+  test('false', () => check('false', t.false()))
+  test('1', () => check('1', t.int()))
+  test.todo('"${1}"', () => check('"${1}"', t.string()))
+  test('(1)', () => check('(1)', t.int()))
 })
 
+/* TODO
 describe('assignment expression types', () => {
   const globals = new HoistedSymbols()
   globals.add('a', b.fun('a'))

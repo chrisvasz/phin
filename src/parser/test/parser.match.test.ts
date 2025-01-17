@@ -14,7 +14,7 @@ describe('parse match expressions', () => {
     let source = 'match (1) {}'
     let expected = b.program(
       new nodes.ExpressionStatement(
-        new nodes.Match(new nodes.NumberLiteral('1'), [], null),
+        new nodes.Match(b.intLiteral('1'), [], null),
       ),
     )
     expect(ast(source)).toEqual(expected)
@@ -25,13 +25,8 @@ describe('parse match expressions', () => {
     let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Match(
-          new nodes.NumberLiteral('1'),
-          [
-            new nodes.MatchArm(
-              [new nodes.NumberLiteral('1')],
-              new nodes.NumberLiteral('2'),
-            ),
-          ],
+          b.intLiteral('1'),
+          [new nodes.MatchArm([b.intLiteral('1')], b.intLiteral('2'))],
           null,
         ),
       ),
@@ -44,11 +39,11 @@ describe('parse match expressions', () => {
     let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Match(
-          new nodes.NumberLiteral('1'),
+          b.intLiteral('1'),
           [
             new nodes.MatchArm(
-              [new nodes.NumberLiteral('1'), new nodes.NumberLiteral('2')],
-              new nodes.NumberLiteral('3'),
+              [b.intLiteral('1'), b.intLiteral('2')],
+              b.intLiteral('3'),
             ),
           ],
           null,
@@ -63,15 +58,15 @@ describe('parse match expressions', () => {
     let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Match(
-          new nodes.NumberLiteral('1'),
+          b.intLiteral('1'),
           [
             new nodes.MatchArm(
-              [new nodes.NumberLiteral('1'), new nodes.NumberLiteral('2')],
-              new nodes.NumberLiteral('3'),
+              [b.intLiteral('1'), b.intLiteral('2')],
+              b.intLiteral('3'),
             ),
             new nodes.MatchArm(
-              [new nodes.NumberLiteral('4'), new nodes.NumberLiteral('5')],
-              new nodes.NumberLiteral('6'),
+              [b.intLiteral('4'), b.intLiteral('5')],
+              b.intLiteral('6'),
             ),
           ],
           null,
@@ -86,16 +81,10 @@ describe('parse match expressions', () => {
     let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Match(
-          new nodes.NumberLiteral('1'),
+          b.intLiteral('1'),
           [
-            new nodes.MatchArm(
-              [new nodes.NumberLiteral('1')],
-              new nodes.NumberLiteral('2'),
-            ),
-            new nodes.MatchArm(
-              [new nodes.NumberLiteral('3')],
-              new nodes.NumberLiteral('4'),
-            ),
+            new nodes.MatchArm([b.intLiteral('1')], b.intLiteral('2')),
+            new nodes.MatchArm([b.intLiteral('3')], b.intLiteral('4')),
           ],
           null,
         ),
@@ -108,11 +97,7 @@ describe('parse match expressions', () => {
     let source = 'match (1) { default => 2 }'
     let expected = b.program(
       new nodes.ExpressionStatement(
-        new nodes.Match(
-          new nodes.NumberLiteral('1'),
-          [],
-          new nodes.NumberLiteral('2'),
-        ),
+        new nodes.Match(b.intLiteral('1'), [], b.intLiteral('2')),
       ),
     )
     expect(ast(source)).toEqual(expected)
@@ -123,14 +108,9 @@ describe('parse match expressions', () => {
     let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Match(
-          new nodes.NumberLiteral('1'),
-          [
-            new nodes.MatchArm(
-              [new nodes.NumberLiteral('1')],
-              new nodes.NumberLiteral('2'),
-            ),
-          ],
-          new nodes.NumberLiteral('3'),
+          b.intLiteral('1'),
+          [new nodes.MatchArm([b.intLiteral('1')], b.intLiteral('2'))],
+          b.intLiteral('3'),
         ),
       ),
     )
@@ -145,13 +125,7 @@ describe('parse match expressions', () => {
           new nodes.BooleanLiteral(true),
           [
             new nodes.MatchArm(
-              [
-                new nodes.Binary(
-                  new nodes.NumberLiteral('1'),
-                  '>=',
-                  new nodes.NumberLiteral('2'),
-                ),
-              ],
+              [new nodes.Binary(b.intLiteral('1'), '>=', b.intLiteral('2'))],
               new nodes.StringLiteral('worked'),
             ),
           ],
@@ -181,18 +155,13 @@ describe('parse match expressions', () => {
     let expected = b.program(
       new nodes.ExpressionStatement(
         new nodes.Match(
-          new nodes.NumberLiteral('1'),
+          b.intLiteral('1'),
           [
             new nodes.MatchArm(
-              [new nodes.NumberLiteral('1')],
+              [b.intLiteral('1')],
               new nodes.Match(
-                new nodes.NumberLiteral('2'),
-                [
-                  new nodes.MatchArm(
-                    [new nodes.NumberLiteral('2')],
-                    new nodes.NumberLiteral('2'),
-                  ),
-                ],
+                b.intLiteral('2'),
+                [new nodes.MatchArm([b.intLiteral('2')], b.intLiteral('2'))],
                 null,
               ),
             ),

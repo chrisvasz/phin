@@ -27,6 +27,7 @@ const {
   EQUAL,
   EXTENDS,
   FALSE,
+  FLOAT,
   FINAL,
   FINALLY,
   FOREACH,
@@ -38,6 +39,7 @@ const {
   IF,
   IMPLEMENTS,
   INSTANCEOF,
+  INT,
   LEFT_BRACE,
   LEFT_BRACKET,
   LEFT_PAREN,
@@ -391,27 +393,29 @@ export default function scan(source: string): Token[] {
 
   function decimalNumber() {
     while (isDigitOr_(peek())) advance()
+    let type = INT
     if (peek() === '.' && isDigit(peekNext())) {
       advance() // consume the .
       advance() // consume the digit after .
       while (isDigitOr_(peek())) advance()
+      type = FLOAT
     }
-    addToken(NUMBER, source.substring(start, current).replaceAll('_', ''))
+    addToken(type, source.substring(start, current).replaceAll('_', ''))
   }
 
   function hexNumber() {
     while (isHexDigitOr_(peek())) advance()
-    addToken(NUMBER, source.substring(start, current).replaceAll('_', ''))
+    addToken(INT, source.substring(start, current).replaceAll('_', ''))
   }
 
   function octalNumber() {
     while (isOctalDigitOr_(peek())) advance()
-    addToken(NUMBER, source.substring(start, current).replaceAll('_', ''))
+    addToken(INT, source.substring(start, current).replaceAll('_', ''))
   }
 
   function binaryNumber() {
     while (isBinaryDigitOr_(peek())) advance()
-    addToken(NUMBER, source.substring(start, current).replaceAll('_', ''))
+    addToken(INT, source.substring(start, current).replaceAll('_', ''))
   }
 
   function identifier() {

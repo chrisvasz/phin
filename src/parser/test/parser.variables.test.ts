@@ -17,18 +17,14 @@ describe('parse var declarations', () => {
 
   test('var x = 3', () => {
     let source = 'var x = 3'
-    let expected = b.program(b.var('x', null, b.numberLiteral('3')))
+    let expected = b.program(b.var('x', null, b.intLiteral('3')))
     expect(ast(source)).toEqual(expected)
   })
 
   test('var x = 3 + 1', () => {
     let source = 'var x = 3 + 1'
     let expected = b.program(
-      b.var(
-        'x',
-        null,
-        b.binary(b.numberLiteral('3'), '+', b.numberLiteral('1')),
-      ),
+      b.var('x', null, b.binary(b.intLiteral('3'), '+', b.intLiteral('1'))),
     )
     expect(ast(source)).toEqual(expected)
   })
@@ -36,26 +32,22 @@ describe('parse var declarations', () => {
   test('var x = 3 + 1; var y; var z = "hello"', () => {
     let source = 'var x = 3 + 1; var y; var z = "hello"'
     let expected = b.program(
-      b.var(
-        'x',
-        null,
-        b.binary(b.numberLiteral('3'), '+', b.numberLiteral('1')),
-      ),
+      b.var('x', null, b.binary(b.intLiteral('3'), '+', b.intLiteral('1'))),
       b.var('y', null, null),
       b.var('z', null, b.stringLiteral('hello')),
     )
     expect(ast(source)).toEqual(expected)
   })
 
-  test('var x: number', () => {
-    let source = 'var x: number'
-    let expected = b.program(b.var('x', t.number()))
+  test('var x: int', () => {
+    let source = 'var x: int'
+    let expected = b.program(b.var('x', t.int()))
     expect(ast(source)).toEqual(expected)
   })
 
-  test('var x: number = 3', () => {
-    let source = 'var x: number = 3'
-    let expected = b.program(b.var('x', t.number(), b.numberLiteral('3')))
+  test('var x: int = 3', () => {
+    let source = 'var x: int = 3'
+    let expected = b.program(b.var('x', t.int(), b.intLiteral('3')))
     expect(ast(source)).toEqual(expected)
   })
 
@@ -89,12 +81,6 @@ describe('parse var declarations', () => {
     expect(ast(source)).toEqual(expected)
   })
 
-  test('var x: 5', () => {
-    let source = 'var x: 5'
-    let expected = b.program(b.var('x', t.numberLiteral('5')))
-    expect(ast(source)).toEqual(expected)
-  })
-
   test('var x: "hello"', () => {
     let source = 'var x: "hello"'
     let expected = b.program(b.var('x', t.stringLiteral('hello')))
@@ -125,31 +111,31 @@ describe('parse var declarations', () => {
     expect(ast(source)).toEqual(expected)
   })
 
-  test('var x: array<number>', () => {
-    let source = 'var x: array<number>'
-    let expected = b.program(b.var('x', t.id('array', t.number())))
+  test('var x: array<int>', () => {
+    let source = 'var x: array<int>'
+    let expected = b.program(b.var('x', t.id('array', t.int())))
     expect(ast(source)).toEqual(expected)
   })
 
-  test('var x: array<array<array<number>>>', () => {
-    let source = 'var x: array<array<array<number>>>'
+  test('var x: array<array<array<int>>>', () => {
+    let source = 'var x: array<array<array<int>>>'
     let expected = b.program(
-      b.var('x', t.id('array', t.id('array', t.id('array', t.number())))),
+      b.var('x', t.id('array', t.id('array', t.id('array', t.int())))),
     )
     expect(ast(source)).toEqual(expected)
   })
 
-  test('var x: array<number|string>', () => {
-    let source = 'var x: array<number|string>'
+  test('var x: array<int|string>', () => {
+    let source = 'var x: array<int|string>'
     let expected = b.program(
-      b.var('x', t.id('array', t.union(t.number(), t.string()))),
+      b.var('x', t.id('array', t.union(t.int(), t.string()))),
     )
     expect(ast(source)).toEqual(expected)
   })
 
-  test('var x: array<string,number>', () => {
-    let source = 'var x: array<string,number>'
-    let expected = b.program(b.var('x', t.id('array', t.string(), t.number())))
+  test('var x: array<string,int>', () => {
+    let source = 'var x: array<string,int>'
+    let expected = b.program(b.var('x', t.id('array', t.string(), t.int())))
     expect(ast(source)).toEqual(expected)
   })
 
@@ -159,54 +145,54 @@ describe('parse var declarations', () => {
     expect(ast(source)).toEqual(expected)
   })
 
-  test('var x: array<string|number,number&null,?5>', () => {
-    let source = 'var x: array<string|number,number&null,?5>'
+  test('var x: array<string|int,int&null,?true>', () => {
+    let source = 'var x: array<string|int,int&null,?true>'
     let expected = b.program(
       b.var(
         'x',
         t.id(
           'array',
-          t.union(t.string(), t.number()),
-          t.intersection(t.number(), t.null()),
-          t.nullable(t.numberLiteral('5')),
+          t.union(t.string(), t.int()),
+          t.intersection(t.int(), t.null()),
+          t.nullable(t.true()),
         ),
       ),
     )
     expect(ast(source)).toEqual(expected)
   })
 
-  test('var x: ?number', () => {
-    let source = 'var x: ?number'
-    let expected = b.program(b.var('x', t.nullable(t.number()), null))
+  test('var x: ?int', () => {
+    let source = 'var x: ?int'
+    let expected = b.program(b.var('x', t.nullable(t.int()), null))
     expect(ast(source)).toEqual(expected)
   })
 
-  test('var x: string|number', () => {
-    let source = 'var x: string|number'
-    let expected = b.program(b.var('x', t.union(t.string(), t.number()), null))
+  test('var x: string|int', () => {
+    let source = 'var x: string|int'
+    let expected = b.program(b.var('x', t.union(t.string(), t.int()), null))
     expect(ast(source)).toEqual(expected)
   })
 
-  test('var x: string|number|null', () => {
-    let source = 'var x: string|number|null'
+  test('var x: string|int|null', () => {
+    let source = 'var x: string|int|null'
     let expected = b.program(
-      b.var('x', t.union(t.string(), t.number(), t.null()), null),
+      b.var('x', t.union(t.string(), t.int(), t.null()), null),
     )
     expect(ast(source)).toEqual(expected)
   })
 
-  test('var x: string&number', () => {
-    let source = 'var x: string&number'
+  test('var x: string&int', () => {
+    let source = 'var x: string&int'
     let expected = b.program(
-      b.var('x', t.intersection(t.string(), t.number()), null),
+      b.var('x', t.intersection(t.string(), t.int()), null),
     )
     expect(ast(source)).toEqual(expected)
   })
 
-  test('var x: string&number&null', () => {
-    let source = 'var x: string&number&null'
+  test('var x: string&int&null', () => {
+    let source = 'var x: string&int&null'
     let expected = b.program(
-      b.var('x', t.intersection(t.string(), t.number(), t.null()), null),
+      b.var('x', t.intersection(t.string(), t.int(), t.null()), null),
     )
     expect(ast(source)).toEqual(expected)
   })

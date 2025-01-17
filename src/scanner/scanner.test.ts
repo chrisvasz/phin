@@ -30,6 +30,7 @@ const {
   EQUAL,
   EXTENDS,
   FALSE,
+  FLOAT,
   FINAL,
   FINALLY,
   FOREACH,
@@ -41,6 +42,7 @@ const {
   IF,
   IMPLEMENTS,
   INSTANCEOF,
+  INT,
   LEFT_BRACE,
   LEFT_BRACKET,
   LEFT_PAREN,
@@ -491,56 +493,56 @@ describe('keywords', () => {
 
 describe('scan number literals', () => {
   test('1', () => {
-    let expected = [new Token(NUMBER, '1', '1', 1), eof()]
+    let expected = [new Token(INT, '1', '1', 1), eof()]
     let source = '1'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
   test('1.2', () => {
-    let expected = [new Token(NUMBER, '1.2', '1.2', 1), eof()]
+    let expected = [new Token(FLOAT, '1.2', '1.2', 1), eof()]
     let source = '1.2'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
   test('123', () => {
-    let expected = [new Token(NUMBER, '123', '123', 1), eof()]
+    let expected = [new Token(INT, '123', '123', 1), eof()]
     let source = '123'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
   test('123_', () => {
-    let expected = [new Token(NUMBER, '123_', '123', 1), eof()]
+    let expected = [new Token(INT, '123_', '123', 1), eof()]
     let source = '123_'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
   test('123.45', () => {
-    let expected = [new Token(NUMBER, '123.45', '123.45', 1), eof()]
+    let expected = [new Token(FLOAT, '123.45', '123.45', 1), eof()]
     let source = '123.45'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
   test('123_456', () => {
-    let expected = [new Token(NUMBER, '123_456', '123456', 1), eof()]
+    let expected = [new Token(INT, '123_456', '123456', 1), eof()]
     let source = '123_456'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
   test('123_456.78', () => {
-    let expected = [new Token(NUMBER, '123_456.78', '123456.78', 1), eof()]
+    let expected = [new Token(FLOAT, '123_456.78', '123456.78', 1), eof()]
     let source = '123_456.78'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
   test('123_456.78_90', () => {
-    let expected = [new Token(NUMBER, '123_456.78_90', '123456.7890', 1), eof()]
+    let expected = [new Token(FLOAT, '123_456.78_90', '123456.7890', 1), eof()]
     let source = '123_456.78_90'
     let actual = scan(source)
     expect(actual).toEqual(expected)
@@ -548,7 +550,7 @@ describe('scan number literals', () => {
 
   test('1_2_3_4_5_6_7_8_9_0', () => {
     let expected = [
-      new Token(NUMBER, '1_2_3_4_5_6_7_8_9_0', '1234567890', 1),
+      new Token(INT, '1_2_3_4_5_6_7_8_9_0', '1234567890', 1),
       eof(),
     ]
     let source = '1_2_3_4_5_6_7_8_9_0'
@@ -557,14 +559,14 @@ describe('scan number literals', () => {
   })
 
   test('0x1', () => {
-    let expected = [new Token(NUMBER, '0x1', '0x1', 1), eof()]
+    let expected = [new Token(INT, '0x1', '0x1', 1), eof()]
     let source = '0x1'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
   test('0X12', () => {
-    let expected = [new Token(NUMBER, '0X12', '0X12', 1), eof()]
+    let expected = [new Token(INT, '0X12', '0X12', 1), eof()]
     let source = '0X12'
     let actual = scan(source)
     expect(actual).toEqual(expected)
@@ -572,7 +574,7 @@ describe('scan number literals', () => {
 
   test('0x012_345_678_9AB_CDE_F', () => {
     let expected = [
-      new Token(NUMBER, '0x012_345_678_9AB_CDE_F', '0x0123456789ABCDEF', 1),
+      new Token(INT, '0x012_345_678_9AB_CDE_F', '0x0123456789ABCDEF', 1),
       eof(),
     ]
     let source = '0x012_345_678_9AB_CDE_F'
@@ -581,42 +583,42 @@ describe('scan number literals', () => {
   })
 
   test('0o1', () => {
-    let expected = [new Token(NUMBER, '0o1', '0o1', 1), eof()]
+    let expected = [new Token(INT, '0o1', '0o1', 1), eof()]
     let source = '0o1'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
   test('0O10', () => {
-    let expected = [new Token(NUMBER, '0O10', '0O10', 1), eof()]
+    let expected = [new Token(INT, '0O10', '0O10', 1), eof()]
     let source = '0O10'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
   test('0o012_345_67', () => {
-    let expected = [new Token(NUMBER, '0o012_345_67', '0o01234567', 1), eof()]
+    let expected = [new Token(INT, '0o012_345_67', '0o01234567', 1), eof()]
     let source = '0o012_345_67'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
   test('0b1', () => {
-    let expected = [new Token(NUMBER, '0b1', '0b1', 1), eof()]
+    let expected = [new Token(INT, '0b1', '0b1', 1), eof()]
     let source = '0b1'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
   test('0B10', () => {
-    let expected = [new Token(NUMBER, '0B10', '0B10', 1), eof()]
+    let expected = [new Token(INT, '0B10', '0B10', 1), eof()]
     let source = '0B10'
     let actual = scan(source)
     expect(actual).toEqual(expected)
   })
 
   test('0b010_101_011', () => {
-    let expected = [new Token(NUMBER, '0b010_101_011', '0b010101011', 1), eof()]
+    let expected = [new Token(INT, '0b010_101_011', '0b010101011', 1), eof()]
     let source = '0b010_101_011'
     let actual = scan(source)
     expect(actual).toEqual(expected)

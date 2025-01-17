@@ -44,7 +44,7 @@ describe('print scoping: vars and functions', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test.only('fun a(b) => b', () => {
+  test('fun a(b) => b', () => {
     let source = 'fun a(b) => b'
     let expected = 'function a($b) {\n  return $b;\n}'
     expect(print(source)).toEqual(expected)

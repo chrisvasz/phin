@@ -74,7 +74,9 @@ export enum TokenType {
 
   // Literals
   IDENTIFIER,
-  NUMBER,
+  INT,
+  FLOAT,
+  NUMBER, // TODO drop me
   DOUBLE_QUOTE,
   STRING,
   STRING_PART,

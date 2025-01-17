@@ -84,12 +84,8 @@ describe('parse class declarations', () => {
     let expected = b.program(
       b.class('A', {
         members: [
-          b.classInitializer(
-            b.block(b.expressionStatement(b.numberLiteral('1'))),
-          ),
-          b.classInitializer(
-            b.block(b.expressionStatement(b.numberLiteral('2'))),
-          ),
+          b.classInitializer(b.block(b.expressionStatement(b.intLiteral('1')))),
+          b.classInitializer(b.block(b.expressionStatement(b.intLiteral('2')))),
         ],
       }),
     )
@@ -131,12 +127,12 @@ describe('parse class params/constructor', () => {
     expect(ast(source)).toEqual(expected)
   })
 
-  test('class A(b: number|string = 5, final public var c: bool,) {}', () => {
-    let source = 'class A(b: number|string = 5, final public var c: bool,) {}'
+  test('class A(b: int|string = 5, final public var c: bool,) {}', () => {
+    let source = 'class A(b: int|string = 5, final public var c: bool,) {}'
     let expected = b.program(
       b.class('A', {
         params: [
-          b.param('b', t.union(t.number(), t.string()), b.numberLiteral('5')),
+          b.param('b', t.union(t.int(), t.string()), b.intLiteral('5')),
           b.classProperty('c', {
             isFinal: true,
             visibility: 'public',
@@ -158,14 +154,14 @@ describe('parse class params/constructor', () => {
     expect(ast(source)).toEqual(expected)
   })
 
-  test('class A(-var b: number) {}', () => {
-    let source = 'class A(-var b: number) {}'
+  test('class A(-var b: int) {}', () => {
+    let source = 'class A(-var b: int) {}'
     let expected = b.program(
       b.class('A', {
         params: [
           b.classProperty('b', {
             visibility: 'private',
-            type: t.number(),
+            type: t.int(),
           }),
         ],
       }),
@@ -183,16 +179,16 @@ describe('parse class params/constructor', () => {
     expect(ast(source)).toEqual(expected)
   })
 
-  test('class A(b, +var c: number=5) {}', () => {
-    let source = 'class A(b, +var c: number=5) {}'
+  test('class A(b, +var c: int=5) {}', () => {
+    let source = 'class A(b, +var c: int=5) {}'
     let expected = b.program(
       b.class('A', {
         params: [
           b.param('b'),
           b.classProperty('c', {
             visibility: 'public',
-            type: t.number(),
-            initializer: b.numberLiteral('5'),
+            type: t.int(),
+            initializer: b.intLiteral('5'),
           }),
         ],
       }),

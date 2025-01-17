@@ -2,7 +2,6 @@ import VoidVisitor from './VoidVisitor'
 import * as n from '../nodes'
 import { Type } from '../types'
 import { t } from '../builder'
-import * as types from '../types'
 
 export class TypeCheckError extends Error {
   override name: string = 'TypeCheckError'
@@ -76,6 +75,11 @@ export default class TypeCheckVisitor extends VoidVisitor {
       node.params.map((p) => p.type!),
       returnType,
     )
+  }
+
+  override visitGrouping(node: n.Grouping): void {
+    super.visitGrouping(node)
+    node.type = node.expression.type!
   }
 
   override visitIdentifier(node: n.Identifier): void {

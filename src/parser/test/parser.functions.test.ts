@@ -20,7 +20,7 @@ describe('call expressions', () => {
   test('thing(1)', () => {
     let source = 'thing(1)'
     let expected = b.program(
-      b.expressionStatement(b.call('thing', b.numberLiteral('1'))),
+      b.expressionStatement(b.call('thing', b.intLiteral('1'))),
     )
     expect(ast(source)).toEqual(expected)
   })
@@ -29,7 +29,7 @@ describe('call expressions', () => {
     let source = 'thing(1, 2)'
     let expected = b.program(
       b.expressionStatement(
-        b.call('thing', b.numberLiteral('1'), b.numberLiteral('2')),
+        b.call('thing', b.intLiteral('1'), b.intLiteral('2')),
       ),
     )
     expect(ast(source)).toEqual(expected)
@@ -41,8 +41,8 @@ describe('call expressions', () => {
       b.expressionStatement(
         b.call(
           'thing',
-          b.binary(b.numberLiteral('1'), '+', b.numberLiteral('2')),
-          b.binary(b.numberLiteral('3'), '-', b.numberLiteral('4')),
+          b.binary(b.intLiteral('1'), '+', b.intLiteral('2')),
+          b.binary(b.intLiteral('3'), '-', b.intLiteral('4')),
         ),
       ),
     )
@@ -60,7 +60,7 @@ describe('call expressions', () => {
   test('thing(1,)', () => {
     let source = 'thing(1,)'
     let expected = b.program(
-      b.expressionStatement(b.call('thing', b.numberLiteral('1'))),
+      b.expressionStatement(b.call('thing', b.intLiteral('1'))),
     )
     expect(ast(source)).toEqual(expected)
   })
@@ -79,12 +79,12 @@ describe('function declarations', () => {
     expect(ast(source)).toEqual(expected)
   })
 
-  test('fun foo(a: array<number>, b: string,) {}', () => {
-    let source = 'fun foo(a: array<number>, b: string,) {}'
+  test('fun foo(a: array<int>, b: string,) {}', () => {
+    let source = 'fun foo(a: array<int>, b: string,) {}'
     let expected = b.program(
       b.fun('foo', {
         params: [
-          b.param('a', t.id('array', t.number())),
+          b.param('a', t.id('array', t.int())),
           b.param('b', t.string()),
         ],
       }),
@@ -92,10 +92,10 @@ describe('function declarations', () => {
     expect(ast(source)).toEqual(expected)
   })
 
-  test('fun foo(): array<number> {}', () => {
-    let source = 'fun foo(): array<number> {}'
+  test('fun foo(): array<int> {}', () => {
+    let source = 'fun foo(): array<int> {}'
     let expected = b.program(
-      b.fun('foo', { returnType: t.id('array', t.number()) }),
+      b.fun('foo', { returnType: t.id('array', t.int()) }),
     )
     expect(ast(source)).toEqual(expected)
   })
@@ -105,19 +105,19 @@ describe('function declarations', () => {
     let expected = b.program(
       b.fun('foo', {
         body: b.block(
-          b.expressionStatement(b.numberLiteral('2')),
-          b.expressionStatement(b.numberLiteral('3')),
+          b.expressionStatement(b.intLiteral('2')),
+          b.expressionStatement(b.intLiteral('3')),
         ),
       }),
     )
     expect(ast(source)).toEqual(expected)
   })
 
-  test('fun foo(a: number = 1) {}', () => {
-    let source = 'fun foo(a: number = 1) {}'
+  test('fun foo(a: int = 1) {}', () => {
+    let source = 'fun foo(a: int = 1) {}'
     let expected = b.program(
       b.fun('foo', {
-        params: [b.param('a', t.number(), b.numberLiteral('1'))],
+        params: [b.param('a', t.int(), b.intLiteral('1'))],
       }),
     )
     expect(ast(source)).toEqual(expected)
@@ -127,7 +127,7 @@ describe('function declarations', () => {
     let source = 'fun foo() { return 1; }'
     let expected = b.program(
       b.fun('foo', {
-        body: b.block(b.return(b.numberLiteral('1'))),
+        body: b.block(b.return(b.intLiteral('1'))),
       }),
     )
     expect(ast(source)).toEqual(expected)
@@ -138,8 +138,8 @@ describe('function declarations', () => {
     let expected = b.program(
       b.fun('foo', {
         body: b.block(
-          b.expressionStatement(b.numberLiteral('3')),
-          b.return(b.numberLiteral('1')),
+          b.expressionStatement(b.intLiteral('3')),
+          b.return(b.intLiteral('1')),
         ),
       }),
     )
@@ -169,7 +169,7 @@ describe('function declarations', () => {
 })
 
 describe('function expressions', () => {
-  test.only('a = fun() {};', () => {
+  test('a = fun() {};', () => {
     let source = 'a = fun() {};'
     let expected = b.program(
       b.expressionStatement(b.assign(b.id('a'), '=', b.fun(null))),
@@ -183,33 +183,33 @@ describe('function expressions', () => {
     expect(ast(source)).toEqual(expected)
   })
 
-  test('var a = fun(): number => 1;', () => {
-    let source = 'var a = fun(): number => 1;'
+  test('var a = fun(): int => 1;', () => {
+    let source = 'var a = fun(): int => 1;'
     let expected = b.program(
       b.var(
         'a',
         null,
         b.fun(null, {
-          returnType: t.number(),
-          body: b.numberLiteral('1'),
+          returnType: t.int(),
+          body: b.intLiteral('1'),
         }),
       ),
     )
     expect(ast(source)).toEqual(expected)
   })
 
-  test('var a = fun(b: number|string = 4, c = 6,) { return 5; }', () => {
-    let source = 'var a = fun(b: number|string = 4, c = 6) { return 5; }'
+  test('var a = fun(b: int|string = 4, c = 6,) { return 5; }', () => {
+    let source = 'var a = fun(b: int|string = 4, c = 6) { return 5; }'
     let expected = b.program(
       b.var(
         'a',
         null,
         b.fun(null, {
           params: [
-            b.param('b', t.union(t.number(), t.string()), b.numberLiteral('4')),
-            b.param('c', null, b.numberLiteral('6')),
+            b.param('b', t.union(t.int(), t.string()), b.intLiteral('4')),
+            b.param('c', null, b.intLiteral('6')),
           ],
-          body: b.block(b.return(b.numberLiteral('5'))),
+          body: b.block(b.return(b.intLiteral('5'))),
         }),
       ),
     )

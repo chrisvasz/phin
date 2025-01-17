@@ -18,7 +18,7 @@ describe('print variables', () => {
 
   test('var a = 1;', () => {
     let source = 'var a = 1;'
-    let expected = '$a = 1;'
+    let expected = '/** @var int $a */\n$a = 1;'
     expect(print(source)).toEqual(expected)
   })
 

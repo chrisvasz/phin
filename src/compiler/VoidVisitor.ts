@@ -97,6 +97,8 @@ export default class VoidVisitor implements n.Visitor<void> {
     node.expression.accept(this)
   }
 
+  visitFloatLiteral(node: n.FloatLiteral): void {}
+
   visitFor(node: n.For): void {
     node.initializer?.accept(this)
     node.condition?.accept(this)
@@ -139,6 +141,8 @@ export default class VoidVisitor implements n.Visitor<void> {
     node.elseBranch?.accept(this)
   }
 
+  visitIntLiteral(node: n.IntLiteral): void {}
+
   visitMatch(node: n.Match): void {
     node.subject.accept(this)
     node.arms.forEach((arm) => arm.accept(this))
@@ -155,8 +159,6 @@ export default class VoidVisitor implements n.Visitor<void> {
   }
 
   visitNullLiteral(node: n.NullLiteral): void {}
-
-  visitNumberLiteral(node: n.NumberLiteral): void {}
 
   visitOptionalGet(node: n.OptionalGet): void {
     node.object.accept(this)

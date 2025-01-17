@@ -66,14 +66,16 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
   // TYPES
   /////////////////////////////
 
+  visitAnyType = () => this.append('any')
   visitBooleanType = () => this.append('bool')
   visitFalseType = () => this.append('false')
   visitFloatType = () => this.append('float')
   visitIntType = () => this.append('int')
   visitNullType = () => this.append('null')
-  visitNumberType = () => this.append('number')
   visitStringType = () => this.append('string')
   visitTrueType = () => this.append('true')
+  visitFloatLiteralType = (node: types.FloatLiteral) => this.append(node.value)
+  visitIntLiteralType = (node: types.IntLiteral) => this.append(node.value)
 
   visitIdentifierType(identifier: types.Identifier): void {
     this.append(identifier.name)
@@ -94,10 +96,6 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
   visitNullableType(nullable: types.Nullable): void {
     this.append('?')
     nullable.type.accept(this)
-  }
-
-  visitNumberLiteralType(numberLiteral: types.NumberLiteral): void {
-    throw new Error('Method not implemented.')
   }
 
   visitStringLiteralType(stringLiteral: types.StringLiteral): void {
@@ -560,7 +558,11 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
     this.append('null')
   }
 
-  visitNumberLiteral(node: nodes.NumberLiteral): void {
+  visitIntLiteral(node: nodes.IntLiteral): void {
+    this.append(node.value)
+  }
+
+  visitFloatLiteral(node: nodes.FloatLiteral): void {
     this.append(node.value)
   }
 

@@ -40,14 +40,15 @@ export type Expr =
   | BooleanLiteral
   | Call
   | Clone
+  | FloatLiteral
   | FunctionExpression
   | Get
   | Grouping
   | Identifier
+  | IntLiteral
   | Match
   | New
   | NullLiteral
-  | NumberLiteral
   | OptionalGet
   | Pipeline
   | Postfix
@@ -83,6 +84,7 @@ export interface Visitor<T> {
   visitDestructuringElement(node: DestructuringElement): T
   visitEcho(node: Echo): T
   visitExpressionStatement(node: ExpressionStatement): T
+  visitFloatLiteral(node: FloatLiteral): T
   visitFor(node: For): T
   visitForeach(node: Foreach): T
   visitForeachVariable(node: ForeachVariable): T
@@ -92,11 +94,11 @@ export interface Visitor<T> {
   visitGrouping(node: Grouping): T
   visitIdentifier(node: Identifier): T
   visitIf(node: If): T
+  visitIntLiteral(node: IntLiteral): T
   visitMatch(node: Match): T
   visitMatchArm(node: MatchArm): T
   visitNew(node: New): T
   visitNullLiteral(node: NullLiteral): T
-  visitNumberLiteral(node: NumberLiteral): T
   visitOptionalGet(node: OptionalGet): T
   visitParam(node: Param): T
   visitPipeline(node: Pipeline): T
@@ -615,13 +617,25 @@ export class Grouping extends Node {
   }
 }
 
-export class NumberLiteral extends Node {
-  _name = 'NumberLiteral' as const
+export class IntLiteral extends Node {
+  _name = 'IntLiteral' as const
+  override type = t.int()
   constructor(public readonly value: string) {
     super()
   }
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitNumberLiteral(this)
+    return visitor.visitIntLiteral(this)
+  }
+}
+
+export class FloatLiteral extends Node {
+  _name = 'FloatLiteral' as const
+  override type = t.float()
+  constructor(public readonly value: string) {
+    super()
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitFloatLiteral(this)
   }
 }
 
@@ -681,7 +695,7 @@ export class ArrayLiteral extends Node {
 export class ArrayElement extends Node {
   _name = 'ArrayElement' as const
   constructor(
-    public readonly key: NumberLiteral | StringLiteral | null,
+    public readonly key: IntLiteral | StringLiteral | null,
     public readonly value: Expr,
   ) {
     super()

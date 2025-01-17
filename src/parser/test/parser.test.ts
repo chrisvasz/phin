@@ -27,8 +27,8 @@ describe('blocks', () => {
     let source = '{ 1; 2; }'
     let expected = b.program(
       b.block(
-        b.expressionStatement(b.numberLiteral('1')),
-        b.expressionStatement(b.numberLiteral('2')),
+        b.expressionStatement(b.intLiteral('1')),
+        b.expressionStatement(b.intLiteral('2')),
       ),
     )
     expect(ast(source)).toEqual(expected)

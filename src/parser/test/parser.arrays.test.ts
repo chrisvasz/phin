@@ -21,9 +21,9 @@ describe('parse array literals', () => {
     let expected = b.program(
       b.expressionStatement(
         new nodes.ArrayLiteral([
-          new nodes.ArrayElement(null, b.numberLiteral('1')),
-          new nodes.ArrayElement(null, b.numberLiteral('2')),
-          new nodes.ArrayElement(null, b.numberLiteral('3')),
+          new nodes.ArrayElement(null, b.intLiteral('1')),
+          new nodes.ArrayElement(null, b.intLiteral('2')),
+          new nodes.ArrayElement(null, b.intLiteral('3')),
         ]),
       ),
     )
@@ -35,9 +35,9 @@ describe('parse array literals', () => {
     let expected = b.program(
       b.expressionStatement(
         new nodes.ArrayLiteral([
-          new nodes.ArrayElement(null, b.numberLiteral('1')),
-          new nodes.ArrayElement(null, b.numberLiteral('2')),
-          new nodes.ArrayElement(null, b.numberLiteral('3')),
+          new nodes.ArrayElement(null, b.intLiteral('1')),
+          new nodes.ArrayElement(null, b.intLiteral('2')),
+          new nodes.ArrayElement(null, b.intLiteral('3')),
         ]),
       ),
     )
@@ -66,15 +66,15 @@ describe('parse array literals', () => {
           new nodes.ArrayElement(
             null,
             new nodes.ArrayLiteral([
-              new nodes.ArrayElement(null, b.numberLiteral('1')),
-              new nodes.ArrayElement(null, b.numberLiteral('2')),
+              new nodes.ArrayElement(null, b.intLiteral('1')),
+              new nodes.ArrayElement(null, b.intLiteral('2')),
             ]),
           ),
           new nodes.ArrayElement(
             null,
             new nodes.ArrayLiteral([
-              new nodes.ArrayElement(null, b.numberLiteral('3')),
-              new nodes.ArrayElement(null, b.numberLiteral('4')),
+              new nodes.ArrayElement(null, b.intLiteral('3')),
+              new nodes.ArrayElement(null, b.intLiteral('4')),
             ]),
           ),
         ]),
@@ -88,7 +88,7 @@ describe('parse array literals', () => {
     let expected = b.program(
       b.expressionStatement(
         new nodes.ArrayLiteral([
-          new nodes.ArrayElement(b.numberLiteral('1'), b.numberLiteral('2')),
+          new nodes.ArrayElement(b.intLiteral('1'), b.intLiteral('2')),
         ]),
       ),
     )
@@ -112,10 +112,10 @@ describe('parse array literals', () => {
     let expected = b.program(
       b.expressionStatement(
         new nodes.ArrayLiteral([
-          new nodes.ArrayElement(b.numberLiteral('1'), b.numberLiteral('2')),
+          new nodes.ArrayElement(b.intLiteral('1'), b.intLiteral('2')),
           new nodes.ArrayElement(
             b.stringLiteral('3'),
-            b.binary(b.numberLiteral('4'), '+', b.numberLiteral('5')),
+            b.binary(b.intLiteral('4'), '+', b.intLiteral('5')),
           ),
           new nodes.ArrayElement(null, b.call(b.id('a'))),
         ]),
@@ -130,7 +130,7 @@ describe('parse array access', () => {
     let source = 'a[1]'
     let expected = b.program(
       b.expressionStatement(
-        new nodes.ArrayAccess(b.id('a'), b.numberLiteral('1')),
+        new nodes.ArrayAccess(b.id('a'), b.intLiteral('1')),
       ),
     )
     expect(ast(source)).toEqual(expected)
@@ -141,8 +141,8 @@ describe('parse array access', () => {
     let expected = b.program(
       b.expressionStatement(
         new nodes.ArrayAccess(
-          new nodes.ArrayAccess(b.id('a'), b.numberLiteral('1')),
-          b.numberLiteral('2'),
+          new nodes.ArrayAccess(b.id('a'), b.intLiteral('1')),
+          b.intLiteral('2'),
         ),
       ),
     )
@@ -153,10 +153,7 @@ describe('parse array access', () => {
     let source = 'a.b[1]'
     let expected = b.program(
       b.expressionStatement(
-        new nodes.ArrayAccess(
-          new nodes.Get(b.id('a'), 'b'),
-          b.numberLiteral('1'),
-        ),
+        new nodes.ArrayAccess(new nodes.Get(b.id('a'), 'b'), b.intLiteral('1')),
       ),
     )
     expect(ast(source)).toEqual(expected)

@@ -34,6 +34,7 @@ const {
   EQUAL,
   EXTENDS,
   FALSE,
+  FLOAT,
   FINAL,
   FINALLY,
   FOREACH,
@@ -45,6 +46,7 @@ const {
   IF,
   IMPLEMENTS,
   INSTANCEOF,
+  INT,
   LEFT_BRACE,
   LEFT_BRACKET,
   LEFT_PAREN,
@@ -61,7 +63,6 @@ const {
   NULL_COALESCE_EQUAL,
   NULL_COALESCE,
   NULL,
-  NUMBER,
   OPTIONAL_CHAIN,
   PERCENT_EQUAL,
   PERCENT,
@@ -898,7 +899,8 @@ export default function parse(
 
   function primary(): Expr {
     if (match(NULL)) return new nodes.NullLiteral()
-    if (match(NUMBER)) return numberLiteral()
+    if (match(INT)) return intLiteral()
+    if (match(FLOAT)) return floatLiteral()
     if (match(STRING)) return stringLiteral()
     if (match(DOUBLE_QUOTE)) return doubleQuoteString()
     if (match(TRUE)) return new nodes.BooleanLiteral(true)
@@ -911,8 +913,12 @@ export default function parse(
     throw error(peek(), 'Expect expression')
   }
 
-  function numberLiteral() {
-    return new nodes.NumberLiteral(previous().literal)
+  function intLiteral() {
+    return new nodes.IntLiteral(previous().literal)
+  }
+
+  function floatLiteral() {
+    return new nodes.FloatLiteral(previous().literal)
   }
 
   function stringLiteral() {
@@ -982,10 +988,10 @@ export default function parse(
     return new nodes.Identifier(previous().lexeme)
   }
 
-  function arrayKey(): nodes.NumberLiteral | nodes.StringLiteral | null {
-    if (check(NUMBER, STRING, DOUBLE_QUOTE) && checkNext(ARROW)) {
-      let result = match(NUMBER)
-        ? numberLiteral()
+  function arrayKey(): nodes.IntLiteral | nodes.StringLiteral | null {
+    if (check(INT, STRING, DOUBLE_QUOTE) && checkNext(ARROW)) {
+      let result = match(INT)
+        ? intLiteral()
         : match(STRING)
           ? stringLiteral()
           : match(DOUBLE_QUOTE)
@@ -1035,7 +1041,8 @@ export default function parse(
 
   function type(): Type {
     if (match(NULL)) return new types.Null()
-    if (match(NUMBER)) return new types.NumberLiteral(previous().literal)
+    if (match(INT)) return new types.IntLiteral(previous().literal)
+    if (match(FLOAT)) return new types.FloatLiteral(previous().literal)
     if (match(STRING)) return new types.StringLiteral(previous().literal)
     if (match(TRUE)) return new types.True()
     if (match(FALSE)) return new types.False()
@@ -1045,7 +1052,6 @@ export default function parse(
 
   function typeIdentifier(): Type {
     let lexeme = previous().lexeme
-    if (lexeme === 'number') return new types.Number()
     if (lexeme === 'string') return new types.String()
     if (lexeme === 'bool') return new types.Boolean()
     if (lexeme === 'int') return new types.Int()

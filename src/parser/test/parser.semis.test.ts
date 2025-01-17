@@ -100,8 +100,8 @@ describe('parse optional semis between block statements', () => {
       new nodes.If(
         b.id('a'),
         b.block(
-          b.expressionStatement(b.numberLiteral(1)),
-          b.expressionStatement(b.numberLiteral(2)),
+          b.expressionStatement(b.intLiteral('1')),
+          b.expressionStatement(b.intLiteral('2')),
         ),
         null,
       ),
@@ -117,8 +117,8 @@ describe('parse optional semis between block statements', () => {
       new nodes.If(
         b.id('a'),
         b.block(
-          b.expressionStatement(b.numberLiteral(1)),
-          b.expressionStatement(b.numberLiteral(2)),
+          b.expressionStatement(b.intLiteral('1')),
+          b.expressionStatement(b.intLiteral('2')),
         ),
         null,
       ),

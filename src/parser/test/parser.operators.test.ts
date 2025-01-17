@@ -26,7 +26,7 @@ const ternary = (condition: Expr, left: Expr, right: Expr) =>
 const new_ = (ex: Expr) => new nodes.New(ex)
 const clone = (ex: Expr) => new nodes.Clone(ex)
 const identifier = (name: string) => new nodes.Identifier(name)
-const number = (value: string) => new nodes.NumberLiteral(value)
+const number = (value: string) => new nodes.IntLiteral(value)
 const get = (left: Expr, property: string) => new nodes.Get(left, property)
 
 function assign(
@@ -362,10 +362,7 @@ describe('parse | operator', () => {
     let expected = expressions(
       builder.pipeline(
         a,
-        builder.call(
-          b,
-          builder.fun(null, { body: builder.numberLiteral('1') }),
-        ),
+        builder.call(b, builder.fun(null, { body: builder.intLiteral('1') })),
       ),
     )
     expect(ast(source)).toEqual(expected)

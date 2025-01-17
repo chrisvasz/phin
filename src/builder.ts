@@ -7,8 +7,8 @@ export const b = (function () {
   return {
     arrayAccess,
     assign,
-    block,
     binary,
+    block,
     call,
     class: classDeclaration,
     classConst,
@@ -16,24 +16,36 @@ export const b = (function () {
     classMethod,
     classProperty,
     classSuperclass,
+    destructuring,
+    destructuringElement,
     echo: (expression: nodes.Expr) => new nodes.Echo(expression),
     expressionStatement,
+    false: () => new nodes.BooleanLiteral(false),
+    floatLiteral: (value: string) => new nodes.FloatLiteral(value),
     foreach,
     foreachVariable,
     fun,
     get,
     grouping: (expression: nodes.Expr) => new nodes.Grouping(expression),
     id,
-    numberLiteral,
+    if: if_,
+    intLiteral: (value: string) => new nodes.IntLiteral(value),
     param,
     pipeline,
     program,
     return: (expression: nodes.Expr) => new nodes.Return(expression),
     stringLiteral: (value: string) => new nodes.StringLiteral(value),
+    true: () => new nodes.BooleanLiteral(true),
     var: var_,
     varDestructuring,
-    destructuring,
-    destructuringElement,
+  }
+
+  function if_(
+    condition: nodes.Expr,
+    thenBranch: nodes.Stmt,
+    elseBranch: nodes.Stmt | null,
+  ) {
+    return new nodes.If(condition, thenBranch, elseBranch)
   }
 
   function assign(
@@ -70,10 +82,6 @@ export const b = (function () {
 
   function expressionStatement(expression: nodes.Expr) {
     return new nodes.ExpressionStatement(expression)
-  }
-
-  function numberLiteral(value: string | number) {
-    return new nodes.NumberLiteral(value.toString())
   }
 
   function param(
@@ -287,7 +295,6 @@ export const t = (function () {
   const bool = new types.Boolean()
   const int = new types.Int()
   const float = new types.Float()
-  const number = new types.Number()
   const string = new types.String()
   const null_ = new types.Null()
   const true_ = new types.True()
@@ -299,14 +306,14 @@ export const t = (function () {
     bool: () => bool,
     false: () => false_,
     float: () => float,
+    floatLiteral: (value: string) => new types.FloatLiteral(value),
     fun,
     id,
     int: () => int,
+    intLiteral: (value: string) => new types.IntLiteral(value),
     intersection,
     null: () => null_,
     nullable: (type: types.Type) => new types.Nullable(type),
-    number: () => number,
-    numberLiteral: (value: string) => new types.NumberLiteral(value),
     true: () => true_,
     string: () => string,
     stringLiteral: (value: string) => new types.StringLiteral(value),

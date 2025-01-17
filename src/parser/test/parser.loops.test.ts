@@ -14,10 +14,7 @@ describe('parse while', () => {
   test('while (true) 2', () => {
     let source = 'while (true) 2'
     let expected = b.program(
-      new nodes.While(
-        new nodes.BooleanLiteral(true),
-        new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
-      ),
+      new nodes.While(b.true(), b.expressionStatement(b.intLiteral('2'))),
     )
     expect(ast(source)).toEqual(expected)
   })
@@ -26,12 +23,8 @@ describe('parse while', () => {
     let source = 'while (1 < 2) 2'
     let expected = b.program(
       new nodes.While(
-        new nodes.Binary(
-          new nodes.NumberLiteral('1'),
-          '<',
-          new nodes.NumberLiteral('2'),
-        ),
-        new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
+        b.binary(b.intLiteral('1'), '<', b.intLiteral('2')),
+        b.expressionStatement(b.intLiteral('2')),
       ),
     )
     expect(ast(source)).toEqual(expected)
@@ -42,9 +35,7 @@ describe('parse while', () => {
     let expected = b.program(
       new nodes.While(
         new nodes.NullLiteral(),
-        new nodes.Block([
-          new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
-        ]),
+        new nodes.Block([b.expressionStatement(b.intLiteral('2'))]),
       ),
     )
     expect(ast(source)).toEqual(expected)
@@ -55,12 +46,7 @@ describe('parse for', () => {
   test('for (;;) 2', () => {
     let source = 'for (;;) 2'
     let expected = b.program(
-      new nodes.For(
-        null,
-        null,
-        null,
-        new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
-      ),
+      new nodes.For(null, null, null, b.expressionStatement(b.intLiteral('2'))),
     )
     expect(ast(source)).toEqual(expected)
   })
@@ -69,10 +55,10 @@ describe('parse for', () => {
     let source = 'for (var i = 0; ;) 2'
     let expected = b.program(
       new nodes.For(
-        new nodes.VarDeclaration('i', null, new nodes.NumberLiteral('0')),
+        new nodes.VarDeclaration('i', null, b.intLiteral('0')),
         null,
         null,
-        new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
+        b.expressionStatement(b.intLiteral('2')),
       ),
     )
     expect(ast(source)).toEqual(expected)
@@ -82,37 +68,23 @@ describe('parse for', () => {
     let source = 'for (var i = 0; i < 10;) 2'
     let expected = b.program(
       new nodes.For(
-        new nodes.VarDeclaration('i', null, new nodes.NumberLiteral('0')),
-        new nodes.Binary(
-          new nodes.Identifier('i'),
-          '<',
-          new nodes.NumberLiteral('10'),
-        ),
+        new nodes.VarDeclaration('i', null, b.intLiteral('0')),
+        b.binary(new nodes.Identifier('i'), '<', b.intLiteral('10')),
         null,
-        new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
+        b.expressionStatement(b.intLiteral('2')),
       ),
     )
     expect(ast(source)).toEqual(expected)
   })
 
-  test('for (var i: number = 0; i < 10; ++i) {2;}', () => {
-    let source = 'for (var i: number = 0; i < 10; ++i) {2;}'
+  test('for (var i: int = 0; i < 10; ++i) {2;}', () => {
+    let source = 'for (var i: int = 0; i < 10; ++i) {2;}'
     let expected = b.program(
       new nodes.For(
-        new nodes.VarDeclaration(
-          'i',
-          new types.Number(),
-          new nodes.NumberLiteral('0'),
-        ),
-        new nodes.Binary(
-          new nodes.Identifier('i'),
-          '<',
-          new nodes.NumberLiteral('10'),
-        ),
+        new nodes.VarDeclaration('i', new types.Int(), b.intLiteral('0')),
+        b.binary(new nodes.Identifier('i'), '<', b.intLiteral('10')),
         new nodes.Unary('++', new nodes.Identifier('i')),
-        new nodes.Block([
-          new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
-        ]),
+        new nodes.Block([b.expressionStatement(b.intLiteral('2'))]),
       ),
     )
     expect(ast(source)).toEqual(expected)
@@ -127,7 +99,7 @@ describe('foreach', () => {
         null,
         new nodes.ForeachVariable('i', null),
         new nodes.Identifier('list'),
-        new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
+        b.expressionStatement(b.intLiteral('2')),
       ),
     )
     expect(ast(source)).toEqual(expected)
@@ -140,22 +112,20 @@ describe('foreach', () => {
         null,
         new nodes.ForeachVariable('i', null),
         new nodes.Identifier('list'),
-        new nodes.Block([
-          new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
-        ]),
+        new nodes.Block([b.expressionStatement(b.intLiteral('2'))]),
       ),
     )
     expect(ast(source)).toEqual(expected)
   })
 
-  test('foreach (list as i: number) 2', () => {
-    let source = 'foreach (list as i: number) 2'
+  test('foreach (list as i: int) 2', () => {
+    let source = 'foreach (list as i: int) 2'
     let expected = b.program(
       new nodes.Foreach(
         null,
-        new nodes.ForeachVariable('i', new types.Number()),
+        new nodes.ForeachVariable('i', new types.Int()),
         new nodes.Identifier('list'),
-        new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
+        b.expressionStatement(b.intLiteral('2')),
       ),
     )
     expect(ast(source)).toEqual(expected)
@@ -168,20 +138,20 @@ describe('foreach', () => {
         new nodes.ForeachVariable('i', null),
         new nodes.ForeachVariable('l', null),
         new nodes.Identifier('list'),
-        new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
+        b.expressionStatement(b.intLiteral('2')),
       ),
     )
     expect(ast(source)).toEqual(expected)
   })
 
-  test('foreach (list as i: number => l: Rental) 2', () => {
-    let source = 'foreach (list as i: number => l: Rental) 2'
+  test('foreach (list as i: int => l: Rental) 2', () => {
+    let source = 'foreach (list as i: int => l: Rental) 2'
     let expected = b.program(
       new nodes.Foreach(
-        new nodes.ForeachVariable('i', new types.Number()),
+        new nodes.ForeachVariable('i', new types.Int()),
         new nodes.ForeachVariable('l', new types.Identifier('Rental', [])),
         new nodes.Identifier('list'),
-        new nodes.ExpressionStatement(new nodes.NumberLiteral('2')),
+        b.expressionStatement(b.intLiteral('2')),
       ),
     )
     expect(ast(source)).toEqual(expected)
