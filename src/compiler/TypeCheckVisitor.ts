@@ -20,7 +20,7 @@ export class TypeMismatch extends TypeCheckError {
 }
 
 function check(expected: Type, actual: Type) {
-  if (!actual.isAssignableTo(expected)) {
+  if (!expected.contains(actual)) {
     throw new TypeMismatch(expected, actual)
   }
 }

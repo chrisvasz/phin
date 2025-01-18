@@ -82,3 +82,7 @@ describe('typecheck: call expression', () => {
     )
   })
 })
+
+test.todo('class const with explicit annotations')
+test.todo('function shorthand return')
+test.todo('callsite params')

@@ -6,7 +6,7 @@ export interface Visitor<T> {
   visitBooleanType(boolean: Boolean): T
   visitInstanceType(class_: Instance): T
   visitFalseType(false_: False): T
-  visitFloatLiteralType(float: Float): T
+  visitFloatLiteralType(float: FloatLiteral): T
   visitFloatType(float: Float): T
   visitFunctionType(function_: Function): T
   visitIdentifierType(identifier: Identifier): T
@@ -27,9 +27,8 @@ export interface Visitor<T> {
 export abstract class Type {
   abstract _name: string
   abstract accept<T>(visitor: Visitor<T>): T
-  isAssignableTo(other: Type) {
-    // TODO override this in subclasses, esp literals
-    return this instanceof other.constructor || other instanceof Any
+  contains(other: Type): boolean {
+    return this.equals(other)
   }
   equals(other: Type) {
     // TODO override this in subclasses, esp literals
@@ -38,7 +37,7 @@ export abstract class Type {
   isExpressibleInPhp(): boolean {
     return true
   }
-  simplify() {
+  simplify(): Type {
     return this
   }
 }
@@ -57,6 +56,9 @@ export class Any extends Type {
   _name = 'Any'
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitAnyType(this)
+  }
+  override contains(other: Type): boolean {
+    return true
   }
   override toString() {
     return 'any'
@@ -81,6 +83,9 @@ export class String extends Type {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitStringType(this)
   }
+  override contains(other: Type): boolean {
+    return other instanceof String || other instanceof StringLiteral
+  }
   override toString() {
     return 'string'
   }
@@ -88,6 +93,13 @@ export class String extends Type {
 
 export class Boolean extends Type {
   _name = 'Boolean'
+  override contains(other: Type) {
+    return (
+      other instanceof Boolean ||
+      other instanceof True ||
+      other instanceof False
+    )
+  }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitBooleanType(this)
   }
@@ -98,6 +110,9 @@ export class Int extends Type {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitIntType(this)
   }
+  override contains(other: Type): boolean {
+    return other instanceof Int || other instanceof IntLiteral
+  }
   override toString() {
     return 'int'
   }
@@ -105,6 +120,9 @@ export class Int extends Type {
 
 export class Float extends Type {
   _name = 'Float'
+  override contains(other: Type) {
+    return other instanceof Float || other instanceof FloatLiteral
+  }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitFloatType(this)
   }
@@ -141,6 +159,9 @@ export class IntLiteral extends Type {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitIntLiteralType(this)
   }
+  override equals(other: Type): boolean {
+    return other instanceof IntLiteral && this.value === other.value
+  }
 }
 
 export class FloatLiteral extends Type {
@@ -151,6 +172,9 @@ export class FloatLiteral extends Type {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitFloatLiteralType(this)
   }
+  override equals(other: Type): boolean {
+    return other instanceof FloatLiteral && this.value === other.value
+  }
 }
 
 export class StringLiteral extends Type {
@@ -160,6 +184,9 @@ export class StringLiteral extends Type {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitStringLiteralType(this)
+  }
+  override equals(other: Type): boolean {
+    return other instanceof StringLiteral && this.value === other.value
   }
   override toString() {
     return 'stringLiteral'
@@ -186,12 +213,28 @@ export class Nullable extends Type {
   constructor(public readonly type: Type) {
     super()
   }
+
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitNullableType(this)
   }
+
+  override contains(other: Type): boolean {
+    return (
+      super.contains(other) ||
+      other instanceof Null ||
+      this.type.contains(other)
+    )
+  }
+
+  override equals(other: Type): boolean {
+    return other instanceof Nullable && this.type.equals(other.type)
+  }
+
+  override toString() {
+    return `?${this.type}`
+  }
 }
 
-// TODO needs an override for isExpressibleInPhp and simplify
 export class Union extends Type {
   _name = 'Union'
   constructor(public readonly types: Type[]) {
@@ -199,6 +242,17 @@ export class Union extends Type {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitUnionType(this)
+  }
+  override contains(other: Type): boolean {
+    if (other instanceof Union) {
+      return other.types.every((type) => this.contains(type))
+    }
+    return this.types.some((type) => type.contains(other))
+  }
+  override equals(other: Type): boolean {
+    if (!(other instanceof Union)) return false
+    if (this.types.length !== other.types.length) return false
+    return this.types.every((type) => other.contains(type))
   }
 }
 
@@ -231,6 +285,16 @@ export class Function extends Type {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitFunctionType(this)
   }
+
+  override contains(other: Type): boolean {
+    if (!(other instanceof Function)) return false
+    if (this.params.length !== other.params.length) return false
+    for (let i = 0; i < this.params.length; i++) {
+      if (!this.params[i].contains(other.params[i])) return false
+    }
+    return this.returnType.contains(other.returnType)
+  }
+
   override equals(other: Type) {
     if (!(other instanceof Function)) return false
     if (this.params.length !== other.params.length) return false
@@ -239,6 +303,7 @@ export class Function extends Type {
     }
     return this.returnType.equals(other.returnType)
   }
+
   override toString() {
     return `(${this.params.join(', ')}) => ${this.returnType}`
   }
