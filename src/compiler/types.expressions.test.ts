@@ -8,7 +8,7 @@ import { b, t } from '../builder'
 import { TestSymbols } from '../symbols'
 import { TypeCheckError } from './TypeCheckVisitor'
 
-describe('typecheck: literals', () => {
+describe('typeof: literals', () => {
   function check(src: string, type: types.Type) {
     let ast = compile(src, {})
     let stmt = ast.statements[0] as n.ExpressionStatement
@@ -25,7 +25,32 @@ describe('typecheck: literals', () => {
   test('(1)', () => check('(1)', t.int()))
 })
 
-describe('typecheck: ternary operator', () => {
+describe('typeof: array literal', () => {
+  function check(src: string, type: types.Type) {
+    let ast = compile(src, {})
+    let stmt = ast.statements[0] as n.ExpressionStatement
+    let expr = stmt.expression as n.ArrayLiteral
+    expect(expr.type?.equals(type)).toBe(true)
+  }
+  test('[]', () => check('[]', t.array(t.void())))
+  test('[1]', () => check('[1]', t.array(t.int())))
+  test('[1,2]', () => check('[1,2]', t.array(t.int())))
+  test('[1+2]', () => check('[1+2]', t.array(t.int())))
+})
+
+describe('typeof: array access', () => {
+  let symbols = new TestSymbols()
+  symbols.add('a', b.var('a', t.array(t.int())))
+  function check(src: string, type: types.Type) {
+    let ast = compile(src, { symbols })
+    let stmt = ast.statements[0] as n.ExpressionStatement
+    let expr = stmt.expression as n.ArrayLiteral
+    expect(expr.type?.equals(type)).toBe(true)
+  }
+  test('a[0]', () => check('a[0]', t.int()))
+})
+
+describe('typeof: ternary operator', () => {
   function check(ast: n.Program, expected: types.Type) {
     let calls = 0
     let visitor = new (class extends VoidVisitor {
@@ -49,7 +74,7 @@ describe('typecheck: ternary operator', () => {
   })
 })
 
-describe('typecheck: match expression', () => {
+describe('typeof: match expression', () => {
   function check(ast: n.Program, expected: types.Type) {
     let calls = 0
     let visitor = new (class extends VoidVisitor {
@@ -83,7 +108,7 @@ describe('typecheck: match expression', () => {
   })
 })
 
-describe('typecheck: call expression', () => {
+describe('typeof: call expression', () => {
   let a = new n.FunctionDeclaration('a', [], t.int(), b.block())
   a.type = t.fun([], t.int())
   let five = b.var('five', t.int())
@@ -107,7 +132,7 @@ describe('typecheck: call expression', () => {
   })
 })
 
-describe('typecheck: binary expression', () => {
+describe('typeof: binary expression', () => {
   function check(src: string, type: types.Type) {
     let ast = compile(src)
     let calls = 0
@@ -138,7 +163,44 @@ describe('typecheck: binary expression', () => {
   }
 })
 
-describe('typecheck: assignment expression types', () => {
+describe('typeof: unary expression', () => {
+  const symbols = new TestSymbols()
+  symbols.add('a', b.var('a', t.int()))
+  symbols.add('c', b.var('c', t.float()))
+  function check(src: string, type: types.Type) {
+    let ast = compile(src, { symbols })
+    let stmt = ast.statements[0] as n.ExpressionStatement
+    let expr = stmt.expression as n.Unary
+    expect(expr.type?.equals(type)).toBe(true)
+  }
+  test('!"hello"', () => check('!"hello"', t.bool()))
+  test('-a', () => check('-a', t.int()))
+  test('+a', () => check('+a', t.int()))
+  test('-c', () => check('-c', t.float()))
+  test('+c', () => check('+c', t.float()))
+  test('--a', () => check('--a', t.int()))
+  test('++a', () => check('++a', t.int()))
+  test('--c', () => check('--c', t.float()))
+  test('++c', () => check('++c', t.float()))
+})
+
+describe('typeof: postfix expression', () => {
+  const symbols = new TestSymbols()
+  symbols.add('a', b.var('a', t.int()))
+  symbols.add('c', b.var('c', t.float()))
+  function check(src: string, type: types.Type) {
+    let ast = compile(src, { symbols })
+    let stmt = ast.statements[0] as n.ExpressionStatement
+    let expr = stmt.expression as n.Unary
+    expect(expr.type?.equals(type)).toBe(true)
+  }
+  test('a--', () => check('a--', t.int()))
+  test('a++', () => check('a++', t.int()))
+  test('c--', () => check('c--', t.float()))
+  test('c++', () => check('c++', t.float()))
+})
+
+describe('typeof: assignment expression', () => {
   const symbols = new TestSymbols()
   symbols.add('a', b.var('a', t.any()))
   function check(src: string, type: types.Type) {
@@ -155,11 +217,6 @@ describe('typecheck: assignment expression types', () => {
 test.todo('new')
 test.todo('clone')
 test.todo('throw')
-test.todo('unary')
-test.todo('prefix')
-test.todo('postfix')
-test.todo('array literal')
-test.todo('array access')
 test.todo('this,super')
 test.todo('get, optional get')
 test.todo('pipeline')

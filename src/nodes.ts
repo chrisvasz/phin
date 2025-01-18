@@ -52,7 +52,6 @@ export type Expr =
   | OptionalGet
   | Pipeline
   | Postfix
-  | Prefix
   | ScopeResolution
   | StringLiteral
   | Super
@@ -103,7 +102,6 @@ export interface Visitor<T> {
   visitParam(node: Param): T
   visitPipeline(node: Pipeline): T
   visitPostfix(node: Postfix): T
-  visitPrefix(node: Prefix): T
   visitProgram(node: Program): T
   visitReturn(node: Return): T
   visitScopeResolution(node: ScopeResolution): T
@@ -715,19 +713,6 @@ export class Unary extends Node {
   }
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitUnary(this)
-  }
-}
-
-export class Prefix extends Node {
-  _name = 'Prefix' as const
-  constructor(
-    public readonly operator: string,
-    public readonly right: Identifier,
-  ) {
-    super()
-  }
-  accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitPrefix(this)
   }
 }
 

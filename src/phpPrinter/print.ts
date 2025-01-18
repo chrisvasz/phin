@@ -76,6 +76,11 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
   visitTrueType = () => this.append('true')
   visitFloatLiteralType = (node: types.FloatLiteral) => this.append(node.value)
   visitIntLiteralType = (node: types.IntLiteral) => this.append(node.value)
+  visitArrayType(array: types.Array): void {
+    this.append('array<')
+    array.type.accept(this)
+    this.append('>')
+  }
 
   visitIdentifierType(identifier: types.Identifier): void {
     this.append(identifier.name)
@@ -592,10 +597,6 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
   visitPostfix(node: nodes.Postfix): void {
     node.left.accept(this)
     this.append(node.operator)
-  }
-
-  visitPrefix(node: nodes.Prefix): void {
-    throw new Error('Method not implemented.')
   }
 
   visitProgram(node: nodes.Program): void {

@@ -1,5 +1,6 @@
 export interface Visitor<T> {
   visitAnyType(any: Any): T
+  visitArrayType(array: Array): T
   visitBooleanType(boolean: Boolean): T
   visitFalseType(false_: False): T
   visitFloatLiteralType(float: Float): T
@@ -18,11 +19,6 @@ export interface Visitor<T> {
   visitVoidType(void_: Void): T
 }
 
-const returnTrue = () => true
-function returnThis(this: Type): Type {
-  return this
-}
-
 // TODO unit tests for assignability and equality
 
 export abstract class Type {
@@ -36,8 +32,12 @@ export abstract class Type {
     // TODO override this in subclasses, esp literals
     return this instanceof other.constructor
   }
-  isExpressibleInPhp: () => boolean = returnTrue
-  simplify: () => Type = returnThis
+  isExpressibleInPhp(): boolean {
+    return true
+  }
+  simplify() {
+    return this
+  }
 }
 
 export class Any extends Type {
@@ -47,6 +47,19 @@ export class Any extends Type {
   }
   override toString() {
     return 'any'
+  }
+}
+
+export class Array extends Type {
+  _name = 'Array'
+  constructor(public readonly type: Type) {
+    super()
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitArrayType(this)
+  }
+  override toString() {
+    return `array<${this.type}>`
   }
 }
 
@@ -91,14 +104,6 @@ export class Null extends Type {
   }
 }
 
-function hasNoGenerics(this: Identifier) {
-  return this.generics.length === 0
-}
-
-function simplifyIdentifier(this: Identifier) {
-  return this.generics.length === 0 ? this : new Identifier(this.name, [])
-}
-
 export class Identifier extends Type {
   _name = 'Identifier'
   constructor(
@@ -110,8 +115,6 @@ export class Identifier extends Type {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitIdentifierType(this)
   }
-  override isExpressibleInPhp = hasNoGenerics
-  override simplify = simplifyIdentifier
 }
 
 export class IntLiteral extends Type {

@@ -31,6 +31,26 @@ export default class TypeCheckVisitor extends VoidVisitor {
     node.accept(this)
   }
 
+  override visitArrayAccess(node: n.ArrayAccess): void {
+    super.visitArrayAccess(node)
+    let array = node.left
+    if (array.type instanceof types.Array) {
+      node.type = array.type.type
+    } else {
+      throw new TypeCheckError('Cannot index non-array')
+    }
+  }
+
+  override visitArrayElement(node: n.ArrayElement): void {
+    super.visitArrayElement(node)
+    node.type = node.value.type!
+  }
+
+  override visitArrayLiteral(node: n.ArrayLiteral): void {
+    super.visitArrayLiteral(node)
+    node.type = t.array(t.union(...node.elements.map((e) => e.type!)))
+  }
+
   override visitAssign(node: n.Assign): void {
     super.visitAssign(node)
     node.type = node.value.type!
@@ -136,6 +156,11 @@ export default class TypeCheckVisitor extends VoidVisitor {
     }
   }
 
+  override visitPostfix(node: n.Postfix): void {
+    super.visitPostfix(node)
+    node.type = node.left.type!
+  }
+
   override visitTernary(node: n.Ternary): void {
     super.visitTernary(node)
     node.type = t.union(node.left.type!, node.right.type!)
@@ -143,7 +168,16 @@ export default class TypeCheckVisitor extends VoidVisitor {
 
   override visitUnary(node: n.Unary): void {
     super.visitUnary(node)
-    if (node.operator === '!') node.type = t.bool()
+    if (node.operator === '!') {
+      node.type = t.bool()
+    } else if (
+      node.operator === '-' ||
+      node.operator === '+' ||
+      node.operator === '++' ||
+      node.operator === '--'
+    ) {
+      node.type = node.right.type!
+    }
   }
 
   override visitVarDeclaration(node: n.VarDeclaration): void {

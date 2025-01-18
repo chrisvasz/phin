@@ -177,10 +177,6 @@ export default class VoidVisitor implements n.Visitor<void> {
     node.left.accept(this)
   }
 
-  visitPrefix(node: n.Prefix): void {
-    node.right.accept(this)
-  }
-
   visitProgram(node: n.Program): void {
     for (let statement of node.statements) {
       statement.accept(this)

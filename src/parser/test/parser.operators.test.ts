@@ -171,7 +171,7 @@ describe('parse postfix', () => {
   test.todo('a++ + ++a', () => {
     let source = 'a++ + ++a'
     let expected = expressions(
-      binary(new nodes.Postfix(a, '++'), '+', new nodes.Prefix('++', a)),
+      binary(new nodes.Postfix(a, '++'), '+', new nodes.Unary('++', a)),
     )
     expect(ast(source)).toEqual(expected)
   })

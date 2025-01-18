@@ -325,8 +325,8 @@ export const t = (function () {
     return new types.Identifier(name, generics)
   }
 
-  function array(...generics: types.Type[]) {
-    return id('array', ...generics)
+  function array(of: types.Type) {
+    return new types.Array(of)
   }
 
   function fun(
