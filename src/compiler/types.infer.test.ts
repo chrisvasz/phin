@@ -298,6 +298,4 @@ describe('type inference: identifiers', () => {
     let src = 'class A { val a = ""; fun b() => a }'
     check(compile(src), t.string())
   })
-
-  // TODO implement nominal class types
 })

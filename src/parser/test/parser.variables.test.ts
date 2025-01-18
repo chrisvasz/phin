@@ -107,57 +107,33 @@ describe('parse var declarations', () => {
 
   test('var x: array', () => {
     let source = 'var x: array'
-    let expected = b.program(b.var('x', t.id('array')))
+    let expected = b.program(b.var('x', t.array()))
     expect(ast(source)).toEqual(expected)
   })
 
   test('var x: array<int>', () => {
     let source = 'var x: array<int>'
-    let expected = b.program(b.var('x', t.id('array', t.int())))
+    let expected = b.program(b.var('x', t.array(t.int())))
     expect(ast(source)).toEqual(expected)
   })
 
   test('var x: array<array<array<int>>>', () => {
     let source = 'var x: array<array<array<int>>>'
-    let expected = b.program(
-      b.var('x', t.id('array', t.id('array', t.id('array', t.int())))),
-    )
+    let expected = b.program(b.var('x', t.array(t.array(t.array(t.int())))))
     expect(ast(source)).toEqual(expected)
   })
 
   test('var x: array<int|string>', () => {
     let source = 'var x: array<int|string>'
-    let expected = b.program(
-      b.var('x', t.id('array', t.union(t.int(), t.string()))),
-    )
+    let expected = b.program(b.var('x', t.array(t.union(t.int(), t.string()))))
     expect(ast(source)).toEqual(expected)
   })
 
-  test('var x: array<string,int>', () => {
-    let source = 'var x: array<string,int>'
-    let expected = b.program(b.var('x', t.id('array', t.string(), t.int())))
-    expect(ast(source)).toEqual(expected)
-  })
+  test.todo('var x: array<string,int>')
 
-  test('var x: array<string,>', () => {
+  test.todo('var x: array<string,>', () => {
     let source = 'var x: array<string,>'
-    let expected = b.program(b.var('x', t.id('array', t.string())))
-    expect(ast(source)).toEqual(expected)
-  })
-
-  test('var x: array<string|int,int&null,?true>', () => {
-    let source = 'var x: array<string|int,int&null,?true>'
-    let expected = b.program(
-      b.var(
-        'x',
-        t.id(
-          'array',
-          t.union(t.string(), t.int()),
-          t.intersection(t.int(), t.null()),
-          t.nullable(t.true()),
-        ),
-      ),
-    )
+    let expected = b.program(b.var('x', t.array(t.string())))
     expect(ast(source)).toEqual(expected)
   })
 

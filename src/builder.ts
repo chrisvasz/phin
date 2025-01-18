@@ -325,7 +325,7 @@ export const t = (function () {
     return new types.Identifier(name, generics)
   }
 
-  function array(of: types.Type) {
+  function array(of: types.Type = void_) {
     return new types.Array(of)
   }
 

@@ -3,6 +3,7 @@ import * as n from '../nodes'
 import * as types from '../types'
 import { t } from '../builder'
 import { Type } from '../types'
+import { HoistedSymbols } from '../symbols'
 
 export class TypeCheckError extends Error {
   override name: string = 'TypeCheckError'
@@ -27,8 +28,15 @@ function check(expected: Type, actual: Type) {
 // https://jaked.org/blog/2021-09-07-Reconstructing-TypeScript-part-0
 
 export default class TypeCheckVisitor extends VoidVisitor {
-  visit(node: n.Program): void {
-    node.accept(this)
+  private readonly symbols: HoistedSymbols
+
+  constructor(private readonly program: n.Program) {
+    super()
+    this.symbols = program.symbols
+  }
+
+  visit(): void {
+    this.program.accept(this)
   }
 
   override visitArrayAccess(node: n.ArrayAccess): void {
@@ -53,7 +61,8 @@ export default class TypeCheckVisitor extends VoidVisitor {
 
   override visitAssign(node: n.Assign): void {
     super.visitAssign(node)
-    node.type = node.value.type!
+    check(node.left.type!, node.right.type!)
+    node.type = node.right.type!
   }
 
   override visitBinary(node: n.Binary): void {
@@ -88,6 +97,11 @@ export default class TypeCheckVisitor extends VoidVisitor {
     }
   }
 
+  override visitClassDeclaration(node: n.ClassDeclaration): void {
+    super.visitClassDeclaration(node)
+    node.type = new types.Instance(node)
+  }
+
   override visitClassMethod(node: n.ClassMethod): void {
     super.visitClassMethod(node)
     let returnType = node.returnType ?? node.body.type
@@ -110,6 +124,11 @@ export default class TypeCheckVisitor extends VoidVisitor {
     }
   }
 
+  override visitClone(node: n.Clone): void {
+    super.visitClone(node)
+    node.type = node.expression.type!
+  }
+
   override visitFunctionDeclaration(node: n.FunctionDeclaration): void {
     super.visitFunctionDeclaration(node)
     let returnType = node.returnType ?? node.body.type
@@ -120,6 +139,18 @@ export default class TypeCheckVisitor extends VoidVisitor {
       node.params.map((p) => p.type!),
       returnType,
     )
+  }
+
+  override visitGet(node: n.Get): void {
+    super.visitGet(node)
+    let type = node.object.type
+    if (!(type instanceof types.Instance)) {
+      throw new TypeCheckError('Cannot get property of non-class')
+    }
+    let class_ = type.node
+    let symbol = class_.symbol(node.name)
+    if (symbol === null) throw new TypeCheckError('Unknown symbol')
+    node.type = symbol.type!
   }
 
   override visitGrouping(node: n.Grouping): void {
@@ -144,6 +175,27 @@ export default class TypeCheckVisitor extends VoidVisitor {
   override visitMatchArm(node: n.MatchArm): void {
     super.visitMatchArm(node)
     node.type = node.body.type!
+  }
+
+  override visitNew(node: n.New): void {
+    super.visitNew(node)
+    let type = node.expression.type
+    if (!(type instanceof types.Instance)) {
+      throw new TypeCheckError('Cannot instantiate non-class')
+    }
+    node.type = type
+  }
+
+  override visitOptionalGet(node: n.OptionalGet): void {
+    super.visitOptionalGet(node)
+    let type = node.object.type
+    if (!(type instanceof types.Instance)) {
+      throw new TypeCheckError('Cannot get property of non-class')
+    }
+    let class_ = type.node
+    let symbol = class_.symbol(node.name)
+    if (symbol === null) throw new TypeCheckError('Unknown symbol')
+    node.type = t.nullable(symbol.type!)
   }
 
   override visitParam(node: n.Param): void {

@@ -66,7 +66,7 @@ describe('call expressions', () => {
   })
 })
 
-describe('function declarations', () => {
+describe('parse function declarations', () => {
   test('fun foo() {}', () => {
     let source = 'fun foo() {}'
     let expected = b.program(b.fun('foo'))
@@ -83,10 +83,7 @@ describe('function declarations', () => {
     let source = 'fun foo(a: array<int>, b: string,) {}'
     let expected = b.program(
       b.fun('foo', {
-        params: [
-          b.param('a', t.id('array', t.int())),
-          b.param('b', t.string()),
-        ],
+        params: [b.param('a', t.array(t.int())), b.param('b', t.string())],
       }),
     )
     expect(ast(source)).toEqual(expected)
@@ -94,9 +91,7 @@ describe('function declarations', () => {
 
   test('fun foo(): array<int> {}', () => {
     let source = 'fun foo(): array<int> {}'
-    let expected = b.program(
-      b.fun('foo', { returnType: t.id('array', t.int()) }),
-    )
+    let expected = b.program(b.fun('foo', { returnType: t.array(t.int()) }))
     expect(ast(source)).toEqual(expected)
   })
 

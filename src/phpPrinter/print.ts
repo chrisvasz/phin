@@ -68,6 +68,7 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
 
   visitAnyType = () => this.append('any')
   visitBooleanType = () => this.append('bool')
+  visitInstanceType(class_: types.Instance): void {}
   visitFalseType = () => this.append('false')
   visitFloatType = () => this.append('float')
   visitIntType = () => this.append('int')
@@ -148,10 +149,10 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
   }
 
   visitAssign(node: nodes.Assign): void {
-    node.name.accept(this)
+    node.left.accept(this)
     let operator = node.operator === '+.=' ? '.=' : node.operator
     this.append(` ${operator} `)
-    node.value.accept(this)
+    node.right.accept(this)
   }
 
   visitBinary(node: nodes.Binary): void {
@@ -474,7 +475,7 @@ export class PhpPrinter implements nodes.Visitor<void>, types.Visitor<void> {
     this.commit(' */')
   }
 
-  visitGetExpr(node: nodes.Get): void {
+  visitGet(node: nodes.Get): void {
     node.object.accept(this)
     this.append(`->${node.name}`)
   }

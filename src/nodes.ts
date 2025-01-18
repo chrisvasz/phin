@@ -1,4 +1,4 @@
-import { ClassSymbols, HoistedSymbols } from './symbols'
+import { ClassNode, ClassSymbols, HoistedSymbols } from './symbols'
 import { t } from './builder'
 import { Type } from './types'
 
@@ -89,7 +89,7 @@ export interface Visitor<T> {
   visitForeachVariable(node: ForeachVariable): T
   visitFunctionDeclaration(node: FunctionDeclaration): T
   visitFunctionExpression(node: FunctionExpression): T
-  visitGetExpr(node: Get): T
+  visitGet(node: Get): T
   visitGrouping(node: Grouping): T
   visitIdentifier(node: Identifier): T
   visitIf(node: If): T
@@ -400,7 +400,9 @@ export class ClassDeclaration extends Node {
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitClassDeclaration(this)
   }
-  properties = classProperties
+  symbol(name: string): ClassNode | null {
+    return this.symbols.get(name)
+  }
 }
 
 export class ClassSuperclass extends Node {
@@ -500,9 +502,9 @@ export class ClassInitializer extends Node {
 export class Assign extends Node {
   _name = 'Assign' as const
   constructor(
-    public readonly name: Identifier | Get | ArrayAccess,
+    public readonly left: Identifier | Get | ArrayAccess,
     public readonly operator: string,
-    public readonly value: Expr,
+    public readonly right: Expr,
   ) {
     super()
   }
@@ -533,7 +535,7 @@ export class Get extends Node {
     super()
   }
   accept<T>(visitor: Visitor<T>): T {
-    return visitor.visitGetExpr(this)
+    return visitor.visitGet(this)
   }
 }
 

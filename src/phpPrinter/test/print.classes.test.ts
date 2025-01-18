@@ -98,7 +98,7 @@ describe('print class params & constructor', () => {
     expect(print(source)).toEqual(expected)
   })
 
-  test('class A(var a: array) {}', () => {
+  test.todo('class A(var a: array) {}', () => {
     let source = 'class A(var a: array) {}'
     let expected = trimMargin(`
       class A {

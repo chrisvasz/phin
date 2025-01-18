@@ -1,7 +1,10 @@
+import * as n from './nodes'
+
 export interface Visitor<T> {
   visitAnyType(any: Any): T
   visitArrayType(array: Array): T
   visitBooleanType(boolean: Boolean): T
+  visitInstanceType(class_: Instance): T
   visitFalseType(false_: False): T
   visitFloatLiteralType(float: Float): T
   visitFloatType(float: Float): T
@@ -26,7 +29,7 @@ export abstract class Type {
   abstract accept<T>(visitor: Visitor<T>): T
   isAssignableTo(other: Type) {
     // TODO override this in subclasses, esp literals
-    return this instanceof other.constructor
+    return this instanceof other.constructor || other instanceof Any
   }
   equals(other: Type) {
     // TODO override this in subclasses, esp literals
@@ -37,6 +40,16 @@ export abstract class Type {
   }
   simplify() {
     return this
+  }
+}
+
+export class Instance extends Type {
+  _name = 'Class'
+  constructor(public readonly node: n.ClassDeclaration) {
+    super()
+  }
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitInstanceType(this)
   }
 }
 
@@ -84,6 +97,9 @@ export class Int extends Type {
   _name = 'Int'
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitIntType(this)
+  }
+  override toString() {
+    return 'int'
   }
 }
 

@@ -1,2 +1,3 @@
 <?php
-$a = [];
+class A {}
+clone 1;

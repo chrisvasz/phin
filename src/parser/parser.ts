@@ -1039,6 +1039,7 @@ export default function parse(
   }
 
   function type(): Type {
+    // TODO use builders in here for perf?
     if (match(NULL)) return new types.Null()
     if (match(INT)) return new types.IntLiteral(previous().literal)
     if (match(FLOAT)) return new types.FloatLiteral(previous().literal)
@@ -1050,12 +1051,23 @@ export default function parse(
   }
 
   function typeIdentifier(): Type {
+    // TODO use builders in here for perf?
     let lexeme = previous().lexeme
+    if (lexeme === 'array') return typeArray()
     if (lexeme === 'string') return new types.String()
     if (lexeme === 'bool') return new types.Boolean()
     if (lexeme === 'int') return new types.Int()
     if (lexeme === 'float') return new types.Float()
     return new types.Identifier(lexeme, typeGenerics())
+  }
+
+  function typeArray(): types.Array {
+    let type = new types.Void()
+    if (match(LESS)) {
+      type = typeAnnotation()
+      consume('Expect ">" after array type', GREATER)
+    }
+    return new types.Array(type)
   }
 
   function typeGenerics(): Type[] {

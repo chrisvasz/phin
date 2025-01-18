@@ -22,7 +22,7 @@ export default function compile(
   new BindIdentifiersVisitor(symbols).visit(ast)
   if (typecheck) {
     // TODO is there any way to indicate with types that type is set after this?
-    new TypeCheckVisitor().visit(ast)
+    new TypeCheckVisitor(ast).visit()
   }
   return ast
 }

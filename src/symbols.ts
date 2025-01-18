@@ -4,7 +4,7 @@ import * as n from './nodes'
 
 type HoistedNode = n.FunctionDeclaration | n.ClassDeclaration
 // | n.PhinRuntimeFunction // TODO
-type ClassNode =
+export type ClassNode =
   | n.ClassDeclaration
   | n.ClassProperty
   | n.ClassAbstractMethod

@@ -21,8 +21,8 @@ export default class VoidVisitor implements n.Visitor<void> {
   }
 
   visitAssign(node: n.Assign): void {
-    node.name.accept(this)
-    node.value.accept(this)
+    node.left.accept(this)
+    node.right.accept(this)
   }
 
   visitBinary(node: n.Binary): void {
@@ -125,7 +125,7 @@ export default class VoidVisitor implements n.Visitor<void> {
     node.body.accept(this)
   }
 
-  visitGetExpr(node: n.Get): void {
+  visitGet(node: n.Get): void {
     node.object.accept(this)
   }
 

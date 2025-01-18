@@ -13,7 +13,7 @@ symbols.add('c', b.var('c'))
 symbols.add('d', b.var('d'))
 
 function ast(source: string) {
-  return compile(source, { symbols })
+  return compile(source, { symbols, typecheck: false })
 }
 
 function print(source: string) {

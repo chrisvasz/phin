@@ -214,9 +214,15 @@ describe('typeof: assignment expression', () => {
   test('a = true', () => check('a = true', t.true()))
 })
 
-test.todo('new')
-test.todo('clone')
+describe('typeof: clone expression', () => {
+  function check(src: string, type: types.Type) {
+    let ast = compile(src)
+    let stmt = ast.statements[0] as n.ExpressionStatement
+    let expr = stmt.expression as n.Clone
+    expect(expr.type?.equals(type)).toBe(true)
+  }
+  test('clone 1', () => check('clone 1', t.int()))
+})
+
 test.todo('throw')
-test.todo('this,super')
-test.todo('get, optional get')
 test.todo('pipeline')
